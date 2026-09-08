@@ -1,0 +1,75 @@
+{
+  "sourceCommit": "dede3e75fde252a20061f491ba46fc2168e9822a",
+  "environment": "LOCAL",
+  "scope": "RETENTION_AND_ISOLATED_RESTORE",
+  "startedAt": "2026-09-08T09:56:07.097Z",
+  "recordedAt": "2026-09-08T10:01:13.293Z",
+  "command": "pnpm exec vitest run --reporter=json",
+  "success": true,
+  "totalTests": 110,
+  "passedTests": 110,
+  "failedTests": 0,
+  "testFiles": 20,
+  "retentionChecks": [
+    {
+      "name": "deletes abandoned and terminal evidence but preserves active settlement and current paid reports",
+      "status": "PASSED",
+      "durationMs": 691.9744999999998
+    },
+    {
+      "name": "starts a stable 30-day clock at first release and does not extend it on retry",
+      "status": "PASSED",
+      "durationMs": 115.96054200000026
+    },
+    {
+      "name": "does not disclose an expired report to another user and rejects downloaded expired data",
+      "status": "PASSED",
+      "durationMs": 92.50004100000024
+    },
+    {
+      "name": "keeps deletion pending after partial failure and retries without reviving the report",
+      "status": "PASSED",
+      "durationMs": 163.71329200000037
+    },
+    {
+      "name": "coordinates cleanup with writes and removes only old unreferenced objects",
+      "status": "PASSED",
+      "durationMs": 96.14937499999996
+    },
+    {
+      "name": "rejects storage aliases before deleting an object",
+      "status": "PASSED",
+      "durationMs": 65.3494169999999
+    },
+    {
+      "name": "PRI-06 restores a real database, encrypted objects, and keys, then removes expired data before access",
+      "status": "PASSED",
+      "durationMs": 1296.9465
+    }
+  ],
+  "acceptance": [
+    {
+      "id": "PRI-06",
+      "status": "PASS",
+      "environment": "LOCAL",
+      "evidence": "Actual pg_dump and pg_restore; expired object rejection and repeated deletion; current paid report decryption and receipt preservation."
+    },
+    {
+      "id": "OPS-05",
+      "status": "BLOCKED",
+      "environment": "HOSTED_STAGING",
+      "reason": "Hosted backup custody, backup expiry, and live-chain reconciliation remain unverified."
+    }
+  ],
+  "runtime": {
+    "service": "retention",
+    "state": "COMPLETE",
+    "evidenceDeleted": 0,
+    "reportsDeleted": 0,
+    "orphansDeleted": 0,
+    "restoredObjectsDeleted": 0,
+    "checkedRows": 0
+  },
+  "livePaymentProof": false,
+  "hostedBackupProof": false
+}
