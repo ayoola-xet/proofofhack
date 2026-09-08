@@ -67,7 +67,7 @@ export function evaluateCoverage(
     proposedAction: action,
     expiresAt: new Date((nowSeconds + terms.recommendationTtlSeconds) * 1000).toISOString(),
   });
-  if (!observation || !observation.observedAt || observation.readStatus === "MISSING")
+  if (!observation?.observedAt || observation.readStatus === "MISSING")
     return finish("ABSTAIN", "MISSING_OBSERVATION");
   if (observation.hasIndexingErrors) return finish("ABSTAIN", "INDEXING_ERROR");
   if (

@@ -6,7 +6,7 @@ The full submission objective remains active. Live Graph indexing and the initia
 
 | Package | Status | Evidence |
 | --- | --- | --- |
-| WP-01 Foundation | IN_PROGRESS | Workspace, local infrastructure, and provider preflight created. Type check passes. |
+| WP-01 Foundation | IN_PROGRESS | Workspace, local infrastructure, provider preflight, service start command, test groups, and pinned CI workflow created. Root lint, type checks, builds, and unit checks pass. CI execution and the latest full integration rerun remain pending. |
 | WP-02 Domain and database | IN_PROGRESS | Strict schemas, policy hashing, 34 database tables, and fifteen applied migrations. OpenAPI generation pending. |
 | WP-03 Escrow | IN_PROGRESS | Contract implemented. Financial suite: 17 passing tests, including 256-run fuzz cases. Arc Testnet deployment verified. Draft approval and durable funding are connected through the API and worker. Database and failure-path tests pass. The live bounty funding test remains pending. |
 | WP-04 Budget controller | IN_PROGRESS | Controller registration, owner controls, exact policy approval, durable allocation, and cumulative limits pass local tests. Five live Privy permission checks pass. Live owner transactions and Circle allocation remain pending. |
@@ -37,17 +37,17 @@ Privy app configuration is stored in the ignored .env file with mode 0600. Graph
 
 ## Current verification
 
-- Pass all 129 TypeScript tests in 21 files. These tests include real PostgreSQL transactions, local chain settlement, concurrent allocation jobs, current role checks, encrypted storage integrity, exact payment gating, owner controls, retention, isolated restore, expiry/refund receipt recovery, checkpoint replay, and durable automatic recovery.
-- Pass 17 Solidity tests from the contract stage.
+- The previous recovery stage passes all 129 TypeScript tests in 21 files. These tests include real PostgreSQL transactions, local chain settlement, concurrent allocation jobs, current role checks, encrypted storage integrity, exact payment gating, owner controls, retention, isolated restore, expiry/refund receipt recovery, checkpoint replay, and durable automatic recovery.
+- Pass 17 Solidity tests with Foundry v1.5.0 in the foundation stage.
 - Pass TypeScript type checking.
-- Pass the production frontend and Graph package builds after the recovery changes. Vite reports one large dependency chunk.
-- Pass lint checks for all thirteen TypeScript files changed in the automatic recovery stage. The earlier repository-wide check reports 13 errors and 23 warnings in other files. A clean repository-wide check remains pending.
+- Pass the production frontend and Graph package builds after the foundation changes. Vite reports one large dependency chunk.
+- Pass repository-wide lint for 167 source and configuration files. Pass all 36 unit tests in nine files. The latest full suite is incomplete because Docker became unavailable.
 - Open the live Privy login window through the new app. The user has signed in to the local workspace. Financial user journeys remain pending.
 - Check the desktop landing page and the 390-pixel mobile page. Mobile scroll width equals viewport width. Browser evidence is in the ignored output/playwright folder.
 
 ## Local services
 
-The frontend runs at http://127.0.0.1:5173. The API uses port 4187. Another existing Docker service uses port 4100, so that service remains unchanged. PostgreSQL uses port 5433.
+The frontend uses http://127.0.0.1:5173. The API uses port 4187. PostgreSQL uses port 5433. The configured service group is currently stopped after a database startup failure. Docker does not respond after a disk-space failure. A Docker restart request is pending because another project also uses Docker.
 
 ## Provider references
 
@@ -220,3 +220,16 @@ The owner and treasury API accepts a known recovery transaction hash. It checks 
 A matching final expiry can resolve a qualifying report hold. The organization still cannot download the unpaid report. The database preserves the expiry event reference and seven-day retention period. An older expiry cannot replace a newer refund projection. Recovery uses the claim lifecycle lock and waits for an active assessment.
 
 Local Anvil and PostgreSQL checks cover these paths, current roles, invalid receipt fields, saved event conflicts, and concurrent processing. Automatic recovery, event discovery, and the owner/treasury recovery screen are implemented. The real queue test records a final refund after an authorized retry. Lost-response tests preserve the provider key or resolve an already completed action from chain events. Qualified claimant credit remains untouched after cutoff. The recovery screen passes local desktop, mobile, keyboard, and receipt-input checks with synthetic API responses. Live Arc recovery evidence and the signed-in account journey remain incomplete. See `docs/RETENTION_AND_RECOVERY.md`.
+
+
+## Development commands and CI
+
+The root start command checks settings and ports. It starts six configured services and stops its children on termination or service failure. Isolated checks verify normal shutdown and shutdown after one child exits. Both checks confirm that every service port closes. A real startup attempt confirms that a database failure stops the group. A successful configured startup remains pending.
+
+Unit and integration tests now have separate Vitest projects. The full test command compiles contracts before tests. The CI workflow pins Node, pnpm, Foundry, and GitHub Action references. It runs local checks without provider credentials. No Git remote is configured, so no GitHub run is recorded.
+
+The first full run passes 127 of 129 tests. Two budget tests reach their 30-second limit. Their local receipt polling interval is reduced to 50 milliseconds. Their assertions and time limits remain unchanged. The next run uses Foundry v1.5.0 but loses its database connection. It records 109 passes and 20 failures. This run does not prove the complete integration suite.
+
+The disk check shows 142 MB free during the failure. Docker logs report a write failure with “no space left on device.” Removing this build's unused downloads and browser caches raises free space to about 762 MB. Project files and database volumes remain intact. Docker still does not respond. Full integration tests and a configured service start must run again after Docker recovers.
+
+All 36 unit tests, 17 Solidity tests, repository-wide lint, type checks, and production builds pass in this stage. See `evidence/local/development-checks.json` for the exact scope. Read `docs/DEVELOPMENT_CHECKS.md` for commands and limits.

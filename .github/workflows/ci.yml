@@ -1,0 +1,52 @@
+name: Local checks
+
+on:
+  push:
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: local-checks-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  verify:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 25
+    env:
+      APP_ENV: local
+      DATABASE_URL: postgres://vulnproof:vulnproof_local@127.0.0.1:5433/vulnproof
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+        with:
+          persist-credentials: false
+      - uses: pnpm/action-setup@f520eceda224fe1a4aed5a2a27a194379a409996 # v6
+      - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7
+        with:
+          node-version-file: .nvmrc
+          cache: pnpm
+      - uses: foundry-rs/foundry-toolchain@908c540300062bd5a7e473851cdb4282204cee09 # v1
+        with:
+          version: v1.5.0
+      - name: Install locked dependencies
+        run: pnpm install --frozen-lockfile
+      - name: Start the local test database
+        run: docker compose --project-name vulnproof -f infra/compose.yaml up -d --wait
+      - name: Apply database migrations
+        run: pnpm db:migrate
+      - name: Check source style
+        run: pnpm lint
+      - name: Check TypeScript
+        run: pnpm typecheck
+      - name: Build the web app and Graph package
+        run: pnpm build
+      - name: Test contracts
+        run: pnpm test:contracts
+      - name: Run unit and integration tests
+        run: pnpm test
+      - name: Stop the test database
+        if: always()
+        run: docker compose --project-name vulnproof -f infra/compose.yaml down --volumes

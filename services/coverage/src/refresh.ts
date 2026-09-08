@@ -126,7 +126,7 @@ export async function refreshCoverage(
         observation.asset,
         observation.assetDecimals,
       ]);
-      if (!policy || !policy.allowed_vault_ids.includes(vault.id)) continue;
+      if (!policy?.allowed_vault_ids.includes(vault.id)) continue;
       const result = evaluateCoverage(
         observation,
         {

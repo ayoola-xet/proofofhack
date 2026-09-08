@@ -1,0 +1,91 @@
+{
+  "schemaVersion": "1",
+  "scope": "LOCAL_DEVELOPMENT_CHECKS",
+  "testnetTransactionsSent": false,
+  "capturedAt": "2026-09-08T11:25:04.133765+00:00",
+  "baseCommit": "4c346698d3e4c7835b099bb47e49ec15e4693d1e",
+  "sourceSha256": {
+    "scripts/dev.ts": "178de4c5600e7e8758a3ff8fe9ed95c4a946e2fee84e1f5f13f69ef51437a73a",
+    "vitest.config.ts": "ea5c8401a505050653701c1a5998f7b5c03cf24e5edad2a491ec8f0f5790930b",
+    "package.json": "67755eb9f22fe13e125c7f7161ffd033b5b87f501cb4c62c15a90fdc1997a60b",
+    "biome.json": "3f2016c42a82de2187454d168f78c8a4d9714c9338edfb149b855c96fed7b691",
+    "tests/budget.test.ts": "4f4670df7b301216c71ff1de9eeab6910aa3b40cde46098203bbd23de408d99f",
+    ".github/workflows/ci.yml": "39cc16d757f7f8996dfb5e15d1b9f5ea93787bf8f04752f66cb3ef6891482358",
+    ".nvmrc": "2722b61f414f07f08be7f1f1316012813818f26f1c40d6a24a748686cec7d2ff"
+  },
+  "tools": {
+    "node": "24.16.0",
+    "pnpm": "10.32.1",
+    "foundry": "1.5.0",
+    "solidity": "0.8.30"
+  },
+  "checks": {
+    "lint": {
+      "passed": true,
+      "files": 167
+    },
+    "typecheck": {
+      "passed": true
+    },
+    "productionBuild": {
+      "passed": true,
+      "packages": [
+        "web",
+        "erc4626-coverage-data"
+      ]
+    },
+    "contracts": {
+      "passed": true,
+      "tests": 17
+    },
+    "unit": {
+      "passed": true,
+      "tests": 36,
+      "passedTests": 36
+    },
+    "supervisor": {
+      "scope": "SYNTHETIC_CHILD_SERVICES",
+      "results": {
+        "normal-stop": {
+          "passed": true,
+          "exitCode": 0,
+          "allServicePortsClosed": true
+        },
+        "child-failure": {
+          "passed": true,
+          "exitCode": 1,
+          "allServicePortsClosed": true
+        }
+      }
+    },
+    "ciYaml": {
+      "parses": true,
+      "actionCommitsPinned": true,
+      "githubRunVerified": false
+    }
+  },
+  "incompleteChecks": {
+    "firstFullRun": {
+      "passed": 127,
+      "failed": 2,
+      "total": 129,
+      "reason": "Two local budget tests reached their 30-second limit."
+    },
+    "latestFullRun": {
+      "passed": 109,
+      "failed": 20,
+      "total": 129,
+      "reason": "Database connections failed while Docker was unresponsive. The latest complete integration suite is not verified."
+    },
+    "configuredStartup": {
+      "passed": false,
+      "reason": "The worker could not connect to PostgreSQL. The supervisor stopped its group."
+    }
+  },
+  "limits": [
+    "No live claim, allocation, payment, or recovery proof is added.",
+    "No GitHub workflow run is recorded.",
+    "The local budget polling change needs a complete integration rerun.",
+    "Docker recovery and configured startup remain pending."
+  ]
+}

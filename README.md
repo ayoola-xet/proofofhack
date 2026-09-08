@@ -37,20 +37,24 @@ If documents conflict, record the conflict and resolve it before implementing th
 
 ## Run the current implementation
 
-1. Install the locked dependencies with `pnpm install --frozen-lockfile`.
-2. Copy `.env.example` to `.env`. Add the Privy and Graph configuration.
-3. Start PostgreSQL with `docker compose up -d`.
-4. Apply database migrations with `pnpm db:migrate`.
-5. Check that the configured deployment has its matching service keys. For a new environment, run `pnpm setup:keys` and `pnpm exec tsx scripts/setup-researcher-report-key.ts` before deployment.
-6. Start report release with `pnpm dev:reports`.
-7. Start the verifier with `pnpm dev:verifier`.
-8. Start the API with `pnpm dev:api`.
-9. Start the worker with `pnpm dev:worker`.
-10. Start the web app with `pnpm dev:web`.
-11. Start ciphertext cleanup with `pnpm dev:retention` after all services run the current source version.
-12. Open `http://127.0.0.1:5173` and sign in.
+1. Use Node.js 24.16.0 and pnpm 10.32.1. The Node version is in `.nvmrc`.
+2. Install the locked dependencies with `pnpm install --frozen-lockfile`.
+3. Install Foundry v1.5.0 for the local contract tools.
+4. Copy `.env.example` to `.env`. Complete the provider, deployment, and service configuration.
+5. Start PostgreSQL with `docker compose --project-name vulnproof -f infra/compose.yaml up -d --wait`.
+6. Apply database migrations with `pnpm db:migrate`.
+7. Check that the configured deployment has its matching service keys. For a new environment, run `pnpm setup:keys` and `pnpm exec tsx scripts/setup-researcher-report-key.ts` before deployment. Keep the existing keys for an existing deployment.
+8. Run `pnpm dev --check` to check required settings and available ports.
+9. Run `pnpm dev` to start report release, the verifier, the API, the worker, ciphertext cleanup, and the web app.
+10. Open `http://127.0.0.1:5173` and sign in.
 
-Use a separate terminal for each service. Run `pnpm typecheck`, `pnpm test`, and `pnpm test:contracts` to check the implementation. PostgreSQL must run for the integration tests. Run `pnpm build` to build the frontend and Graph package.
+Keep the start command running. Press Ctrl+C to stop its service group. The command stops the group if one service exits. It rejects ports already used by another process. Provider checks run inside each service. A ready web port alone does not prove provider access. The command starts the configured app. It requires the existing provider accounts and deployment.
+
+The individual `dev:*` commands remain available for service debugging. Use them in separate terminals. Start either the service group or individual services for the same ports.
+
+Run `pnpm lint`, `pnpm typecheck`, `pnpm test`, and `pnpm test:contracts` to check the implementation. PostgreSQL must run for integration tests. Run `pnpm test:unit` for tests that do not require PostgreSQL. Run `pnpm test:integration` for tests that use PostgreSQL. The full test command builds contract artifacts first. Run `pnpm build` to build the frontend and Graph package.
+
+Read [development checks](docs/DEVELOPMENT_CHECKS.md) for tool versions, test requirements, and CI limits.
 
 Read [implementation status](docs/IMPLEMENTATION_STATUS.md) for completed work and remaining release requirements. Public integration evidence is in `evidence/`. Configuration secrets stay in the ignored `.env` file.
 

@@ -103,7 +103,10 @@ beforeAll(async () => {
     ["--host", "127.0.0.1", "--port", String(port), "--chain-id", "31337", "--silent"],
     { stdio: "ignore" },
   );
-  client = createPublicClient({ transport: http(rpc, { retryCount: 0, timeout: 1000 }) });
+  client = createPublicClient({
+    pollingInterval: 50,
+    transport: http(rpc, { retryCount: 0, timeout: 1000 }),
+  });
   for (let i = 0; i < 50; i++) {
     try {
       await client.getChainId();

@@ -10,9 +10,9 @@
   "scripts": {
     "build": "pnpm -r --if-present build",
     "typecheck": "tsc --noEmit",
-    "lint": "biome check apps packages services scripts tests",
+    "lint": "biome check apps packages services scripts tests package.json biome.json tsconfig.json vitest.config.ts",
     "format": "biome check --write apps packages services scripts tests",
-    "test": "vitest run",
+    "test": "pnpm contracts:build && vitest run",
     "test:contracts": "forge test --root contracts",
     "contracts:build": "forge build --root contracts",
     "preflight": "tsx scripts/preflight.ts",
@@ -27,7 +27,10 @@
     "dev:retention": "tsx services/retention/src/main.ts --watch",
     "retention:run": "tsx services/retention/src/main.ts",
     "fixtures:generate": "tsx scripts/generate-demo-fixtures.ts",
-    "test:ai": "vitest run tests/assistant.test.ts tests/coverage.test.ts tests/coverage-persistence.test.ts"
+    "test:ai": "vitest run tests/assistant.test.ts tests/coverage.test.ts tests/coverage-persistence.test.ts",
+    "dev": "tsx scripts/dev.ts",
+    "test:unit": "vitest run --project unit",
+    "test:integration": "pnpm contracts:build && vitest run --project integration"
   },
   "devDependencies": {
     "@biomejs/biome": "^2.5.12",

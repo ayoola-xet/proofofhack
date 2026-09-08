@@ -33,7 +33,7 @@ if (
 await mkdir("evidence/the-graph", { recursive: true });
 await writeFile(
   "evidence/the-graph/live-query.json",
-  JSON.stringify(
+  `${JSON.stringify(
     {
       capturedAt: new Date().toISOString(),
       environment: "LIVE_PUBLIC_DATA",
@@ -43,6 +43,6 @@ await writeFile(
     },
     null,
     2,
-  ) + "\n",
+  )}\n`,
 );
 process.stdout.write(`Captured ${rows.length} fresh live vault observations.\n`);
