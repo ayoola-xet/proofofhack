@@ -118,7 +118,17 @@ beforeAll(async () => {
   rpc = `http://127.0.0.1:${port}`;
   anvil = spawn(
     "anvil",
-    ["--host", "127.0.0.1", "--port", String(port), "--chain-id", "31337", "--silent"],
+    [
+      "--host",
+      "127.0.0.1",
+      "--port",
+      String(port),
+      "--chain-id",
+      "31337",
+      "--prune-history",
+      "4096",
+      "--silent",
+    ],
     { stdio: "ignore" },
   );
   client = createPublicClient({

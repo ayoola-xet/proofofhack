@@ -6,7 +6,7 @@ The full submission objective remains active. Live Graph indexing and the initia
 
 | Package | Status | Evidence |
 | --- | --- | --- |
-| WP-01 Foundation | IN_PROGRESS | Workspace, local infrastructure, provider preflight, service start command, test groups, and pinned CI workflow created. Root lint, type checks, builds, and unit checks pass. CI execution and the latest full integration rerun remain pending. |
+| WP-01 Foundation | IN_PROGRESS | Workspace, local infrastructure, provider preflight, service start command, test groups, and pinned CI workflow created. Root lint, type checks, builds, and unit checks pass. The full integration rerun passes. CI execution remains pending. |
 | WP-02 Domain and database | IN_PROGRESS | Strict schemas, policy hashing, 34 database tables, and fifteen applied migrations. OpenAPI generation pending. |
 | WP-03 Escrow | IN_PROGRESS | Contract implemented. Financial suite: 17 passing tests, including 256-run fuzz cases. Arc Testnet deployment verified. Draft approval and durable funding are connected through the API and worker. Database and failure-path tests pass. The live bounty funding test remains pending. |
 | WP-04 Budget controller | IN_PROGRESS | Controller registration, owner controls, exact policy approval, durable allocation, and cumulative limits pass local tests. Five live Privy permission checks pass. Live owner transactions and Circle allocation remain pending. |
@@ -37,17 +37,17 @@ Privy app configuration is stored in the ignored .env file with mode 0600. Graph
 
 ## Current verification
 
-- The previous recovery stage passes all 129 TypeScript tests in 21 files. These tests include real PostgreSQL transactions, local chain settlement, concurrent allocation jobs, current role checks, encrypted storage integrity, exact payment gating, owner controls, retention, isolated restore, expiry/refund receipt recovery, checkpoint replay, and durable automatic recovery.
+- The latest development recovery stage passes all 129 TypeScript tests in 21 files. These tests include real PostgreSQL transactions, local chain settlement, concurrent allocation jobs, current role checks, encrypted storage integrity, exact payment gating, owner controls, retention, isolated restore, expiry/refund receipt recovery, checkpoint replay, and durable automatic recovery.
 - Pass 17 Solidity tests with Foundry v1.5.0 in the foundation stage.
 - Pass TypeScript type checking.
 - Pass the production frontend and Graph package builds after the foundation changes. Vite reports one large dependency chunk.
-- Pass repository-wide lint for 167 source and configuration files. Pass all 36 unit tests in nine files. The latest full suite is incomplete because Docker became unavailable.
+- Pass repository-wide lint for 167 source and configuration files. Pass all 36 unit tests in nine files. The full suite also passes after Docker recovery and the test-chain history change.
 - Open the live Privy login window through the new app. The user has signed in to the local workspace. Financial user journeys remain pending.
 - Check the desktop landing page and the 390-pixel mobile page. Mobile scroll width equals viewport width. Browser evidence is in the ignored output/playwright folder.
 
 ## Local services
 
-The frontend uses http://127.0.0.1:5173. The API uses port 4187. PostgreSQL uses port 5433. The configured service group is currently stopped after a database startup failure. Docker does not respond after a disk-space failure. A Docker restart request is pending because another project also uses Docker.
+The frontend uses http://127.0.0.1:5173. The API uses port 4187. PostgreSQL uses port 5433. The configured service group is running after Docker recovery. The API health check and worker provider startup check pass.
 
 ## Provider references
 
@@ -224,12 +224,23 @@ Local Anvil and PostgreSQL checks cover these paths, current roles, invalid rece
 
 ## Development commands and CI
 
-The root start command checks settings and ports. It starts six configured services and stops its children on termination or service failure. Isolated checks verify normal shutdown and shutdown after one child exits. Both checks confirm that every service port closes. A real startup attempt confirms that a database failure stops the group. A successful configured startup remains pending.
+The root start command checks settings and ports. It starts six configured services and stops its children on termination or service failure. Isolated checks verify normal shutdown and shutdown after one child exits. Both checks confirm that every service port closes. A real startup attempt confirms that a database failure stops the group. A successful configured startup passes in the development recovery stage below.
 
 Unit and integration tests now have separate Vitest projects. The full test command compiles contracts before tests. The CI workflow pins Node, pnpm, Foundry, and GitHub Action references. It runs local checks without provider credentials. No Git remote is configured, so no GitHub run is recorded.
 
 The first full run passes 127 of 129 tests. Two budget tests reach their 30-second limit. Their local receipt polling interval is reduced to 50 milliseconds. Their assertions and time limits remain unchanged. The next run uses Foundry v1.5.0 but loses its database connection. It records 109 passes and 20 failures. This run does not prove the complete integration suite.
 
-The disk check shows 142 MB free during the failure. Docker logs report a write failure with “no space left on device.” Removing this build's unused downloads and browser caches raises free space to about 762 MB. Project files and database volumes remain intact. Docker still does not respond. Full integration tests and a configured service start must run again after Docker recovers.
+The disk check shows 142 MB free during the failure. Docker logs report a write failure with “no space left on device.” Removing this build's unused downloads and browser caches raises free space to about 762 MB. Project files and database volumes remain intact. At the end of that stage, Docker still did not respond. The development recovery stage below resolves this interruption.
 
 All 36 unit tests, 17 Solidity tests, repository-wide lint, type checks, and production builds pass in this stage. See `evidence/local/development-checks.json` for the exact scope. Read `docs/DEVELOPMENT_CHECKS.md` for commands and limits.
+
+
+## Development recovery
+
+Docker restarts after package cache cleanup. PostgreSQL is healthy and the migrations apply. The configured service supervisor starts the app and all service ports. The worker confirms provider readiness. The API health check passes.
+
+The first recovered full run passes 120 tests and fails nine historical state reads. The Anvil suites now retain up to 4096 historical states in memory. They do not write historical state files to disk. Existing assertions and finality checks remain unchanged. The final run passes all 129 tests in 21 files. Repository-wide lint and type checking pass.
+
+Only test configuration and documentation change in this stage. The earlier 17 contract tests and production builds remain valid for the unchanged source. No new live financial journey is proved. GitHub CI execution, live journeys, hosting, backups, and submission assets remain open.
+
+Evidence is in `evidence/local/development-recovery.json`.

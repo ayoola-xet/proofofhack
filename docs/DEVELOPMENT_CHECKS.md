@@ -42,6 +42,8 @@ Use a disposable local database for integration tests. Several tests use shared 
 
 The local budget tests check transaction receipts every 50 milliseconds. This avoids the slower default polling interval on a local chain. Their existing time limits and assertions remain in place.
 
+The three Anvil suites use `--prune-history 4096`. This keeps up to 4096 historical states in memory and disables historical-state files on disk. The test chains stay within this limit. Historical finality checks still run. This avoids failed reads from archived test state and limits temporary disk growth.
+
 ## Lint scope
 
 Drizzle owns the generated migration metadata format. Biome excludes that metadata directory. Biome still checks migration source files that it supports.

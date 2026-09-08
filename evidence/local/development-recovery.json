@@ -1,0 +1,46 @@
+{
+  "schemaVersion": "1",
+  "scope": "LOCAL_DEVELOPMENT_RECOVERY",
+  "capturedAt": "2026-09-08T12:03:12.602595+00:00",
+  "baseCommit": "285e05839db4e51d10ae0b14fdb50a899b9958be",
+  "sourceSha256": {
+    "tests/budget.test.ts": "b9d4074455c344871ea8e0e6bbaa298db0f1e54b655e85c6d08fbf3dbd3b5ae9",
+    "tests/claim-journey.test.ts": "26d47ba267b19b8150e33a3b7a219edcb899d103542fd7a582a9a0616e84dfa2",
+    "tests/recovery.test.ts": "0f4ee8d1a1988bcdf8e4ea42409640ba705b0ff7f120ba02049dd1814078ac49"
+  },
+  "tools": {
+    "node": "24.16.0",
+    "pnpm": "10.32.1",
+    "foundry": "1.5.0"
+  },
+  "applicationTests": {
+    "passed": true,
+    "total": 129,
+    "passedTests": 129,
+    "failedTests": 0,
+    "files": 21
+  },
+  "testChains": {
+    "chainId": "31337",
+    "retainedHistoricalStates": 4096,
+    "persistHistoricalStatesToDisk": false
+  },
+  "checks": {
+    "lintPassed": true,
+    "typecheckPassed": true,
+    "apiHealthPassed": true,
+    "httpServiceStartupPassed": true,
+    "workerProviderStartupPassed": true,
+    "githubRunVerified": false
+  },
+  "limits": [
+    "These checks do not prove live bounty funding, allocation, claims, settlement, or recovery.",
+    "Contract source and production source do not change in this stage. The earlier production build and 17 contract tests remain the relevant evidence."
+  ],
+  "previousAttempt": {
+    "passedTests": 120,
+    "failedTests": 9,
+    "total": 129,
+    "reason": "Historical Anvil state reads failed after old state left memory. The final run retains up to 4096 historical states in memory."
+  }
+}
