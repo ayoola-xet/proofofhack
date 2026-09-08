@@ -1,0 +1,11 @@
+{
+  "name": "@vulnproof/erc4626-coverage-data",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "exports": "./src/client.ts",
+  "scripts": {
+    "codegen": "graph codegen subgraph.yaml",
+    "build": "graph build subgraph.yaml"
+  }
+}

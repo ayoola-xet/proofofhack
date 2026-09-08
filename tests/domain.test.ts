@@ -1,5 +1,5 @@
 import { SimpleMerkleTree } from "@openzeppelin/merkle-tree";
-import { type Hex, toHex } from "viem";
+import type { Hex } from "viem";
 import { describe, expect, it } from "vitest";
 import {
   canonicalJson,
@@ -11,8 +11,6 @@ import {
   unseal,
 } from "../packages/crypto-envelope/src/index.ts";
 import {
-  ADAPTER_ID,
-  type BountyPolicy,
   type Fixture,
   fixtureSchema,
   formatMoney,
@@ -22,31 +20,8 @@ import {
 } from "../packages/domain/src/index.ts";
 import { assessFixture, leafHash } from "../services/verifier/src/fixture.ts";
 
-const h = (n: number) => toHex(n, { size: 32 });
-const a = (n: number) => toHex(n, { size: 20 });
-const examplePolicy = (): BountyPolicy => ({
-  settlementChainId: "31337",
-  escrow: a(1),
-  organizationId: h(1),
-  refundRecipient: a(2),
-  sourceChainId: "1",
-  sourceVault: a(3),
-  sourceBlockHash: h(2),
-  fixtureManifestRoot: h(3),
-  adapterId: ADAPTER_ID,
-  adapterCodeHash: h(5),
-  verifierConfigHash: h(6),
-  admissionSigner: a(4),
-  verdictSigner: a(5),
-  reportRecipientKeyId: h(7),
-  asset: a(6),
-  reward: "25000000",
-  minimumDiscrepancy: "1000000",
-  submissionDeadline: "1800086400",
-  settlementDeadline: "1800088200",
-  reservationDurationSeconds: "1800",
-  organizationNonce: h(1),
-});
+import { examplePolicy, h } from "./helpers/policy.ts";
+
 const fixtures: Fixture[] = ["5000000", "10000000", "9500000"].map((observedAssets, i) => ({
   schemaVersion: "1",
   manifestVersion: "1",

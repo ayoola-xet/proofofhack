@@ -5,7 +5,7 @@ dist/
 !.env.example
 .local/
 tmp/
-coverage/
+/coverage/
 playwright-report/
 test-results/
 contracts/cache/
@@ -17,3 +17,6 @@ contracts/broadcast/
 output/
 .playwright/
 .playwright-cli/
+
+packages/erc4626-coverage-data/generated/
+packages/erc4626-coverage-data/build/

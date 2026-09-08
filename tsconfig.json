@@ -9,8 +9,23 @@
     "skipLibCheck": true,
     "noEmit": true,
     "jsx": "react-jsx",
-    "types": ["node"],
+    "types": [
+      "node"
+    ],
     "allowImportingTsExtensions": true
   },
-  "include": ["packages/**/*.ts", "services/**/*.ts", "apps/**/*.ts", "apps/**/*.tsx", "scripts/**/*.ts", "tests/**/*.ts"]
+  "include": [
+    "packages/**/*.ts",
+    "services/**/*.ts",
+    "apps/**/*.ts",
+    "apps/**/*.tsx",
+    "scripts/**/*.ts",
+    "tests/**/*.ts"
+  ],
+  "exclude": [
+    "**/node_modules",
+    "**/dist",
+    "**/generated",
+    "packages/erc4626-coverage-data/mapping.ts"
+  ]
 }

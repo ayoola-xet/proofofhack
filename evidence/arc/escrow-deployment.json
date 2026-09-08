@@ -1,0 +1,14 @@
+{
+  "capturedAt": "2026-09-08T03:23:38.364Z",
+  "chainId": 5042002,
+  "contract": "0x01742711ee569a0186349e54cffe805209808292",
+  "asset": "0x3600000000000000000000000000000000000000",
+  "transactionHash": "0xfb959bbe3be6c7c15afe536412e9c7df9689257a706efd0cab4cbab288282fd0",
+  "blockNumber": "61011415",
+  "blockHash": "0x592192ade7281f1a4aa5ad49e5d680313ef3a743821564277563e6fba3688f72",
+  "runtimeCodeHash": "0x6e5d26099564900cd8add3b06f37ea95cdeff6f77a957b2c4daed377a64c32b5",
+  "totalLiability": "0",
+  "transactionStatus": "success",
+  "provider": "Circle Agent Stack",
+  "network": "Arc Testnet"
+}

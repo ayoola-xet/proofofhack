@@ -1,0 +1,42 @@
+type Vault @entity(immutable: false) {
+ id: ID!
+ chainId: BigInt!
+ address: Bytes!
+ asset: Bytes
+ assetDecimals: Int
+ shareDecimals: Int
+ implementationLabel: String
+ firstObservedBlock: BigInt!
+ latestObservation: VaultObservation
+}
+type VaultObservation @entity(immutable: true) {
+ id: ID!
+ vault: Vault!
+ blockNumber: BigInt!
+ blockHash: Bytes!
+ blockTimestamp: BigInt!
+ totalAssets: BigInt
+ totalSupply: BigInt
+ readStatus: String!
+ schemaVersion: String!
+}
+type VaultFlow @entity(immutable: true) {
+ id: ID!
+ vault: Vault!
+ kind: String!
+ sender: Bytes!
+ owner: Bytes!
+ receiver: Bytes
+ assets: BigInt!
+ shares: BigInt!
+ transactionHash: Bytes!
+ logIndex: BigInt!
+ blockNumber: BigInt!
+}
+type SourceCursor @entity(immutable: false) {
+ id: ID!
+ chainId: BigInt!
+ blockNumber: BigInt!
+ blockHash: Bytes!
+ blockTimestamp: BigInt!
+}
