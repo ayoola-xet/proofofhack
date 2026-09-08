@@ -1,0 +1,32 @@
+{
+  "schemaVersion": "1",
+  "scope": "LIVE_ARC_BOUNTY_FUNDING",
+  "capturedAt": "2026-09-08T12:34:05.532Z",
+  "sourceCommit": "b3cbd997494340096e8469542704c874aa84583b",
+  "chainId": "5042002",
+  "fundingRequestId": "3d19db94-31a6-4f2d-8ad4-11db7ca0a754",
+  "bountyId": "0xa3147639ed3a03f68dab3f18cbb81d249c23ff6efb452f25b56c12ae8ba34a68",
+  "rewardBaseUnits": "1000000",
+  "asset": "0x3600000000000000000000000000000000000000",
+  "escrow": "0x01742711ee569a0186349e54cffe805209808292",
+  "fundingWallet": "0x6dd9e77782bbb10268abfa04663a062f3ca30768",
+  "approval": {
+    "transactionHash": "0xa051f3db9ee0f73ee4069a1533edc1bfb4eb7b581b3fda25f04c29eb1d6f5b4a",
+    "blockNumber": "61069967",
+    "blockHash": "0x641cb9583654ff9caad8d56610d597483a9163f6973872272cf4b6ad58facde3",
+    "exactApprovalEvent": true
+  },
+  "funding": {
+    "transactionHash": "0xdf7bdf668bed86d952f4444722d947138b9055153fc9062b971091d2013beb59",
+    "blockNumber": "61070007",
+    "blockHash": "0x5130ecae3201b034d401c291e75533c49d687f546091f4d348e5a05e9084fb30",
+    "logIndex": 28,
+    "exactBountyFundedEvent": true,
+    "exactUsdcTransfer": true
+  },
+  "canonicalFinalizedReceipts": true,
+  "limits": [
+    "This evidence proves funding only. Claim settlement and report release require separate evidence.",
+    "The owner and claimant currently use the same signed-in account."
+  ]
+}

@@ -1,0 +1,44 @@
+{
+  "schemaVersion": "1",
+  "scope": "CIRCLE_REQUEST_ID_COMPATIBILITY",
+  "capturedAt": "2026-09-08T12:40:26.274337+00:00",
+  "baseCommit": "b3cbd997494340096e8469542704c874aa84583b",
+  "sourceSha256": {
+    "packages/circle/src/claims.ts": "8387abae03acbaecbdc258d70998df519035798dff56cc9bc3e8210be4f087f1",
+    "packages/circle/src/budget.ts": "24f3c412c3a71fa531b814df42d98a5191b0521c599cd5fdcd74953b7d15a6d1",
+    "services/worker/src/claim-process.ts": "2941199284ca047763f9976617be127136bc0b018e6a9361b36f53389d7f4cda",
+    "services/worker/src/recovery-process.ts": "f86a1390085b8e36171637eb4b20b5c0d7753d73edc48e57d0a065e0b1b4a2c0",
+    "services/budget/src/allocate.ts": "ab29430b0249aab40c81fcd00999820aac27ce24e19df5ea5af593cde3a28152",
+    "packages/database/migrations/0015_circle_request_identity.sql": "6bc301265440286f7b5f2120fd0cec168a9656d96050f6ac5c04648f076229cc",
+    "tests/circle-claims.test.ts": "3ac7a795a451846c6f58f4c51431e0eca152c30ca5579a72c2daca571e49d463",
+    "tests/claim-journey.test.ts": "e87f6155179fc61c1d8d2c93ee9b5e3ddafa9620e490246f9db04a59cc3e12c0",
+    "tests/budget.test.ts": "0f0003edf4abb21636925603c4caac69654de539e42b08b10003f6753c0898d8"
+  },
+  "applicationTests": {
+    "passed": true,
+    "total": 129,
+    "passedTests": 129,
+    "failedTests": 0,
+    "files": 21
+  },
+  "checks": {
+    "productionBuildPassed": true,
+    "typecheckPassed": true,
+    "lintPassed": true,
+    "databaseIdMutationRejected": true
+  },
+  "liveRequest": {
+    "intentId": "b230f332-2ed7-4d60-888d-e71724368ae0",
+    "claimId": "0xe68451c8b4ab400629e23ec033325e62f975b599ed41c61237e212b2009713e3",
+    "feeEstimateAccepted": true,
+    "version5RequestRejected": true,
+    "version4RequestRejected": true,
+    "errorCode": "INVALID_ARGUMENT",
+    "errorMessage": "Service returned error 400: Invalid request body.",
+    "settlementProven": false
+  },
+  "limits": [
+    "This change meets the documented UUID requirement. It does not resolve the complete live provider failure.",
+    "No live reservation, assessment, or payment is proven by these checks."
+  ]
+}

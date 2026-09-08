@@ -10,13 +10,14 @@ import {
   hashPolicy,
   policySchema,
 } from "../../domain/src/index.ts";
-import { type CircleRunner, circleRequestId, runCircle } from "./claims.ts";
+import { type CircleRunner, runCircle } from "./claims.ts";
 export interface BudgetExecutor {
   walletId: string;
   send(
     key: string,
     binding: ControllerBinding,
     policy: BountyPolicy,
+    requestId: string,
   ): Promise<{ hash: Hex; providerId: string }>;
 }
 export function budgetArguments(input: BountyPolicy) {
@@ -44,7 +45,7 @@ export class CircleBudgetExecutor implements BudgetExecutor {
     address.parse(operator);
     address.parse(escrow);
   }
-  async send(key: string, binding: ControllerBinding, input: BountyPolicy) {
+  async send(key: string, binding: ControllerBinding, input: BountyPolicy, requestId: string) {
     const policy = policySchema.parse(input);
     if (
       binding.chainId !== 5042002 ||
@@ -61,7 +62,7 @@ export class CircleBudgetExecutor implements BudgetExecutor {
         "ALLOCATION_SCOPE",
         "The allocation differs from the approved controller policy.",
       );
-    const idempotencyKey = circleRequestId(key);
+    const idempotencyKey = z.uuid({ version: "v4" }).parse(requestId);
     const result = z
       .object({
         id: z.string().min(1),

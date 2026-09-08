@@ -26,6 +26,7 @@ export interface RecoveryRelayer {
     escrow: Hex,
     call: RecoveryCall,
     attempt: string,
+    requestId: string,
   ): Promise<{ hash: Hex; providerId: string }>;
 }
 export function dueRecovery(
@@ -291,6 +292,7 @@ export async function processRecovery(
         policy.escrow,
         call,
         request.attempt,
+        intent.id,
       );
       bytes32.parse(sent.hash);
       await c.query(

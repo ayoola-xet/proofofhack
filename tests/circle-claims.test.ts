@@ -73,7 +73,7 @@ describe("Circle claim bridge", () => {
     ];
     for (const call of recovery) {
       const key = recoveryRequestKey(call, "1");
-      await relayer.sendRecovery(key, a(9), call, "1");
+      await relayer.sendRecovery(key, a(9), call, "1", "00000000-0000-4000-8000-000000000002");
       const command = commands.at(-1) as string[];
       expect(command[command.indexOf("--amount") + 1]).toBe("0");
       expect(command[command.indexOf("--contract") + 1]).toBe(a(9));
@@ -84,13 +84,23 @@ describe("Circle claim bridge", () => {
           args: [command[3]],
         }),
       ).toBe(encodeRecoveryCall(call));
-      await expect(relayer.sendRecovery(key, a(7), call, "1")).rejects.toMatchObject({
+      await expect(
+        relayer.sendRecovery(key, a(7), call, "1", "00000000-0000-4000-8000-000000000002"),
+      ).rejects.toMatchObject({
         code: "RELAYER_SCOPE",
       });
       await expect(
-        relayer.sendRecovery(key, a(9), { ...call, bountyId: h(4) }, "1"),
+        relayer.sendRecovery(
+          key,
+          a(9),
+          { ...call, bountyId: h(4) },
+          "1",
+          "00000000-0000-4000-8000-000000000002",
+        ),
       ).rejects.toMatchObject({ code: "RELAYER_SCOPE" });
-      await expect(relayer.sendRecovery(key, a(9), call, "2")).rejects.toMatchObject({
+      await expect(
+        relayer.sendRecovery(key, a(9), call, "2", "00000000-0000-4000-8000-000000000002"),
+      ).rejects.toMatchObject({
         code: "RELAYER_SCOPE",
       });
     }
@@ -136,19 +146,28 @@ describe("Circle claim bridge", () => {
       },
     );
     const key = `${h(2)}:reserveClaim`;
-    await expect(relayer.send(key, a(9), calls[0])).rejects.toThrow("Lost provider response");
-    expect(await relayer.send(key, a(9), calls[0])).toEqual({
-      hash: h(99),
-      providerId: "provider-id",
-    });
-    expect(saved[0]).toEqual(saved[1]);
-    expect(circleRequestId(key)).toMatch(
-      /^[0-9a-f]{8}-[0-9a-f]{4}-5[0-9a-f]{3}-a[0-9a-f]{3}-[0-9a-f]{12}$/,
+    await expect(
+      relayer.send(key, a(9), calls[0], "00000000-0000-4000-8000-000000000002"),
+    ).rejects.toThrow("Lost provider response");
+    expect(await relayer.send(key, a(9), calls[0], "00000000-0000-4000-8000-000000000002")).toEqual(
+      {
+        hash: h(99),
+        providerId: "provider-id",
+      },
     );
-    await expect(relayer.send(key, a(7), calls[0])).rejects.toMatchObject({
+    expect(saved[0]).toEqual(saved[1]);
+    expect(saved[0][saved[0].indexOf("--idempotency-key") + 1]).toBe(
+      "00000000-0000-4000-8000-000000000002",
+    );
+    await expect(relayer.send(key, a(9), calls[0], circleRequestId(key))).rejects.toThrow();
+    await expect(
+      relayer.send(key, a(7), calls[0], "00000000-0000-4000-8000-000000000002"),
+    ).rejects.toMatchObject({
       code: "RELAYER_SCOPE",
     });
-    await expect(relayer.send(`${h(4)}:reserveClaim`, a(9), calls[0])).rejects.toMatchObject({
+    await expect(
+      relayer.send(`${h(4)}:reserveClaim`, a(9), calls[0], "00000000-0000-4000-8000-000000000002"),
+    ).rejects.toMatchObject({
       code: "RELAYER_SCOPE",
     });
     expect(saved).toHaveLength(2);
@@ -168,7 +187,9 @@ describe("Circle claim bridge", () => {
         state: "CONFIRMED",
       }),
     );
-    await expect(relayer.send(`${h(2)}:reserveClaim`, a(9), calls[0])).rejects.toMatchObject({
+    await expect(
+      relayer.send(`${h(2)}:reserveClaim`, a(9), calls[0], "00000000-0000-4000-8000-000000000002"),
+    ).rejects.toMatchObject({
       code: "CIRCLE_RESPONSE_MISMATCH",
     });
   });

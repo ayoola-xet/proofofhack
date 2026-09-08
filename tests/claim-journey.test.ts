@@ -508,6 +508,16 @@ it("Pays the qualifying claim once and releases the exact report after final pay
   await processClaim(pool, reader, relayer, verifierClient, releaseClient, claimId);
   await processClaim(pool, reader, relayer, verifierClient, releaseClient, claimId);
   expect(calls.size).toBe(count);
+  const savedIntent = (
+    await pool.query(
+      "select id from transaction_intents where request_json->>'claimId'=$1 limit 1",
+      [claimId],
+    )
+  ).rows[0];
+  expect(savedIntent).toBeDefined();
+  await expect(
+    pool.query("update transaction_intents set id=gen_random_uuid() where id=$1", [savedIntent.id]),
+  ).rejects.toThrow("Circle request identity is immutable");
   const after = await publicClient.readContract({
     address: asset,
     abi: erc20Abi,
@@ -562,8 +572,8 @@ it("Reconciles an external payment after a lost assessment response", async () =
   let externalHash: Hex | undefined;
   const concurrent: ClaimRelayer = {
     walletId: relayer.walletId,
-    send: async (key, escrow, call) => {
-      const result = await relayer.send(key, escrow, call);
+    send: async (key, escrow, call, requestId) => {
+      const result = await relayer.send(key, escrow, call, requestId);
       if (call.method === "submitAssessment" && !externalHash) {
         externalHash = await collectExternally();
         throw new Error("Lost assessment response after external payment");

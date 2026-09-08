@@ -11,7 +11,12 @@ import { first } from "../../api/src/context.ts";
 
 export interface ClaimRelayer {
   walletId: string;
-  send(key: string, escrow: Hex, call: ClaimCall): Promise<{ hash: Hex; providerId: string }>;
+  send(
+    key: string,
+    escrow: Hex,
+    call: ClaimCall,
+    requestId: string,
+  ): Promise<{ hash: Hex; providerId: string }>;
 }
 export type ClaimChain = BountyReader & {
   finalReceipt(hash: Hex): Promise<FundingReceipt | null>;
@@ -177,7 +182,7 @@ export async function processClaim(
             "update transaction_intents set state='SUBMITTED',updated_at=now() where id=$1",
             [intent.id],
           );
-          const sent = await relayer.send(intent.idempotency_key, policy.escrow, call);
+          const sent = await relayer.send(intent.idempotency_key, policy.escrow, call, intent.id);
           bytes32.parse(sent.hash);
           await c.query(
             "update transaction_intents set transaction_hash=$2,provider_request_id=$3,state='BROADCAST',updated_at=now() where id=$1",

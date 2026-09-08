@@ -7,7 +7,7 @@ The full submission objective remains active. Live Graph indexing and the initia
 | Package | Status | Evidence |
 | --- | --- | --- |
 | WP-01 Foundation | IN_PROGRESS | Workspace, local infrastructure, provider preflight, service start command, test groups, and pinned CI workflow created. Root lint, type checks, builds, and unit checks pass. The full integration rerun passes. CI execution remains pending. |
-| WP-02 Domain and database | IN_PROGRESS | Strict schemas, policy hashing, 34 database tables, and fifteen applied migrations. OpenAPI generation pending. |
+| WP-02 Domain and database | IN_PROGRESS | Strict schemas, policy hashing, 34 database tables, and sixteen applied migrations. OpenAPI generation pending. |
 | WP-03 Escrow | IN_PROGRESS | Contract implemented. Financial suite: 17 passing tests, including 256-run fuzz cases. Arc Testnet deployment verified. Draft approval and durable funding are connected through the API and worker. Database and failure-path tests pass. The signed-in browser funds a one-test-USDC bounty on Arc. Live claim settlement remains pending. |
 | WP-04 Budget controller | IN_PROGRESS | Controller registration, owner controls, exact policy approval, durable allocation, and cumulative limits pass local tests. Five live Privy permission checks pass. Live owner transactions and Circle allocation remain pending. |
 | WP-05 Identity and Privy | IN_PROGRESS | Live login, current role checks, and user wallet transfers work. The organization wallet has a verified Privy owner and policy. Live signing checks accept an allowed approval and reject an unapproved spender. A signed-in owner authorizes and funds a one-test-USDC bounty on Arc. |
@@ -250,3 +250,15 @@ Evidence is in `evidence/local/development-recovery.json`.
 The internal report service now uses port 4194. Fetch blocks the previous port, 4190. A TCP connection test did not detect this failure. The service supervisor now checks HTTP access through Fetch. The bounty draft test also calls the report service through its real HTTP client. It no longer replaces that connection with an in-process request.
 
 Invalid fixture signatures return a specific 400 response. They do not return a generic service failure. All 129 tests pass after these changes. Type checks, lint, and the production build pass. This evidence does not prove live claim settlement or hosted service isolation.
+
+## Circle request identity
+
+Circle contract execution requires a UUID v4 idempotency key. This key identifies retries of the same request. The previous adapter derived a version-5-shaped key from the action name. The live zero-control claim reached the provider but received `INVALID_ARGUMENT` with `Invalid request body`. The fee estimate passed. The provider transaction list returned no execute transactions before the change.
+
+Claim settlement, budget allocation, and recovery now use the saved transaction intent ID as the provider key. PostgreSQL creates that ID as UUID v4 before the provider call. The adapter rejects other UUID versions. A database trigger prevents changes to Circle intent IDs. The separate internal service owner ID keeps its existing value.
+
+This development change applies to the one rejected live reservation request. An installation with unresolved requests from the previous adapter must reconcile those requests before changing provider keys. An absent transaction hash alone does not prove that a provider request failed.
+
+Source: [Circle contract execution requirements](https://developers.circle.com/api-reference/wallets/user-controlled-wallets/create-user-transaction-contract-execution-challenge).
+
+The UUID v4 request also receives `Invalid request body`. The ID change meets the documented requirement, but it does not resolve the complete live provider failure. The original admission signature expires during diagnosis. The provider body and expired admission path still need verification. All 129 local tests, type checks, lint, and the production build pass with the immutable ID change.

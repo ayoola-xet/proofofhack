@@ -706,10 +706,21 @@ it("keeps one Circle request ID on retries and rejects a different controller", 
       },
     );
   const key = `allocation:${binding.address}:${hashPolicy(policy)}`;
-  await expect(executor.send(key, binding, policy)).rejects.toThrow("Lost Circle response");
-  expect(await executor.send(key, binding, policy)).toEqual({ hash: h(99), providerId: "test" });
+  await expect(
+    executor.send(key, binding, policy, "00000000-0000-4000-8000-000000000002"),
+  ).rejects.toThrow("Lost Circle response");
+  expect(await executor.send(key, binding, policy, "00000000-0000-4000-8000-000000000002")).toEqual(
+    { hash: h(99), providerId: "test" },
+  );
   expect(calls[0]).toEqual(calls[1]);
-  await expect(executor.send(key, { ...binding, address: a(100) }, policy)).rejects.toMatchObject({
+  await expect(
+    executor.send(
+      key,
+      { ...binding, address: a(100) },
+      policy,
+      "00000000-0000-4000-8000-000000000002",
+    ),
+  ).rejects.toMatchObject({
     code: "ALLOCATION_SCOPE",
   });
   expect(calls).toHaveLength(2);

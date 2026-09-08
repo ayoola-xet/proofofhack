@@ -62,7 +62,7 @@ export class CircleClaimRelayer implements ClaimRelayer {
     address.parse(operator);
     address.parse(escrow);
   }
-  async send(key: string, escrow: Hex, input: ClaimCall) {
+  async send(key: string, escrow: Hex, input: ClaimCall, requestId: string) {
     const call = claimCallSchema.parse(input);
     if (escrow !== this.escrow || !key.endsWith(`:${call.method}`))
       throw new DomainError(
@@ -73,19 +73,25 @@ export class CircleClaimRelayer implements ClaimRelayer {
     bytes32.parse(claimId);
     if ("claimId" in call.payload && call.payload.claimId !== claimId)
       throw new DomainError("RELAYER_SCOPE", "The transaction differs from the saved claim.");
-    return this.execute(key, circleClaimArguments(call));
+    return this.execute(requestId, circleClaimArguments(call));
   }
-  async sendRecovery(key: string, escrow: Hex, input: RecoveryCall, attempt: string) {
+  async sendRecovery(
+    key: string,
+    escrow: Hex,
+    input: RecoveryCall,
+    attempt: string,
+    requestId: string,
+  ) {
     const call = recoveryCallSchema.parse(input);
     if (escrow !== this.escrow || key !== recoveryRequestKey(call, attempt))
       throw new DomainError(
         "RELAYER_SCOPE",
         "The transaction differs from the saved recovery request.",
       );
-    return this.execute(key, [`${call.method}(bytes32)`, call.bountyId]);
+    return this.execute(requestId, [`${call.method}(bytes32)`, call.bountyId]);
   }
-  private async execute(key: string, args: string[]) {
-    const idempotencyKey = circleRequestId(key);
+  private async execute(requestId: string, args: string[]) {
+    const idempotencyKey = z.uuid({ version: "v4" }).parse(requestId);
     const result = z
       .object({
         id: z.string().min(1),

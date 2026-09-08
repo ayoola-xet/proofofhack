@@ -172,7 +172,7 @@ export async function allocateBudget(
       await c.query("update agent_actions set state='SUBMITTED',updated_at=now() where id=$1", [
         actionId,
       ]);
-      const sent = await executor.send(intent.idempotency_key, binding, policy);
+      const sent = await executor.send(intent.idempotency_key, binding, policy, intent.id);
       await c.query(
         "update transaction_intents set transaction_hash=$2,provider_request_id=$3,state='BROADCAST',updated_at=now() where id=$1",
         [intent.id, sent.hash, sent.providerId],
