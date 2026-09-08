@@ -14,8 +14,8 @@ for (const binary of ["node", "pnpm", "forge", "docker"]) {
 checks.push({ name: "Local environment file", status: existsSync(".env") ? "PRESENT" : "MISSING" });
 for (const [name, keys] of Object.entries({
   Privy: ["PRIVY_APP_ID", "PRIVY_APP_SECRET"],
-  Graph: ["GRAPH_ENDPOINT", "GRAPH_API_KEY"],
-  Circle: ["CIRCLE_WALLET_ID"],
+  Graph: ["GRAPH_ENDPOINT", "GRAPH_DEPLOYMENT_ID"],
+  Circle: ["CIRCLE_AGENT_ADDRESS"],
   Model: ["MODEL_API_KEY", "MODEL_ID"],
   Settlement: ["ESCROW_ADDRESS", "RELAYER_PRIVATE_KEY"],
 })) {

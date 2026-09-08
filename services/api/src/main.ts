@@ -3,6 +3,7 @@ import { readFile } from "node:fs/promises";
 import { createRemoteJWKSet } from "jose";
 import { z } from "zod";
 import { connectDatabase } from "../../../packages/database/src/index.ts";
+import { PrivyWalletIdentity } from "../../../packages/privy/src/wallets.ts";
 import { createApp } from "./app.ts";
 import { LocalAuthProvider, PrivyAuthProvider } from "./auth.ts";
 
@@ -35,6 +36,10 @@ const app = await createApp({
   pool,
   auth,
   appEnv,
+  walletIdentity:
+    process.env.PRIVY_APP_ID && process.env.PRIVY_APP_SECRET
+      ? new PrivyWalletIdentity(process.env.PRIVY_APP_ID, process.env.PRIVY_APP_SECRET)
+      : undefined,
   webOrigin: process.env.WEB_ORIGIN ?? "http://localhost:5173",
 });
 const close = async () => {

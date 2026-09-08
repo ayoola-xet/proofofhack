@@ -1,8 +1,8 @@
-# VulnProof build specification
+# VulnProof
 
 Version: 1.0.0  
 Created: 8 September 2026  
-Status: Ready for implementation of the defined testnet reference product. No application code exists yet.
+Status: Implementation in progress. Live Graph coverage and a Privy transfer on Arc pass checks. The full claim and settlement flow remains incomplete.
 
 VulnProof lets a protocol team fund a fixed bounty, receive a confidential claim assessment, pay a qualifying researcher, and receive the corresponding report after payment.
 
@@ -12,7 +12,7 @@ Selected sponsors: **The Graph, Arc, and Privy**. Hedera is the first alternativ
 
 The product scope has an explicit verification limit. Version 1 uses controlled accounting fixtures. These fixtures contain known test records created by the team. A trusted verifier checks those records against a fixed condition. It does not discover vulnerabilities, reproduce exploits, execute arbitrary transactions, or establish that a third-party vault is vulnerable.
 
-This is a working confidential claim-and-payment reference product. It is not a general proof-of-vulnerability engine. The verifier operator can access submitted evidence in version 1. Encryption protects the evidence in transport and storage, and access controls withhold it from the protocol team until payment. Do not describe this as zero-knowledge verification or hardware-attested execution.
+The product is a confidential claim-and-payment reference implementation. It is not a general proof-of-vulnerability engine. The verifier operator can access submitted evidence in version 1. Encryption protects the evidence in transport and storage, and access controls withhold it from the protocol team until payment. Do not describe this as zero-knowledge verification or hardware-attested execution.
 
 The product can retain the VulnProof name. Show the verification mode and fixture limitation in the claim flow and demo. A later provider can add hardware-attested execution through the defined verifier interface. That work requires a separate specification and validation.
 
@@ -35,11 +35,20 @@ Use the user's latest explicit decisions first. Use the PRD for product scope. U
 
 If documents conflict, record the conflict and resolve it before implementing the affected behavior. Never remove a financial or privacy rule to make a test pass. The older strategy PDF supplies context only. This package replaces its sponsor plan, implementation plan, verifier scope, and settlement design.
 
-## Start the build
+## Run the current implementation
 
-Give the next build agent [AGENT_BUILD_PROMPT.md](AGENT_BUILD_PROMPT.md). Ask it to build the version 1 product in this repository. The agent must read the complete package first.
+1. Install the locked dependencies with `pnpm install --frozen-lockfile`.
+2. Copy `.env.example` to `.env`. Add the Privy and Graph configuration.
+3. Start PostgreSQL with `docker compose up -d`.
+4. Apply database migrations with `pnpm db:migrate`.
+5. Start the API with `pnpm dev:api`.
+6. Start the worker with `pnpm dev:worker`.
+7. Start the web app with `pnpm dev:web`.
+8. Open `http://127.0.0.1:5173` and sign in.
 
-The specification defines local and testnet work. Creating this package does not deploy contracts, open provider accounts, spend funds, contact sponsors, or submit a hackathon entry. Mainnet release requires the separate readiness work in the build plan.
+Use separate terminals for the three services. Run `pnpm typecheck`, `pnpm test`, and `pnpm test:contracts` to check the implementation. PostgreSQL must run for the integration tests. Run `pnpm build` to build the frontend and Graph package.
+
+Read [implementation status](docs/IMPLEMENTATION_STATUS.md) for completed work and remaining release requirements. Public integration evidence is in `evidence/`. Configuration secrets stay in the ignored `.env` file.
 
 ## Working assumptions
 

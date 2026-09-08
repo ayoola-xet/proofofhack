@@ -32,6 +32,9 @@ importers:
       '@openzeppelin/merkle-tree':
         specifier: ^1.0.8
         version: 1.0.8
+      '@privy-io/chains':
+        specifier: 0.5.2
+        version: 0.5.2
       '@privy-io/node':
         specifier: ^0.34.0
         version: 0.34.0(@solana/kit@5.5.1(bufferutil@4.1.0)(typescript@7.0.2)(utf-8-validate@6.0.6))(@x402/evm@2.11.0(bufferutil@4.1.0)(typescript@7.0.2)(utf-8-validate@6.0.6))(viem@2.56.3(bufferutil@4.1.0)(typescript@7.0.2)(utf-8-validate@6.0.6)(zod@4.5.4))
@@ -117,6 +120,8 @@ importers:
 
   apps/web: {}
 
+  packages/chain: {}
+
   packages/ciphertext-store: {}
 
   packages/crypto-envelope: {}
@@ -126,6 +131,8 @@ importers:
   packages/domain: {}
 
   packages/erc4626-coverage-data: {}
+
+  packages/privy: {}
 
   packages/service-auth: {}
 
@@ -5983,7 +5990,7 @@ snapshots:
       clsx: 1.2.1
       eth-block-tracker: 7.1.0
       eth-json-rpc-filters: 6.0.1
-      eventemitter3: 5.0.1
+      eventemitter3: 5.0.4
       keccak: 3.0.4
       preact: 10.29.8
       sha.js: 2.4.12

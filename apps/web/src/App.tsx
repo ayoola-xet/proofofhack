@@ -1,4 +1,4 @@
-import { usePrivy, useWallets } from "@privy-io/react-auth";
+import { usePrivy } from "@privy-io/react-auth";
 import {
   ArrowDownLeft,
   ArrowRight,
@@ -23,6 +23,7 @@ import { Link, NavLink, Route, Routes } from "react-router-dom";
 import { formatMoney } from "../../../packages/domain/src/index.ts";
 import { type Me, type Membership, useApi, useResource } from "./api.ts";
 import { Coverage } from "./pages/Coverage.tsx";
+import { WalletPage } from "./pages/Wallet.tsx";
 
 function Brand() {
   return (
@@ -520,57 +521,6 @@ function Reports({ organization }: { organization: Membership | null }) {
             <Pill>{r.state}</Pill>
           </div>
         ))}
-      </section>
-    </>
-  );
-}
-function WalletPage() {
-  const { wallets, ready } = useWallets();
-  return (
-    <>
-      <PageTitle
-        eyebrow="YOUR PRIVY WALLETS"
-        title="Wallet"
-        description="Keep a clear record of the wallet that receives your reward."
-      />
-      <div className="notice">
-        <WalletIcon size={18} />
-        <span>
-          Arc uses USDC for transfers and gas. The two balance views must not be added together.
-        </span>
-      </div>
-      <section className="panel">
-        <State
-          loading={!ready}
-          empty={ready && !wallets.length ? "No wallet is linked yet." : undefined}
-        />
-        {wallets.map((w) => (
-          <article className="wallet-card" key={w.address}>
-            <div className="wallet-graphic">
-              <WalletIcon size={28} />
-              <span>PRIVY WALLET</span>
-            </div>
-            <div>
-              <Pill>{w.walletClientType}</Pill>
-              <h2>Your reward wallet</h2>
-              <p className="mono break">{w.address}</p>
-              <p className="muted">Current network: {w.chainId}</p>
-              <button
-                type="button"
-                className="secondary"
-                onClick={() => navigator.clipboard.writeText(w.address)}
-              >
-                Copy address
-              </button>
-            </div>
-          </article>
-        ))}
-      </section>
-      <section className="panel">
-        <h2>Transfers</h2>
-        <p className="muted">
-          Transfer controls appear after your wallet is verified by the backend.
-        </p>
       </section>
     </>
   );

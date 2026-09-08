@@ -326,3 +326,24 @@ Use HTTP 400 for malformed inputs; 401 for invalid authentication; 403 for forbi
 Required domain codes include `POLICY_IMMUTABLE`, `POLICY_NOT_APPROVED`, `RESERVATION_BUSY`, `RESERVATION_EXPIRED`, `EVIDENCE_NOT_READY`, `UNSUPPORTED_EVIDENCE`, `WRONG_NETWORK`, `WALLET_POLICY_DENIED`, `BUDGET_LIMIT_REACHED`, `SOURCE_DATA_STALE`, `REPORT_LOCKED`, `PAYMENT_NOT_FINAL`, `ALREADY_COLLECTED`, `PROVIDER_UNAVAILABLE`, and `IDEMPOTENCY_CONFLICT`.
 
 Return `404` instead of confirming another user’s private claim or report exists. Log only the request ID and sanitized code.
+
+## Implemented wallet and source routes
+
+The following routes extend the version 1 API. All paths have the `/api/v1` prefix.
+
+| Route | Purpose |
+| --- | --- |
+| `GET /coverage/sources` | List the configured source vaults. |
+| `POST /organizations/:id/coverage/refresh` | Queue a durable source update. |
+| `GET /organizations/:id/coverage-policies` | Read approved coverage policy versions. |
+| `GET /organizations/:id/recommendations` | Read current and expired coverage decisions. |
+| `POST /wallets/sync` | Verify the signed-in user's Privy embedded wallets. Reject client address input. |
+| `GET /wallets/:id/balance` | Read token and native balances at one Arc block. These are two views of the same funds. |
+| `POST /wallets/:id/transfers` | Save an exact test-USDC transfer and reserve its sender nonce. |
+| `GET /wallets/:id/transfers` | Read the wallet owner's transfer records. |
+| `POST /transfers/:id/broadcast` | Check the saved transfer against its transaction and final event. |
+| `POST /rpc/arc` | Relay allowed Arc reads and signed transactions that match saved transfer intents. |
+
+The RPC relay does not receive user private keys. A raw signed transaction supplies its own sender authorization. The relay checks that sender against a saved intent before it broadcasts. Other mutation routes require the user's current access token and an idempotency key.
+
+Wallet transfer states are AWAITING_SIGNATURE, SUBMITTED, BROADCAST, CONFIRMED, and FAILED. SUBMITTED means that the signed transaction hash is saved. It does not establish that Arc accepted the broadcast.

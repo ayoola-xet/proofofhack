@@ -1,5 +1,7 @@
-import { randomBytes, randomUUID } from "node:crypto";
-import { afterAll, beforeAll, describe, expect, it } from "vitest";
+import { createHash, randomBytes, randomUUID } from "node:crypto";
+import { encodeFunctionData, erc20Abi, type Hex, keccak256 } from "viem";
+import { privateKeyToAccount } from "viem/accounts";
+import { afterAll, beforeAll, describe, expect, it, vi } from "vitest";
 import { connectDatabase } from "../packages/database/src/index.ts";
 import { createApp } from "../services/api/src/app.ts";
 import { LocalAuthProvider } from "../services/api/src/auth.ts";
@@ -12,6 +14,14 @@ const identities = ["Owner", "Reviewer", "Other organization"].map((displayName)
 }));
 const app = await createApp({
   pool: database.pool,
+  walletIdentity: {
+    userWallets: async (subject) => [
+      {
+        providerWalletId: subject,
+        address: `0x${createHash("sha256").update(subject).digest("hex").slice(0, 40)}`,
+      },
+    ],
+  },
   auth: new LocalAuthProvider(identities, "local"),
   appEnv: "local",
   webOrigin: "http://localhost:5173",
@@ -53,6 +63,13 @@ afterAll(async () => {
       [userIds],
     );
     await c.query("delete from organizations where owner_user_id=any($1::uuid[])", [userIds]);
+    await c.query(
+      "delete from transaction_intents where wallet_id in(select id from wallets where owner_type='USER' and owner_id=any($1::uuid[]))",
+      [userIds],
+    );
+    await c.query("delete from wallets where owner_type='USER' and owner_id=any($1::uuid[])", [
+      userIds,
+    ]);
     await c.query("delete from users where id=any($1::uuid[])", [userIds]);
     await c.query("commit");
   } catch (error) {
@@ -234,6 +251,119 @@ describe("Database-backed access and retry rules", () => {
     });
     expect(coverage.statusCode).toBe(200);
     expect(coverage.json().items[0].reason).toBe("MISSING_OBSERVATION");
+  });
+  it("Stores provider-verified wallets and hides them from other users", async () => {
+    const request = {
+      method: "POST" as const,
+      url: "/api/v1/wallets/sync",
+      headers: headers(),
+      payload: {},
+    };
+    const response = await app.inject(request);
+    expect(response.statusCode).toBe(200);
+    const wallet = response.json().items[0];
+    expect((await app.inject(request)).json().items[0].id).toBe(wallet.id);
+    expect(
+      (await app.inject({ url: `/api/v1/wallets/${wallet.id}/transfers`, headers: headers(2) }))
+        .statusCode,
+    ).toBe(404);
+    expect(
+      (
+        await app.inject({
+          ...request,
+          headers: headers(),
+          payload: { address: "0x0000000000000000000000000000000000000001" },
+        })
+      ).statusCode,
+    ).toBe(400);
+  });
+  it("Rejects unsupported and unsigned relay requests without provider calls", async () => {
+    for (const method of [
+      "personal_sign",
+      "eth_sendTransaction",
+      "eth_sendRawTransaction",
+      "debug_traceCall",
+    ]) {
+      const response = await app.inject({
+        method: "POST",
+        url: "/api/v1/rpc/arc",
+        payload: { jsonrpc: "2.0", id: 1, method, params: [] },
+      });
+      expect(response.statusCode).toBe(200);
+      expect(response.json().error.code).toBe(-32000);
+    }
+  });
+  it("Saves a signed transfer hash before an uncertain provider response", async () => {
+    const account = privateKeyToAccount(`0x${randomBytes(32).toString("hex")}` as Hex);
+    const asset = "0x3600000000000000000000000000000000000000";
+    const data = encodeFunctionData({
+      abi: erc20Abi,
+      functionName: "transfer",
+      args: [account.address, 10000n],
+    });
+    const walletId = randomUUID(),
+      intentId = randomUUID();
+    await database.pool.query(
+      "insert into wallets(id,provider,provider_wallet_id,owner_type,owner_id,chain_id,address) values($1,'PRIVY',$2,'USER',$3,'5042002',$4)",
+      [walletId, `test:${walletId}`, userIds[0], account.address.toLowerCase()],
+    );
+    const request = {
+      from: account.address.toLowerCase(),
+      to: asset,
+      data,
+      nonce: 0,
+      amount: "10000",
+      recipient: account.address.toLowerCase(),
+      chainId: 5042002,
+      value: "0",
+    };
+    await database.pool.query(
+      "insert into transaction_intents(id,chain_id,provider,wallet_id,purpose,request_hash,idempotency_key,sender_nonce,state,request_json) values($1,'5042002','PRIVY',$2,'USER_TRANSFER','test',$3,0,'AWAITING_SIGNATURE',$4)",
+      [intentId, walletId, randomUUID(), JSON.stringify(request)],
+    );
+    const raw = await account.signTransaction({
+      chainId: 5042002,
+      to: asset,
+      data,
+      nonce: 0,
+      value: 0n,
+      gas: 100000n,
+      maxFeePerGas: 1000000000n,
+      maxPriorityFeePerGas: 100000000n,
+    });
+    const fetch = vi.spyOn(globalThis, "fetch").mockRejectedValue(new Error("Connection lost"));
+    try {
+      const response = await app.inject({
+        method: "POST",
+        url: "/api/v1/rpc/arc",
+        payload: { jsonrpc: "2.0", id: 1, method: "eth_sendRawTransaction", params: [raw] },
+      });
+      expect(response.json().error.code).toBe(-32000);
+      const stored = (
+        await database.pool.query(
+          "select state,transaction_hash from transaction_intents where id=$1",
+          [intentId],
+        )
+      ).rows[0];
+      expect(stored).toEqual({ state: "SUBMITTED", transaction_hash: keccak256(raw) });
+      fetch.mockResolvedValue(
+        new Response(JSON.stringify({ jsonrpc: "2.0", id: 1, result: keccak256(raw) }), {
+          status: 200,
+        }),
+      );
+      const retry = await app.inject({
+        method: "POST",
+        url: "/api/v1/rpc/arc",
+        payload: { jsonrpc: "2.0", id: 1, method: "eth_sendRawTransaction", params: [raw] },
+      });
+      expect(retry.json().result).toBe(keccak256(raw));
+      expect(
+        (await database.pool.query("select state from transaction_intents where id=$1", [intentId]))
+          .rows[0].state,
+      ).toBe("BROADCAST");
+    } finally {
+      fetch.mockRestore();
+    }
   });
   it("Uses bounded pagination", async () => {
     const page = await app.inject({

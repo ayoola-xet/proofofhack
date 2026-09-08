@@ -1,0 +1,20 @@
+{
+  "capturedAt": "2026-09-08T03:50:51.629Z",
+  "provider": "Privy React SDK",
+  "network": "Arc Testnet",
+  "chainId": 5042002,
+  "from": "0xcef31a2417a0edce2f4082bda2cb64b5a5b9ba9b",
+  "recipient": "0xb0ec625a625556d999d271c0addd441dac7b1dcc",
+  "asset": "0x3600000000000000000000000000000000000000",
+  "amountBaseUnits": "10000",
+  "decimals": 6,
+  "transactionHash": "0x40db171697dbaa32160e5816531b1ff302d6baabd268f89dfebf15db77a93a1a",
+  "blockNumber": "61015171",
+  "blockHash": "0x136d371d57f60fe6c802bc4644902fdc77cd2b723d7c289186a47a2e9917e73f",
+  "finalizedHead": "61015260",
+  "gasUsed": "48938",
+  "effectiveGasPrice": "25000000000",
+  "exactTransferEvent": true,
+  "canonicalBlock": true,
+  "status": "CONFIRMED"
+}

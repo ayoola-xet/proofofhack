@@ -10,7 +10,7 @@ The full submission objective remains active. Live Graph indexing and the initia
 | WP-02 Domain and database | IN_PROGRESS | Strict schemas, policy hashing, 27 database tables, and two applied migrations. OpenAPI generation pending. |
 | WP-03 Escrow | IN_PROGRESS | Contract implemented. Financial suite: 17 passing tests, including 256-run fuzz cases. Arc Testnet deployment verified. API integration pending. |
 | WP-04 Budget controller | IN_PROGRESS | Exact policy approval and cumulative limits implemented and tested locally. Live Circle path pending. |
-| WP-05 Identity and Privy | IN_PROGRESS | VulnProof development app created. Live login UI opens. Server token verification, roles, and transactional retries implemented. Wallet policies and transfers pending. |
+| WP-05 Identity and Privy | IN_PROGRESS | VulnProof development app created. Live login UI opens. Server token verification, roles, and transactional retries implemented. The user reward wallet is verified. A live outgoing transfer passes finality and exact-event checks. Organization wallet policies remain pending. |
 | WP-06 Graph data | IN_PROGRESS | One shared schema indexes three live vaults. The Studio query returns fresh observations without indexing errors. |
 | WP-07 Coverage intelligence | IN_PROGRESS | Deterministic coverage calculations, source checks, and exact approved policy selection pass tests. Durable database updates and rule-based explanations work. Model explanations are pending. |
 | WP-08 Confidential service | IN_PROGRESS | Fixed fixture assessment, atomic encrypted file storage, service tokens, and payment-gated report access implemented. Separate service deployment pending. |
@@ -37,7 +37,7 @@ Privy app configuration is stored in the ignored .env file with mode 0600. Graph
 
 ## Current verification
 
-- Pass 36 TypeScript tests. These tests include real PostgreSQL transactions, concurrent retries, current role checks, encrypted storage integrity, and exact payment gating.
+- Pass 41 TypeScript tests. These tests include real PostgreSQL transactions, concurrent retries, current role checks, encrypted storage integrity, and exact payment gating.
 - Pass 17 Solidity tests from the contract stage.
 - Pass TypeScript type checking.
 - Pass the first production frontend build. Rebuild after later changes.
@@ -66,3 +66,13 @@ The frontend runs at http://127.0.0.1:5173. The API uses port 4187. Another exis
 The signed-in demo workspace registers Sky sDAI, Sky sUSDS, and Ethena sUSDe. The owner approved a minimum reward of one test USDC per vault. The worker stores live observations and coverage decisions. All three decisions correctly stop funding because no exact bounty policy has approval.
 
 The PostgreSQL job queue runs a source update each minute. Vault registration and policy approval also create durable update requests. Provider failures invalidate saved funding actions. Concurrent delivery keeps one observation and one equivalent current decision.
+
+## Reward wallet workflow
+
+The user created a Privy embedded wallet through the application. The backend checked the provider user record before it saved the wallet. Circle sent two test USDC to that wallet. The user wallet then sent 0.01 test USDC back to the Circle wallet through Privy.
+
+The final transfer hash is `0x40db171697dbaa32160e5816531b1ff302d6baabd268f89dfebf15db77a93a1a`. Evidence is in `evidence/privy/outgoing-transfer.json`. This is a wallet transfer. It is not a bounty payout or a report-release test.
+
+Direct Arc RPC calls fail in the user's browser. The app uses a bounded Arc RPC relay. Read calls use an allowlist. A signed transfer must match a saved sender, nonce, chain, token, and calldata. The relay saves its hash before broadcast. A lost provider response leaves the intent in SUBMITTED state. The app can check the saved hash again. It does not create a new transfer to recover from that failure.
+
+A final transaction requires a canonical block, the finalized head, and the exact USDC Transfer event. Organization wallets, provider spending policies, bounty funding, and confidential settlement still need implementation.

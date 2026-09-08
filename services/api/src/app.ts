@@ -5,16 +5,20 @@ import Fastify from "fastify";
 import type { Pool } from "pg";
 import { z } from "zod";
 import { DomainError, organizationHash, role, uint } from "../../../packages/domain/src/index.ts";
+import type { WalletIdentityProvider } from "../../../packages/privy/src/wallets.ts";
 import type { AuthProvider } from "./auth.ts";
 import { expectedVersion, first, idParams, member, mutate, pageParams } from "./context.ts";
 import { registerCoverageRoutes } from "./coverage-routes.ts";
 import { registerReadRoutes } from "./read-routes.ts";
+import { registerRpcRoutes } from "./rpc-routes.ts";
+import { registerWalletRoutes } from "./wallet-routes.ts";
 
 export type ApiOptions = {
   pool: Pool;
   auth: AuthProvider;
   appEnv: "local" | "arc-testnet";
   webOrigin: string;
+  walletIdentity?: WalletIdentityProvider;
 };
 const nameSchema = z.string().trim().min(2).max(80);
 export async function createApp(options: ApiOptions) {
@@ -37,7 +41,11 @@ export async function createApp(options: ApiOptions) {
       .header("Cache-Control", "no-store")
       .header("X-Content-Type-Options", "nosniff")
       .header("X-Request-Id", request.id);
-    if (request.method === "OPTIONS" || request.url.split("?")[0] === "/api/v1/health") return;
+    if (
+      request.method === "OPTIONS" ||
+      ["/api/v1/health", "/api/v1/rpc/arc"].includes(request.url.split("?")[0])
+    )
+      return;
     const header = request.headers.authorization;
     if (!header?.startsWith("Bearer ") || header.length > 8192)
       throw new DomainError("UNAUTHENTICATED", "Sign in to continue.", 401);
@@ -303,7 +311,9 @@ export async function createApp(options: ApiOptions) {
       nextCursor: rows.length > page.limit ? rows[page.limit - 1].id : null,
     };
   });
+  registerRpcRoutes(app, pool);
   registerReadRoutes(app, pool);
   registerCoverageRoutes(app, pool);
+  registerWalletRoutes(app, pool, options.walletIdentity);
   return app;
 }

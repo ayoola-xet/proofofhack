@@ -1,3 +1,4 @@
+import { addRpcUrlOverrideToChain } from "@privy-io/chains";
 import { PrivyProvider } from "@privy-io/react-auth";
 import React from "react";
 import { createRoot } from "react-dom/client";
@@ -6,14 +7,17 @@ import { defineChain } from "viem";
 import { App } from "./App.tsx";
 import "./styles.css";
 
-const arc = defineChain({
-  id: 5042002,
-  name: "Arc Testnet",
-  nativeCurrency: { name: "USDC", symbol: "USDC", decimals: 18 },
-  rpcUrls: { default: { http: ["https://rpc.testnet.arc.io"] } },
-  blockExplorers: { default: { name: "Arcscan", url: "https://testnet.arcscan.app" } },
-  testnet: true,
-});
+const arc = addRpcUrlOverrideToChain(
+  defineChain({
+    id: 5042002,
+    name: "Arc Testnet",
+    nativeCurrency: { name: "USDC", symbol: "USDC", decimals: 18 },
+    rpcUrls: { default: { http: ["https://rpc.testnet.arc.io"] } },
+    blockExplorers: { default: { name: "Arcscan", url: "https://testnet.arcscan.app" } },
+    testnet: true,
+  }),
+  `${window.location.origin}/api/v1/rpc/arc`,
+);
 const root = document.getElementById("root");
 if (!root) throw new Error("The application root is missing.");
 const appId = import.meta.env.VITE_PRIVY_APP_ID;

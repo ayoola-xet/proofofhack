@@ -6,6 +6,6 @@
   "exports": "./src/client.ts",
   "scripts": {
     "codegen": "graph codegen subgraph.yaml",
-    "build": "graph build subgraph.yaml"
+    "build": "graph codegen subgraph.yaml && graph build subgraph.yaml"
   }
 }
