@@ -59,6 +59,8 @@ const bountyServices =
       }
     : undefined;
 const app = await createApp({
+  assistantModel:
+    process.env.MODEL_API_KEY || process.env.OPENAI_API_KEY ? process.env.MODEL_ID : undefined,
   bountyServices,
   claimServices: bountyServices
     ? {

@@ -5,6 +5,8 @@ import { address } from "../../../packages/domain/src/index.ts";
 import { PrivyTreasury } from "../../../packages/privy/src/treasury.ts";
 import { InternalClient } from "../../../packages/service-auth/src/http.ts";
 import { loadTestnetSecret } from "../../../packages/service-config/src/index.ts";
+import { configuredExplanationProvider } from "../../assistant/src/provider.ts";
+import { startAssistantJobs } from "./assistant-jobs.ts";
 import { startClaimJobs } from "./claim-jobs.ts";
 import { startTreasuryJobs } from "./treasury-jobs.ts";
 import "dotenv/config";
@@ -73,7 +75,9 @@ if (process.env.CIRCLE_AGENT_ADDRESS && process.env.ESCROW_ADDRESS) {
     ),
   );
 }
-process.stdout.write("Configured coverage, treasury, and claim workers are ready.\n");
+const explanationProvider = configuredExplanationProvider();
+if (explanationProvider) await startAssistantJobs(boss, pool, explanationProvider);
+process.stdout.write("Configured coverage, treasury, claim, and assistant workers are ready.\n");
 for (const signal of ["SIGINT", "SIGTERM"] as const)
   process.once(signal, async () => {
     await boss.stop({ graceful: true, timeout: 20_000 });

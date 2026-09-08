@@ -2,6 +2,7 @@ import { CircleHelp, RefreshCw } from "lucide-react";
 import { type FormEvent, useEffect, useState } from "react";
 import { formatMoney, parseMoney } from "../../../../packages/domain/src/index.ts";
 import { type Membership, useApi, useResource } from "../api.ts";
+import { CoverageAssistant } from "./CoverageAssistant.tsx";
 
 type Vault = {
   id: string;
@@ -280,6 +281,7 @@ function CoverageWorkspace({ organization }: { organization: Membership | null }
               </form>
             </div>
           )}
+          <CoverageAssistant organizationId={organization.organization_id} />
           <div className="panel">
             <div className="section-heading">
               <h2>Coverage decisions</h2>
@@ -293,8 +295,8 @@ function CoverageWorkspace({ organization }: { organization: Membership | null }
                   <span className="pill">{labels[r.status] ?? r.status}</span>
                   <p>{r.explanation}</p>
                   <small>
-                    Valid until {new Date(r.expires_at).toLocaleString()}. No model explanation is
-                    attached.
+                    Valid until {new Date(r.expires_at).toLocaleString()}. This calculation controls
+                    policy selection.
                   </small>
                 </article>
               ))

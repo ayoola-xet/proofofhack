@@ -181,6 +181,32 @@ export const recommendations = pgTable("recommendations", {
   status: text("status").notNull(),
   ...dates(),
 });
+export const assistantRuns = pgTable(
+  "assistant_runs",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    organizationId: uuid("organization_id")
+      .notNull()
+      .references(() => organizations.id),
+    requestedBy: uuid("requested_by")
+      .notNull()
+      .references(() => users.id),
+    question: text("question").notNull(),
+    snapshot: json("snapshot_json").notNull(),
+    inputHash: text("input_hash").notNull(),
+    promptVersion: text("prompt_version").notNull(),
+    requestedModel: text("requested_model").notNull(),
+    state: text("state").notNull().default("QUEUED"),
+    attempts: integer("attempts").notNull().default(0),
+    answer: json("answer_json"),
+    responseId: text("response_id"),
+    responseModel: text("response_model"),
+    usage: json("usage_json"),
+    errorCode: text("error_code"),
+    ...dates(),
+  },
+  (t) => [index("assistant_runs_organization").on(t.organizationId, t.createdAt)],
+);
 export const fixtureManifests = pgTable(
   "fixture_manifests",
   {

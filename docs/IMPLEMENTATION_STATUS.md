@@ -7,12 +7,12 @@ The full submission objective remains active. Live Graph indexing and the initia
 | Package | Status | Evidence |
 | --- | --- | --- |
 | WP-01 Foundation | IN_PROGRESS | Workspace, local infrastructure, and provider preflight created. Type check passes. |
-| WP-02 Domain and database | IN_PROGRESS | Strict schemas, policy hashing, 31 database tables, and nine applied migrations. OpenAPI generation pending. |
+| WP-02 Domain and database | IN_PROGRESS | Strict schemas, policy hashing, 32 database tables, and ten applied migrations. OpenAPI generation pending. |
 | WP-03 Escrow | IN_PROGRESS | Contract implemented. Financial suite: 17 passing tests, including 256-run fuzz cases. Arc Testnet deployment verified. Draft approval and durable funding are connected through the API and worker. Database and failure-path tests pass. The live bounty funding test remains pending. |
 | WP-04 Budget controller | IN_PROGRESS | Exact policy approval and cumulative limits implemented and tested locally. Live Circle path pending. |
 | WP-05 Identity and Privy | IN_PROGRESS | Live login, current role checks, and user wallet transfers work. The organization wallet has a verified Privy owner and policy. Live signing checks accept an allowed approval and reject an unapproved spender. Bounty funding remains pending. |
 | WP-06 Graph data | IN_PROGRESS | One shared schema indexes three live vaults. The Studio query returns fresh observations without indexing errors. |
-| WP-07 Coverage intelligence | IN_PROGRESS | Deterministic coverage calculations, source checks, and exact approved policy selection pass tests. Durable database updates and rule-based explanations work. Model explanations are pending. |
+| WP-07 Coverage intelligence | IN_PROGRESS | Deterministic coverage calculations, source checks, and exact approved policy selection pass tests. Durable database updates and rule-based explanations work. The model adapter, saved requests, current-source checks, and source validation pass local tests. Live model verification needs credentials. |
 | WP-08 Confidential service | IN_PROGRESS | Fixed fixture assessment, atomic encrypted file storage, service tokens, and payment-gated report access implemented. The report service runs separately on port 4190 and creates organization keys. Encrypted fixture admission, signed assessment, and separate report download services pass a full local chain test. Live operation remains pending. |
 | WP-09 Settlement worker | IN_PROGRESS | Funding confirms the canonical Arc receipt and exact approval, funding, and USDC transfer events. It saves signed bytes before broadcast and resumes the same intent after a lost response. The claim settlement core passes a local chain test. The queue and Circle execution connection are configured. Local tests also reconcile a payment collected outside the worker. The live claim test remains pending. |
 | WP-10 Circle agent | IN_PROGRESS | Circle CLI 1.0.0 is authenticated. The agent wallet received test USDC and deployed the escrow. Bounded funding remains pending. |
@@ -116,7 +116,7 @@ The API accepts only ciphertext for a claim. It binds the file hash, size, verif
 
 The verifier saves two separately encrypted report copies before it signs an assessment. The researcher report service checks claim ownership. The organization report service checks current membership and final payment. An organization role does not grant early access to the organization copy.
 
-Three integration tests use an isolated database and a local chain. They cover malformed evidence, both nonqualifying controls, a qualifying payment, report integrity, role removal, and a report service failure after payment. A retry releases the report without another payment. All 65 TypeScript tests pass. The live Circle claim test and browser claim test remain pending.
+Three integration tests use an isolated database and a local chain. They cover malformed evidence, both nonqualifying controls, a qualifying payment, report integrity, role removal, and a report service failure after payment. A retry releases the report without another payment. All 72 TypeScript tests pass. The live Circle claim test and browser claim test remain pending.
 
 ## Claim worker and browser controls
 
@@ -129,3 +129,15 @@ The browser accepts the downloaded synthetic case bundle. The user selects one c
 The reports page shows personal claim status and separate researcher report downloads. Organization report downloads require final payment. The production frontend build passes. Live browser checks remain pending while the Mac is locked.
 
 The local verifier listens on port 4191. Researcher reports use port 4192. The organization report service uses port 4193. The internal report release service remains on port 4190. These local endpoints are not a hosted submission.
+
+## Coverage assistant
+
+The coverage page accepts questions about registered vault funding and source freshness. Each request saves its question, source snapshot, fixed calculation, prompt version, model ID, and input hash. The worker uses the OpenAI Responses API with a strict JSON output schema. It supplies no tools. It sends no report, evidence file, wallet key, or organization name.
+
+The server checks every returned decision, amount, and source reference against the saved snapshot. It rejects changed calculations and invented citations. Model prose cannot add numeric amounts or links. The interface renders amounts and source links from checked fields. The model cannot create or execute a funding action.
+
+The worker checks current source and funding records before and after generation. A changed record makes the answer stale. The read API checks freshness again. Current organization membership is required for each read. Request terms and completed answers are immutable in the database.
+
+Seven new tests use a simulated model provider and an isolated database. They cover immutable requests, malicious metadata removal, exact large numbers, access control, rejected model output, provider failure, changed source records, removed members, and the Responses API request shape. These are local integration checks. They do not prove live model behavior or sponsor qualification.
+
+The live model gate remains incomplete. `MODEL_API_KEY` and `MODEL_ID` are empty in the local configuration. The interface states that the model is not configured. The browser remains unavailable while the Mac is locked.

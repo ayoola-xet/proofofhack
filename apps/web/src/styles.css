@@ -1118,3 +1118,12 @@ code {
 .claim-form { display: grid; gap: 1rem; margin-top: 1.5rem; padding-top: 1.5rem; border-top: 1px solid var(--border, #e1e5e9); }
 .claim-form label { display: grid; gap: .5rem; font-size: .85rem; }
 .claim-form input, .claim-form select { min-width: 0; width: 100%; }
+
+.assistant-question { display: grid; gap: .75rem; margin: 1.5rem 0; }
+.assistant-question label, .assistant-history { display: grid; gap: .5rem; }
+.assistant-question textarea { width: 100%; min-height: 6rem; padding: .75rem; resize: vertical; font: inherit; border: 1px solid #bcc8d4; border-radius: .5rem; }
+.assistant-question button { justify-self: start; }
+.assistant-answer { margin-top: 1.5rem; }
+.assistant-source { display: grid; gap: .5rem; padding: 1rem 0; overflow-wrap: anywhere; }
+.assistant-source p { margin: 0; }
+.assistant-history select { min-width: 0; width: 100%; }

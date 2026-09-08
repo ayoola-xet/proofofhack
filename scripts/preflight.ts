@@ -17,7 +17,7 @@ for (const [name, keys] of Object.entries({
   Graph: ["GRAPH_ENDPOINT", "GRAPH_DEPLOYMENT_ID"],
   Circle: ["CIRCLE_AGENT_ADDRESS"],
   Model: ["MODEL_API_KEY", "MODEL_ID"],
-  Settlement: ["ESCROW_ADDRESS", "RELAYER_PRIVATE_KEY"],
+  Settlement: ["ESCROW_ADDRESS", "CIRCLE_AGENT_ADDRESS", "SERVICE_PUBLIC_CONFIG"],
 })) {
   checks.push({
     name,

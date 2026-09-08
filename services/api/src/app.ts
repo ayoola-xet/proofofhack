@@ -6,6 +6,7 @@ import type { Pool } from "pg";
 import { z } from "zod";
 import { DomainError, organizationHash, role, uint } from "../../../packages/domain/src/index.ts";
 import type { WalletIdentityProvider } from "../../../packages/privy/src/wallets.ts";
+import { registerAssistantRoutes } from "./assistant-routes.ts";
 import type { AuthProvider } from "./auth.ts";
 import { type BountyServices, registerBountyRoutes } from "./bounty-routes.ts";
 import { type ClaimServices, registerClaimRoutes } from "./claim-routes.ts";
@@ -25,6 +26,7 @@ export type ApiOptions = {
   walletIdentity?: WalletIdentityProvider;
   bountyServices?: BountyServices;
   claimServices?: ClaimServices;
+  assistantModel?: string;
 };
 const nameSchema = z.string().trim().min(2).max(80);
 export async function createApp(options: ApiOptions) {
@@ -324,6 +326,7 @@ export async function createApp(options: ApiOptions) {
   registerFundingRoutes(app, pool, options.bountyServices?.escrow, options.walletIdentity);
   registerClaimRoutes(app, pool, options.claimServices, options.walletIdentity);
   registerCoverageRoutes(app, pool);
+  registerAssistantRoutes(app, pool, options.assistantModel);
   registerWalletRoutes(app, pool, options.walletIdentity);
   return app;
 }
