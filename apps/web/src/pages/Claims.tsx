@@ -6,6 +6,7 @@ import { canonicalJson, seal } from "../../../../packages/crypto-envelope/src/in
 import { fixtureSchema, MAX_EVIDENCE_BYTES } from "../../../../packages/domain/src/index.ts";
 import { verifyReportBytes } from "../../../../packages/report-integrity/src/index.ts";
 import { useApi, useResource, type Wallet } from "../api.ts";
+import { ReportRetention, reportIsRetained } from "./ReportRetention.tsx";
 
 type Fixture = ReturnType<typeof fixtureSchema.parse>;
 type Attempt = {
@@ -267,6 +268,10 @@ export function MyClaims() {
       report_id: string | null;
       report_hash: string | null;
       chain_state: string;
+      report_state: string;
+      delete_after: string | null;
+      retention_hold: boolean | null;
+      deleted_at: string | null;
     }[];
   }>("/claims/me");
   useEffect(() => {
@@ -295,14 +300,19 @@ export function MyClaims() {
             </strong>
             <small className="mono">{claim.claim_id.slice(0, 14)}…</small>
             <small>{claim.job_state.replaceAll("_", " ")}</small>
+            {claim.report_id && (
+              <ReportRetention report={{ ...claim, state: claim.report_state }} />
+            )}
           </div>
-          {claim.report_id && claim.report_hash && (
-            <ReportDownload
-              id={claim.report_id}
-              mode="researcher"
-              expectedHash={claim.report_hash}
-            />
-          )}
+          {claim.report_id &&
+            claim.report_hash &&
+            reportIsRetained({ ...claim, state: claim.report_state }) && (
+              <ReportDownload
+                id={claim.report_id}
+                mode="researcher"
+                expectedHash={claim.report_hash}
+              />
+            )}
         </div>
       ))}
     </section>

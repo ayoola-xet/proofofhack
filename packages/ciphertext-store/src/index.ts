@@ -1,6 +1,6 @@
 import { randomUUID } from "node:crypto";
 import { constants } from "node:fs";
-import { link, mkdir, open, unlink } from "node:fs/promises";
+import { link, lstat, mkdir, open, opendir, realpath, unlink } from "node:fs/promises";
 import { resolve } from "node:path";
 import { keccak256 } from "viem";
 import { z } from "zod";
@@ -10,6 +10,11 @@ export interface CiphertextStore {
   put(id: string, ciphertext: Uint8Array, expectedHash: string): Promise<void>;
   read(id: string, expectedHash: string): Promise<Uint8Array>;
   remove(id: string): Promise<void>;
+}
+export interface ManagedCiphertextStore extends CiphertextStore {
+  location(): Promise<string>;
+  inventory(): AsyncIterable<{ id: string; kind: "sealed" | "pending"; modifiedAt: Date }>;
+  removePending(id: string): Promise<void>;
 }
 
 // Mount separate evidence and report directories with service-specific permissions.
@@ -24,6 +29,10 @@ export class FileCiphertextStore implements CiphertextStore {
   }
   private path(id: string) {
     return resolve(this.root, `${z.uuid().parse(id)}.sealed`);
+  }
+  async location() {
+    await mkdir(this.root, { recursive: true, mode: 0o700 });
+    return realpath(this.root);
   }
   async put(id: string, ciphertext: Uint8Array, expectedHash: string) {
     const file = this.path(id);
@@ -85,10 +94,42 @@ export class FileCiphertextStore implements CiphertextStore {
     }
   }
   async remove(id: string) {
+    await this.removePath(this.path(id));
+  }
+  async removePending(id: string) {
+    await this.removePath(resolve(this.root, `${z.uuid().parse(id)}.pending`));
+  }
+  private async removePath(path: string) {
     try {
-      await unlink(this.path(id));
+      await unlink(path);
+      const directory = await open(this.root, constants.O_RDONLY);
+      try {
+        await directory.sync();
+      } finally {
+        await directory.close();
+      }
     } catch (error) {
       if ((error as NodeJS.ErrnoException).code !== "ENOENT") throw error;
+    }
+  }
+  async *inventory() {
+    let directory: Awaited<ReturnType<typeof opendir>>;
+    try {
+      directory = await opendir(this.root);
+    } catch (error) {
+      if ((error as NodeJS.ErrnoException).code === "ENOENT") return;
+      throw error;
+    }
+    for await (const entry of directory) {
+      if (!entry.isFile() && !entry.isSymbolicLink()) continue;
+      const match = /^(.+)\.(sealed|pending)$/.exec(entry.name);
+      if (!match || !z.uuid().safeParse(match[1]).success) continue;
+      try {
+        const stat = await lstat(resolve(this.root, entry.name));
+        yield { id: match[1], kind: match[2] as "sealed" | "pending", modifiedAt: stat.mtime };
+      } catch (error) {
+        if ((error as NodeJS.ErrnoException).code !== "ENOENT") throw error;
+      }
     }
   }
 }

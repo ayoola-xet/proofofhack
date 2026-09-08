@@ -287,6 +287,10 @@ export const uploads = pgTable(
     byteLength: integer("byte_length").notNull(),
     state: text("state").notNull(),
     expiresAt: timestamp("expires_at", { withTimezone: true }).notNull(),
+    deleteAfter: timestamp("delete_after", { withTimezone: true }).default(
+      sql`now() + interval '24 hours'`,
+    ),
+    deletedAt: timestamp("deleted_at", { withTimezone: true }),
     ...dates(),
   },
   (t) => [check("upload_size", sql`${t.byteLength} > 0 and ${t.byteLength} <= 262192`)],
@@ -384,6 +388,8 @@ export const reports = pgTable(
     paidEventRef: uuid("paid_event_ref").references(() => chainEvents.id),
     availableAt: timestamp("available_at", { withTimezone: true }),
     deleteAfter: timestamp("delete_after", { withTimezone: true }).notNull(),
+    retentionHold: boolean("retention_hold").notNull().default(false),
+    deletedAt: timestamp("deleted_at", { withTimezone: true }),
     ...dates(),
   },
   (t) => [

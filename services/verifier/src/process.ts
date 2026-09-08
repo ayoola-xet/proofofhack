@@ -3,6 +3,7 @@ import type { Pool, PoolClient } from "pg";
 import { type Hex, keccak256, toHex } from "viem";
 import { privateKeyToAccount } from "viem/accounts";
 import type { BountyReader } from "../../../packages/chain/src/bounty-reader.ts";
+import { protectCiphertextWrite } from "../../../packages/ciphertext-store/src/coordination.ts";
 import type { CiphertextStore } from "../../../packages/ciphertext-store/src/index.ts";
 import {
   canonicalJson,
@@ -171,6 +172,7 @@ export class FixtureVerifier {
     const c = await this.pool.connect();
     try {
       await c.query("begin");
+      await protectCiphertextWrite(c);
       await c.query("select pg_advisory_xact_lock(hashtextextended($1,0))", [
         `verifier:${bytes32.parse(claimId)}`,
       ]);
@@ -227,7 +229,7 @@ export class FixtureVerifier {
         reportBytes.fill(0);
       }
       await c.query(
-        "insert into reports(claim_id,report_hash,ciphertext_object_key,ciphertext_hash,researcher_object_key,researcher_ciphertext_hash,researcher_key_id,wrapped_key_ref,recipient_key_id,state,delete_after) values($1,$2,$3,$4,$5,$6,$7,$8,$9,'SEALED',now()+interval '7 days')",
+        "insert into reports(claim_id,report_hash,ciphertext_object_key,ciphertext_hash,researcher_object_key,researcher_ciphertext_hash,researcher_key_id,wrapped_key_ref,recipient_key_id,state,delete_after,retention_hold) values($1,$2,$3,$4,$5,$6,$7,$8,$9,'SEALED',now()+interval '7 days',$10)",
         [
           claimId,
           assessment.reportHash,
@@ -238,6 +240,7 @@ export class FixtureVerifier {
           keccak256(toHex(this.options.researcherKeys.publicKey)),
           hashCanonical(organization.wrappedKey),
           policy.reportRecipientKeyId,
+          assessment.report.outcome === "QUALIFIES",
         ],
       );
       const qualifies = assessment.report.outcome === "QUALIFIES";

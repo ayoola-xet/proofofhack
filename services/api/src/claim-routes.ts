@@ -3,6 +3,7 @@ import type { FastifyInstance } from "fastify";
 import type { Pool } from "pg";
 import { keccak256 } from "viem";
 import { z } from "zod";
+import { protectCiphertextWrite } from "../../../packages/ciphertext-store/src/coordination.ts";
 import type { CiphertextStore } from "../../../packages/ciphertext-store/src/index.ts";
 import { bytes32, DomainError, MAX_EVIDENCE_BYTES } from "../../../packages/domain/src/index.ts";
 import type { WalletIdentityProvider } from "../../../packages/privy/src/wallets.ts";
@@ -140,6 +141,7 @@ export function registerClaimRoutes(
       c = await pool.connect();
     try {
       await c.query("begin");
+      await protectCiphertextWrite(c);
       const row = await first(
         c,
         "select u.*,c.claim_id,c.job_state from uploads u join claims c on c.upload_id=u.id where u.id=$1 and u.owner_user_id=$2 for update of u,c",
@@ -158,7 +160,10 @@ export function registerClaimRoutes(
       if (row.state !== "UPLOADING" || Date.now() - row.created_at.getTime() > 900000)
         throw new DomainError("UPLOAD_EXPIRED", "Prepare a new encrypted upload.", 410);
       await services.evidence.put(row.object_key, data, hash);
-      await c.query("update uploads set state='UPLOADED',updated_at=now() where id=$1", [id]);
+      await c.query(
+        "update uploads set state='UPLOADED',delete_after=null,updated_at=now() where id=$1",
+        [id],
+      );
       await c.query(
         "update claims set job_state='ADMISSION_PENDING',updated_at=now() where claim_id=$1",
         [row.claim_id],
@@ -179,7 +184,7 @@ export function registerClaimRoutes(
   app.get("/api/v1/claims/me", async (request) => ({
     items: (
       await pool.query(
-        "select c.claim_id,c.bounty_id,c.job_state,c.claimant_address,c.reservation_expiry,r.id as report_id,r.state as report_state,r.report_hash,a.outcome,b.chain_state from claims c join bounties b on b.bounty_id=c.bounty_id left join reports r on r.claim_id=c.claim_id left join assessments a on a.claim_id=c.claim_id where c.researcher_user_id=$1 order by c.created_at desc limit 100",
+        "select c.claim_id,c.bounty_id,c.job_state,c.claimant_address,c.reservation_expiry,r.id as report_id,r.state as report_state,r.report_hash,r.delete_after,r.retention_hold,r.deleted_at,a.outcome,b.chain_state from claims c join bounties b on b.bounty_id=c.bounty_id left join reports r on r.claim_id=c.claim_id left join assessments a on a.claim_id=c.claim_id where c.researcher_user_id=$1 order by c.created_at desc limit 100",
         [request.actor.id],
       )
     ).rows,

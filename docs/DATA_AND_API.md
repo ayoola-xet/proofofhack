@@ -380,3 +380,9 @@ Commands are `SET_LIMITS`, `SET_ENABLED`, `APPROVE_POLICY`, `DEPOSIT`, and `WITH
 Request states are `AWAITING_AUTHORIZATION`, `QUEUED`, `SIGNING`, `SIGNED`, `CONFIRMING`, `COMPLETE`, `CANCELLED`, `EXPIRED`, and `FAILED`. One wallet can have one active owner request. `permission_pending` means that the worker must verify removal of a temporary Privy rule. An unresolved transaction after expiry remains pending for reconciliation. It must not permit a new nonce reservation.
 
 The `owner_requests` table preserves the full command, signing message, requesting actor, authorization wallet, expiry, signature, transaction reference, and final receipt. Database triggers prevent changes to authorization terms, transaction terms, saved signatures, and completed receipts.
+
+## Report retention fields
+
+Organization report lists and the researcher's claim list return `delete_after`, `retention_hold`, and `deleted_at`. A true `retention_hold` means that settlement must resolve before the report deletion clock applies. A report in `DELETING` or `DELETED` cannot be downloaded. After authorization, an expired report returns `410 REPORT_EXPIRED`. An unrelated user receives 404, including for an expired report.
+
+The first successful payment-gated release clears the hold and sets `delete_after` to 30 days after `available_at`. A duplicate release preserves both dates. Database triggers prevent changes to paid retention terms, report commitments, object bindings, and completed deletion records.

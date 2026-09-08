@@ -41,14 +41,20 @@ If documents conflict, record the conflict and resolve it before implementing th
 2. Copy `.env.example` to `.env`. Add the Privy and Graph configuration.
 3. Start PostgreSQL with `docker compose up -d`.
 4. Apply database migrations with `pnpm db:migrate`.
-5. Start the API with `pnpm dev:api`.
-6. Start the worker with `pnpm dev:worker`.
-7. Start the web app with `pnpm dev:web`.
-8. Open `http://127.0.0.1:5173` and sign in.
+5. Check that the configured deployment has its matching service keys. For a new environment, run `pnpm setup:keys` and `pnpm exec tsx scripts/setup-researcher-report-key.ts` before deployment.
+6. Start report release with `pnpm dev:reports`.
+7. Start the verifier with `pnpm dev:verifier`.
+8. Start the API with `pnpm dev:api`.
+9. Start the worker with `pnpm dev:worker`.
+10. Start the web app with `pnpm dev:web`.
+11. Start ciphertext cleanup with `pnpm dev:retention` after all services run the current source version.
+12. Open `http://127.0.0.1:5173` and sign in.
 
-Use separate terminals for the three services. Run `pnpm typecheck`, `pnpm test`, and `pnpm test:contracts` to check the implementation. PostgreSQL must run for the integration tests. Run `pnpm build` to build the frontend and Graph package.
+Use a separate terminal for each service. Run `pnpm typecheck`, `pnpm test`, and `pnpm test:contracts` to check the implementation. PostgreSQL must run for the integration tests. Run `pnpm build` to build the frontend and Graph package.
 
 Read [implementation status](docs/IMPLEMENTATION_STATUS.md) for completed work and remaining release requirements. Public integration evidence is in `evidence/`. Configuration secrets stay in the ignored `.env` file.
+
+Read [retention and recovery](docs/RETENTION_AND_RECOVERY.md) before restoring data. Use `pnpm retention:run` for one cleanup scan. Hosted backups and financial recovery remain release requirements.
 
 ## Working assumptions
 

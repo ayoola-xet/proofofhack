@@ -304,6 +304,10 @@ The organization path requires final `Paid` evidence plus current `OWNER` or `RE
 
 For the testnet reference service, delete abandoned ciphertext after 24 hours. Delete rejected and expired evidence after seven days. Keep paid encrypted reports for 30 days, with a visible export and deletion date. Keep non-sensitive financial receipts and report hashes. Document backup expiry so deletion claims include backups. These are product defaults, not legal retention advice.
 
+Start the paid-report clock at the first successful release. A retry must preserve that deadline. Hold a qualifying report while settlement is unresolved. Do not delete it from an inferred local payment state. Delete paid evidence seven days after settlement once release has resolved. The current reference implementation keeps unresolved qualifying reports on hold until release. Canonical expiry reconciliation must resolve other terminal cases before those holds can end.
+
+Run cleanup in a separate service with access to ciphertext storage and the database. It needs no wallet or decryption key. Coordinate writes and cleanup with the shared maintenance lock. Record deletion before removing files, then retain the completed deletion record. Expired or deleted reports must remain inaccessible after an object restore. See [retention and recovery](RETENTION_AND_RECOVERY.md) for the implemented periods and recovery limits.
+
 ## 12. The Graph integration
 
 Create `erc4626-coverage-data` as a reusable package. Define standardized `Vault`, `VaultObservation`, `VaultFlow`, and `SourceCursor` entities. Index ERC-4626 deposit and withdrawal events and capture available vault metadata through safe read calls. Store observation block numbers and failed-read indicators.

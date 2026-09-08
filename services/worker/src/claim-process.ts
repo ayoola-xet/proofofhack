@@ -54,7 +54,7 @@ export async function processClaim(
           [claimId],
         )
       ).rows[0];
-      if (report && report.state !== "AVAILABLE")
+      if (report && !["AVAILABLE", "DELETING", "DELETED"].includes(report.state))
         await release.post("/internal/report-releases", {
           reportId: report.id,
           eventId: report.event_id,

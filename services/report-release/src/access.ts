@@ -16,9 +16,16 @@ export async function reportAccess(
     `select r.*, c.researcher_user_id, c.claimant_address, c.bounty_id, b.reward, b.chain_id, b.escrow, b.policy_json, p.organization_id from reports r join claims c on c.claim_id=r.claim_id join bounties b on b.bounty_id=c.bounty_id join programs p on p.id=b.program_id where r.id=$1`,
     [reportId],
   );
-  if (new Date(r.delete_after).getTime() <= Date.now())
-    throw new DomainError("REPORT_EXPIRED", "The report retention period has ended.", 410);
+  function requireRetained() {
+    if (
+      r.deleted_at ||
+      ["DELETING", "DELETED"].includes(r.state) ||
+      (!r.retention_hold && new Date(r.delete_after).getTime() <= Date.now())
+    )
+      throw new DomainError("REPORT_EXPIRED", "The report retention period has ended.", 410);
+  }
   if (mode !== "organization" && r.researcher_user_id === actorId) {
+    requireRetained();
     if (!["SEALED", "AVAILABLE"].includes(r.state))
       throw new DomainError("REPORT_NOT_READY", "The report is not ready.");
     return r;
@@ -31,6 +38,7 @@ export async function reportAccess(
     "select role from memberships where organization_id=$1 and user_id=$2 and role in ('OWNER','REVIEWER') and status='ACTIVE'",
     [r.organization_id, actorId],
   );
+  requireRetained();
   if (r.state !== "AVAILABLE" || !r.paid_event_ref)
     throw new DomainError("REPORT_LOCKED", "The report becomes available after final payment.");
   const payment = await first(c, "select * from chain_events where id=$1", [r.paid_event_ref]);
@@ -78,10 +86,16 @@ export async function releaseReport(c: PoolClient, reportId: string, eventId: st
       throw new DomainError("PAYMENT_EVENT_CONFLICT", "The report has a different payment record.");
     return r;
   }
+  if (
+    r.deleted_at ||
+    ["DELETING", "DELETED"].includes(r.state) ||
+    (!r.retention_hold && new Date(r.delete_after).getTime() <= Date.now())
+  )
+    throw new DomainError("REPORT_EXPIRED", "The report retention period has ended.", 410);
   if (r.state !== "SEALED") throw new DomainError("REPORT_NOT_READY", "The report is not ready.");
   return first(
     c,
-    "update reports set state='AVAILABLE',paid_event_ref=$2,available_at=now(),version=version+1,updated_at=now() where id=$1 returning *",
+    "update reports set state='AVAILABLE',paid_event_ref=$2,available_at=now(),delete_after=now()+interval '30 days',retention_hold=false,version=version+1,updated_at=now() where id=$1 returning *",
     [reportId, eventId],
   );
 }

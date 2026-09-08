@@ -85,6 +85,13 @@
       "when": 1788855341675,
       "tag": "0011_unknown_paper_doll",
       "breakpoints": true
+    },
+    {
+      "idx": 12,
+      "version": "7",
+      "when": 1788858916256,
+      "tag": "0012_short_reavers",
+      "breakpoints": true
     }
   ]
 }

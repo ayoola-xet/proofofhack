@@ -60,7 +60,7 @@ export function registerReadRoutes(app: FastifyInstance, pool: Pool) {
     const page = pageParams.parse(request.query);
     const rows = (
       await pool.query(
-        `select r.id,r.state,r.report_hash,r.available_at from reports r join claims c on c.claim_id=r.claim_id join bounties b on b.bounty_id=c.bounty_id join programs p on p.id=b.program_id where p.organization_id=$1 and ($2::uuid is null or r.id>$2) order by r.id limit $3`,
+        `select r.id,r.state,r.report_hash,r.available_at,r.delete_after,r.retention_hold,r.deleted_at from reports r join claims c on c.claim_id=r.claim_id join bounties b on b.bounty_id=c.bounty_id join programs p on p.id=b.program_id where p.organization_id=$1 and ($2::uuid is null or r.id>$2) order by r.id limit $3`,
         [id, page.cursor ?? null, page.limit + 1],
       )
     ).rows;

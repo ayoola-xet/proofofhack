@@ -26,6 +26,11 @@ import { BountyWorkspace } from "./pages/BountyWorkspace.tsx";
 import { Budget } from "./pages/Budget.tsx";
 import { ClaimSubmission, MyClaims, ReportDownload } from "./pages/Claims.tsx";
 import { Coverage } from "./pages/Coverage.tsx";
+import {
+  ReportRetention,
+  type ReportRetentionData,
+  reportIsRetained,
+} from "./pages/ReportRetention.tsx";
 import { Treasury } from "./pages/Treasury.tsx";
 import { WalletPage } from "./pages/Wallet.tsx";
 
@@ -499,7 +504,11 @@ function Bounties({ organization, actorId }: { organization: Membership | null; 
 }
 function Reports({ organization }: { organization: Membership | null }) {
   const result = useResource<{
-    items: { id: string; state: string; report_hash: string; available_at: string | null }[];
+    items: (ReportRetentionData & {
+      id: string;
+      report_hash: string;
+      available_at: string | null;
+    })[];
   }>(organization ? `/organizations/${organization.organization_id}/reports` : null);
   return (
     <>
@@ -531,9 +540,10 @@ function Reports({ organization }: { organization: Membership | null }) {
             <div>
               <strong>Fixture assessment</strong>
               <small className="mono">{short(r.report_hash)}</small>
+              <ReportRetention report={r} />
             </div>
-            <Pill>{r.state}</Pill>
-            {r.state === "AVAILABLE" && (
+            <Pill>{reportIsRetained(r) ? r.state : "EXPIRED"}</Pill>
+            {r.state === "AVAILABLE" && reportIsRetained(r) && (
               <ReportDownload id={r.id} mode="organization" expectedHash={r.report_hash} />
             )}
           </div>

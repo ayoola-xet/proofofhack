@@ -7,7 +7,7 @@ The full submission objective remains active. Live Graph indexing and the initia
 | Package | Status | Evidence |
 | --- | --- | --- |
 | WP-01 Foundation | IN_PROGRESS | Workspace, local infrastructure, and provider preflight created. Type check passes. |
-| WP-02 Domain and database | IN_PROGRESS | Strict schemas, policy hashing, 33 database tables, and twelve applied migrations. OpenAPI generation pending. |
+| WP-02 Domain and database | IN_PROGRESS | Strict schemas, policy hashing, 33 database tables, and thirteen applied migrations. OpenAPI generation pending. |
 | WP-03 Escrow | IN_PROGRESS | Contract implemented. Financial suite: 17 passing tests, including 256-run fuzz cases. Arc Testnet deployment verified. Draft approval and durable funding are connected through the API and worker. Database and failure-path tests pass. The live bounty funding test remains pending. |
 | WP-04 Budget controller | IN_PROGRESS | Controller registration, owner controls, exact policy approval, durable allocation, and cumulative limits pass local tests. Five live Privy permission checks pass. Live owner transactions and Circle allocation remain pending. |
 | WP-05 Identity and Privy | IN_PROGRESS | Live login, current role checks, and user wallet transfers work. The organization wallet has a verified Privy owner and policy. Live signing checks accept an allowed approval and reject an unapproved spender. Bounty funding remains pending. |
@@ -17,7 +17,7 @@ The full submission objective remains active. Live Graph indexing and the initia
 | WP-09 Settlement worker | IN_PROGRESS | Funding confirms the canonical Arc receipt and exact approval, funding, and USDC transfer events. It saves signed bytes before broadcast and resumes the same intent after a lost response. The claim settlement core passes a local chain test. The queue and Circle execution connection are configured. Local tests also reconcile a payment collected outside the worker. The live claim test remains pending. |
 | WP-10 Circle agent | IN_PROGRESS | Circle CLI 1.0.0 is authenticated. The agent wallet received test USDC and deployed the escrow. Bounded allocation passes local tests with the Circle argument format. Live allocation remains pending. |
 | WP-11 Application | IN_PROGRESS | Responsive workspace, live Privy login, organization and program setup, vault coverage, and wallet transfers work. The new bounty page prepares signed fixtures, downloads cases, approves terms, and requests Privy funding confirmation. Its live browser test waits for the Mac to be unlocked. |
-| WP-12 Deployment and evidence | NOT_STARTED | No evidence yet |
+| WP-12 Deployment and evidence | IN_PROGRESS | Live sponsor evidence is saved. Local retention and an isolated database, ciphertext, and key restore pass checks. Hosted backups, deployment, financial recovery, and submission assets remain pending. |
 
 ## Environment
 
@@ -37,11 +37,11 @@ Privy app configuration is stored in the ignored .env file with mode 0600. Graph
 
 ## Current verification
 
-- Pass all 103 TypeScript tests in 19 files. These tests include real PostgreSQL transactions, local chain settlement, concurrent allocation jobs, current role checks, encrypted storage integrity, exact payment gating, and owner controls.
+- Pass all 110 TypeScript tests in 20 files. These tests include real PostgreSQL transactions, local chain settlement, concurrent allocation jobs, current role checks, encrypted storage integrity, exact payment gating, owner controls, retention, and isolated restore.
 - Pass 17 Solidity tests from the contract stage.
 - Pass TypeScript type checking.
 - Pass the production frontend build after the organization wallet changes. Vite reports one large dependency chunk.
-- Pass lint checks for all 19 TypeScript files changed in the owner-control stage. The earlier repository-wide check reports 13 existing errors and 23 warnings in other files. Resolve these before submission.
+- Pass lint checks for all 14 TypeScript files changed in the retention stage. The earlier repository-wide check reports 13 errors and 23 warnings in other files. A clean repository-wide check remains pending.
 - Open the live Privy login window through the new app. The user has signed in to the local workspace. Financial user journeys remain pending.
 - Check the desktop landing page and the 390-pixel mobile page. Mobile scroll width equals viewport width. Browser evidence is in the ignored output/playwright folder.
 
@@ -194,3 +194,21 @@ Eighteen owner-control tests pass. They check database immutability, current rol
 All 103 tests in 19 files pass in a clean full run. The first run exposed a test cleanup race. The assistant test now closes its database connections and drops its isolated database without forced disconnection. All 19 changed TypeScript files pass lint. Type checking and the production build pass.
 
 The local API and worker run the owner controls. The API health check passes. Both owner queues exist. The Mac remains locked. The live browser flow, owner transactions, Circle allocation, and complete payout journey remain pending. Model credentials and hosting also remain open.
+
+## Ciphertext retention and local recovery
+
+The retention service deletes abandoned uploads after 24 hours. It schedules terminal claim evidence for deletion after seven days. Nonqualifying report copies expire after seven days. A qualifying report stays on hold while settlement is unresolved. Its first successful release starts a 30-day report period. A retry cannot extend that period.
+
+The database preserves report commitments, paid retention dates, and completed deletion records. Cleanup records `DELETING` before removing ciphertext. It records `DELETED` after both report copies are removed. A failed file operation leaves a retryable deletion. Restored copies of deleted objects are removed again, including copies with recent file times. Financial receipts and report hashes remain.
+
+Ciphertext writes and cleanup share a database lock. Cleanup rejects overlapping storage directories, including aliases. Old unreferenced ciphertext and pending files expire after 24 hours. The service does not read plaintext or require signing and decryption keys. Hosted permissions must isolate it from those keys.
+
+The report interface shows the export deadline. Access checks reject expired reports. An unrelated user receives 404 before the expiry state is disclosed. Organization access still requires the exact final payment and current membership.
+
+The local recovery test uses actual `pg_dump` and `pg_restore` operations. It restores an isolated database, encrypted files, and a report key. Expired data remains inaccessible and is removed. A current paid report still decrypts to its saved hash, and its receipt remains. This proves local PRI-06 behavior. It does not prove hosted backup custody or live-chain recovery.
+
+The updated API, verifier, report service, and worker run locally. The retention process scans every ten minutes. Its first scan completes with zero due files. The API health check passes. See `docs/RETENTION_AND_RECOVERY.md` for periods, commands, and restore limits.
+
+All 110 tests in 20 files pass in the final full run. The seven retention tests include interrupted deletion, restored objects, alias rejection, and an actual PostgreSQL restore. Type checking, changed-file lint, and the production build pass.
+
+Hosted backups and backup expiry enforcement remain unimplemented. Canonical reservation-expiry recovery must resolve qualifying reports that cannot reach payment. Those reports stay on hold until that path exists. The full submission objective remains active.
