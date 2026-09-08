@@ -35,7 +35,8 @@
     "containers:check": "tsx scripts/check-containers.ts",
     "evidence:manifest": "tsx scripts/build-live-manifest.ts",
     "evidence:validate": "tsx scripts/validate-evidence.ts",
-    "test:live": "tsx scripts/test-live.ts"
+    "test:live": "tsx scripts/test-live.ts",
+    "seed:local": "tsx scripts/seed-local.ts"
   },
   "devDependencies": {
     "@biomejs/biome": "^2.5.12",

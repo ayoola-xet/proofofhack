@@ -1,6 +1,7 @@
 import { defineConfig } from "vitest/config";
 
 const integration = [
+  "tests/local-seed.test.ts",
   "tests/api.test.ts",
   "tests/assistant.test.ts",
   "tests/bounty-drafts.test.ts",

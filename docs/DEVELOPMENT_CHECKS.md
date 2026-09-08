@@ -54,7 +54,7 @@ The shared stylesheet has selectors for separate page components and intentional
 
 ## Release limits
 
-These commands prove local behavior. They do not prove the live owner, claim, settlement, report, or recovery journeys. The live model check, hosted deployment, backup controls, and submission assets remain required. Dedicated `test:e2e` and `seed:local` commands remain unimplemented. The read-only live check and evidence validator are described below.
+These commands prove local behavior. They do not prove the live owner, claim, settlement, report, or recovery journeys. The live model check, hosted deployment, backup controls, and submission assets remain required. The dedicated `test:e2e` command remains unimplemented. `seed:local` creates a separate local database and funded synthetic bounties. See [Local seed setup](LOCAL_SEED.md). The read-only live check and evidence validator are described below.
 
 
 ## Deployment containers
