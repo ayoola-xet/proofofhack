@@ -1,0 +1,16 @@
+{
+  "schemaVersion": "1",
+  "capturedAt": "2026-09-08T12:57:35.769Z",
+  "scope": "LIVE_PRIVY_REPORT_DOWNLOADS",
+  "reportId": "a37aebcc-e326-483f-96b1-39e1a6a1552d",
+  "claimId": "0xc497553a6a9aee8e371f6efb58b63135cb40fc7648d9afa933a09e9b514e52e5",
+  "reportHash": "0xf600bb842e2825318bb1ea20d1422968a711cfa2b7dc586694f31ae099180513",
+  "claimantDownloadHashVerified": true,
+  "organizationDownloadHashVerified": true,
+  "identicalReportBytes": true,
+  "organizationAccessObservedAfterFinalPayment": true,
+  "limits": [
+    "Both roles use the same live Privy account. This does not prove separate live actor isolation.",
+    "The organization download uses the AVAILABLE report control on the local application. Hosting remains unverified."
+  ]
+}
