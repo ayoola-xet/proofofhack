@@ -52,7 +52,9 @@ try {
   assert.equal(jobs.length, 1, "No completed receipt export job exists.");
   const evidence = {
     schemaVersion: "1",
-    scope: "LIVE_ORGANIZATION_RECEIPT_EXPORT",
+    scope: snapshot.organizationId
+      ? "LIVE_ORGANIZATION_RECEIPT_EXPORT"
+      : "LIVE_RESEARCHER_RECEIPT_EXPORT",
     capturedAt: new Date().toISOString(),
     baseCommit: execFileSync("git", ["rev-parse", "HEAD"], { encoding: "utf8" }).trim(),
     exportId,
@@ -75,8 +77,8 @@ try {
     })),
     queue: { jobId: jobs[0].id, state: jobs[0].state, completedAt: jobs[0].completed_on },
     limits: [
-      "This capture verifies one organization export through the local app and live Arc Testnet.",
-      "It does not prove hosted operation, separate live user access, or researcher receipt export.",
+      "This capture verifies one receipt export through the local app and live Arc Testnet.",
+      "It does not prove hosted operation or access checks between separate live users.",
     ],
   };
   await writeFile(

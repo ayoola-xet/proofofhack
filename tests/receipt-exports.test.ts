@@ -13,7 +13,7 @@ import { LocalAuthProvider } from "../services/api/src/auth.ts";
 import { processReceiptExport } from "../services/receipts/src/process.ts";
 import { contentHash, exportSnapshotSchema, receiptCsv } from "../services/receipts/src/records.ts";
 import { startReceiptExportJobs } from "../services/worker/src/receipt-jobs.ts";
-import { examplePolicy, h } from "./helpers/policy.ts";
+import { a, examplePolicy, h } from "./helpers/policy.ts";
 
 const admin = connectDatabase().pool,
   name = `exports_test_${randomUUID().replaceAll("-", "")}`,
@@ -135,7 +135,7 @@ async function fixture() {
         [org, bounty, amount, ARC_USDC, eventId, status],
       )
     ).rows[0].id;
-    return { id, eventId, hash, receipt };
+    return { id, eventId, hash, receipt, bounty, policy };
   };
   const create = async (body = {}, actor = 0, key = randomUUID()) =>
     app.inject({
@@ -269,6 +269,152 @@ it("Applies category and date filters and excludes non-final rows", async () => 
   });
   expect(list.json().items).toHaveLength(1);
   expect(list.json().nextCursor).toBeTruthy();
+});
+async function paymentFixture(actor: number) {
+  const f = await fixture(),
+    funded = await f.add(),
+    n = seq++;
+  const claimant = a(n),
+    claimId = h(n + 20000),
+    wallet = randomUUID(),
+    upload = randomUUID();
+  await pool.query(
+    "insert into wallets(id,provider,provider_wallet_id,owner_type,owner_id,chain_id,address) values($1,'PRIVY',$2,'USER',$3,'5042002',$4)",
+    [wallet, randomUUID(), users[actor], claimant],
+  );
+  await pool.query(
+    "insert into uploads(id,owner_user_id,bounty_id,object_key,ciphertext_hash,key_id,byte_length,state,expires_at) values($1,$2,$3,$4,$5,'test-key',10,'COMPLETE',now()+interval '1 hour')",
+    [upload, users[actor], funded.bounty, randomUUID(), h(n)],
+  );
+  await pool.query(
+    "insert into claims(claim_id,bounty_id,researcher_user_id,claimant_wallet_id,claimant_address,upload_id,evidence_commitment,job_state) values($1,$2,$3,$4,$5,$6,$7,'SETTLED')",
+    [claimId, funded.bounty, users[actor], wallet, claimant, upload, h(n)],
+  );
+  const event = bountyEscrowAbi.find((e) => e.type === "event" && e.name === "Paid");
+  if (event?.type !== "event") throw new Error("No payment event");
+  const args = { bountyId: funded.bounty, claimId, claimant, asset: ARC_USDC, amount: 1000001n };
+  const hash = h(n),
+    blockHash = h(n + 10000),
+    eventId = randomUUID();
+  const receipt: FundingReceipt = {
+    hash,
+    blockHash,
+    blockNumber: BigInt(n),
+    status: "success",
+    logs: [
+      {
+        address: funded.policy.escrow,
+        topics: encodeEventTopics({ abi: bountyEscrowAbi, eventName: "Paid", args }) as [
+          Hex,
+          ...Hex[],
+        ],
+        data: encodeAbiParameters(
+          event.inputs.filter((i) => !i.indexed),
+          [claimant, ARC_USDC, args.amount],
+        ),
+        blockHash,
+        blockNumber: BigInt(n),
+        transactionHash: hash,
+        transactionIndex: 0,
+        logIndex: 0,
+        removed: false,
+      },
+    ],
+  };
+  chainReceipts.set(hash, receipt);
+  await pool.query(
+    "insert into chain_events(id,chain_id,contract_address,transaction_hash,log_index,block_number,block_hash,name,payload_json,finality_state) values($1,'5042002',$2,$3,0,$4,$5,'Paid',$6,'FINAL')",
+    [
+      eventId,
+      funded.policy.escrow,
+      hash,
+      String(n),
+      blockHash,
+      { ...args, amount: String(args.amount) },
+    ],
+  );
+  const row = (
+    await pool.query(
+      "insert into receipts(organization_id,claimant_user_id,bounty_id,category,amount,asset,event_id,status) values($1,$2,$3,'PAYMENT','1000001',$4,$5,'FINAL') returning id",
+      [f.org, users[actor], funded.bounty, ARC_USDC, eventId],
+    )
+  ).rows[0];
+  return { ...f, receiptId: row.id, claimId, hash };
+}
+it("Exports only the researcher's own payments without organization membership", async () => {
+  const own = await paymentFixture(2),
+    other = await paymentFixture(1);
+  const list = (await app.inject({ url: "/api/v1/me/receipts", headers: headers(2) })).json();
+  expect(list.items.map((r: { id: string }) => r.id)).toEqual([own.receiptId]);
+  const key = randomUUID();
+  const create = () =>
+    app.inject({
+      method: "POST",
+      url: "/api/v1/me/receipt-exports",
+      headers: headers(2, key),
+      payload: {},
+    });
+  const response = await create();
+  expect(response.statusCode).toBe(202);
+  expect(response.json().rowCount).toBe(1);
+  const id = response.json().id;
+  expect((await create()).json().id).toBe(id);
+  await processReceiptExport(pool, chain, id);
+  const download = await app.inject({ url: `/api/v1/exports/${id}`, headers: headers(2) });
+  expect(download.statusCode).toBe(200);
+  expect(download.body).toContain(own.hash);
+  expect(download.body).not.toContain(other.hash);
+  expect(download.body).toContain('"PAYMENT","1000001","1.000001"');
+  for (const actor of [0, 1, 3])
+    expect(
+      (await app.inject({ url: `/api/v1/exports/${id}`, headers: headers(actor) })).statusCode,
+    ).toBe(404);
+  expect(
+    (await app.inject({ url: "/api/v1/me/receipt-exports", headers: headers(2) }))
+      .json()
+      .items.map((e: { id: string }) => e.id),
+  ).toContain(id);
+  expect(
+    (
+      await app.inject({
+        url: `/api/v1/organizations/${own.org}/receipt-exports`,
+        headers: headers(0),
+      })
+    ).json().items,
+  ).toEqual([]);
+  await expect(
+    pool.query("update receipt_exports set organization_id=$2 where id=$1", [id, own.org]),
+  ).rejects.toMatchObject({ code: "23514" });
+});
+it("Preserves personal payment access after organization removal and rejects a wrong claimant binding", async () => {
+  const own = await paymentFixture(3);
+  const create = () =>
+    app.inject({
+      method: "POST",
+      url: "/api/v1/me/receipt-exports",
+      headers: headers(3),
+      payload: {},
+    });
+  const id = (await create()).json().id;
+  await pool.query(
+    "update memberships set status='REMOVED' where organization_id=$1 and user_id=$2",
+    [own.org, users[3]],
+  );
+  await processReceiptExport(pool, chain, id);
+  expect((await app.inject({ url: `/api/v1/exports/${id}`, headers: headers(3) })).statusCode).toBe(
+    200,
+  );
+  await pool.query("update receipts set claimant_user_id=$2 where id=$1", [
+    own.receiptId,
+    users[0],
+  ]);
+  const bad = await app.inject({
+    method: "POST",
+    url: "/api/v1/me/receipt-exports",
+    headers: headers(0),
+    payload: {},
+  });
+  expect(bad.json().error.code).toBe("EXPORT_SCOPE_MISMATCH");
 });
 it("Processes a durable export through the actual PostgreSQL queue", async () => {
   const f = await fixture();

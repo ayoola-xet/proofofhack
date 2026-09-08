@@ -523,9 +523,7 @@ export const bountyRecovery = pgTable(
 );
 export const receiptExports = pgTable("receipt_exports", {
   id: uuid("id").primaryKey().defaultRandom(),
-  organizationId: uuid("organization_id")
-    .notNull()
-    .references(() => organizations.id),
+  organizationId: uuid("organization_id").references(() => organizations.id),
   requestedBy: uuid("requested_by")
     .notNull()
     .references(() => users.id),

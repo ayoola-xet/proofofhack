@@ -30,15 +30,29 @@ const categories = [
 ];
 const label = (value: string) => value.toLowerCase().replaceAll("_", " ");
 export function ReceiptsPage({ organization }: { organization: Membership | null }) {
-  if (!organization) return <p>Select an organization to view receipts.</p>;
-  if (!["OWNER", "TREASURY"].includes(organization.role))
-    return <p>Receipt exports require an owner or treasury role.</p>;
-  return <ReceiptWorkspace key={organization.organization_id} organization={organization} />;
+  const [selectedScope, setSelectedScope] = useState("organization");
+  const canReadOrganization = organization && ["OWNER", "TREASURY"].includes(organization.role);
+  const scope = canReadOrganization ? selectedScope : "researcher";
+  return (
+    <>
+      <label>
+        Receipt account
+        <select value={scope} onChange={(event) => setSelectedScope(event.target.value)}>
+          {canReadOrganization && <option value="organization">Organization receipts</option>}
+          <option value="researcher">My reward payments</option>
+        </select>
+      </label>
+      <ReceiptWorkspace
+        key={scope === "organization" ? organization?.organization_id : "researcher"}
+        base={scope === "organization" ? `/organizations/${organization?.organization_id}` : "/me"}
+        researcher={scope === "researcher"}
+      />
+    </>
+  );
 }
-function ReceiptWorkspace({ organization }: { organization: Membership }) {
+function ReceiptWorkspace({ base, researcher }: { base: string; researcher: boolean }) {
   const api = useApi(),
-    { getAccessToken } = usePrivy(),
-    base = `/organizations/${organization.organization_id}`;
+    { getAccessToken } = usePrivy();
   const [category, setCategory] = useState(""),
     [from, setFrom] = useState(""),
     [to, setTo] = useState("");
@@ -138,9 +152,13 @@ function ReceiptWorkspace({ organization }: { organization: Membership }) {
   return (
     <>
       <header className="page-title">
-        <p>PAYMENT RECORDS · ARC TESTNET</p>
-        <h1>Receipts</h1>
-        <p>Filter records and export amounts checked against final chain events.</p>
+        <div>
+          <p className="eyebrow">PAYMENT RECORDS · ARC TESTNET</p>
+          <h1>{researcher ? "My reward payments" : "Organization receipts"}</h1>
+          <p className="muted">
+            Filter records and export amounts checked against final chain events.
+          </p>
+        </div>
       </header>
       <section className="panel">
         <form className="form-row" onSubmit={apply}>
@@ -148,7 +166,7 @@ function ReceiptWorkspace({ organization }: { organization: Membership }) {
             Category
             <select value={category} onChange={(e) => setCategory(e.target.value)}>
               <option value="">All categories</option>
-              {categories.map((c) => (
+              {(researcher ? ["PAYMENT"] : categories).map((c) => (
                 <option value={c} key={c}>
                   {label(c)}
                 </option>
@@ -252,19 +270,25 @@ function ReceiptWorkspace({ organization }: { organization: Membership }) {
       </section>
       <section className="panel">
         <h2>Your saved exports</h2>
-        <p>A current owner or treasury role is required for every download.</p>
+        <p>
+          {researcher
+            ? "Only you can download your reward payment exports. Organization membership is not required."
+            : "A current owner or treasury role is required for every download."}
+        </p>
         {exports.data?.items.map((item) => (
           <article className="wallet-card" key={item.id}>
             <p>
-              {item.rowCount} receipts · {label(item.state)} ·{" "}
+              {item.rowCount} {item.rowCount === 1 ? "receipt" : "receipts"} · {label(item.state)} ·{" "}
               {new Date(item.createdAt).toLocaleString()}
             </p>
             {item.errorCode && (
               <p>
                 {label(item.errorCode)}.{" "}
-                {item.state === "FAILED"
-                  ? "Check the records and request a new export."
-                  : "The worker will retry."}
+                {item.state === "CANCELLED"
+                  ? "Access was removed. This export will not run."
+                  : item.state === "FAILED"
+                    ? "Check the records and request a new export."
+                    : "The worker will retry."}
               </p>
             )}
             {item.state === "READY" && (

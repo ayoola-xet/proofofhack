@@ -18,6 +18,7 @@ export async function processReceiptExport(pool: Pool, chain: ExportChain, expor
     const row = await first(c, "select * from receipt_exports where id=$1", [exportId]);
     if (["READY", "FAILED", "CANCELLED"].includes(row.state)) return;
     const authorized = async () =>
+      row.organization_id === null ||
       (
         await c.query(
           "select 1 from memberships where organization_id=$1 and user_id=$2 and status='ACTIVE' and role in ('OWNER','TREASURY')",

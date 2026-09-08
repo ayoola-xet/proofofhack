@@ -427,3 +427,14 @@ The organization draft read also returns `chain_state` and `creation_tx` from th
 The `receipt_exports` table stores the requesting user, organization, filters, source records, input hash, status, attempts, fixed error code, CSV bytes, file hash, and completion time. Database checks preserve the snapshot and completed output. The worker verifies each source event against a canonical final Arc receipt. No export creates a chain transaction.
 
 The CSV states `FIXTURE_ONLY`, `TRUSTED_SERVICE`, and Arc Testnet. Amounts use six decimal places and exact base-unit strings. Import long base-unit values as text in spreadsheet software. Funding, budget transfers, and payments are separate categories. Do not add all categories as revenue.
+
+
+## Researcher receipt exports
+
+`GET /api/v1/me/receipts` lists payments whose `claimant_user_id` matches the signed-in user. It accepts the same date filters, category filter, and pagination as organization receipts. A researcher does not need organization membership.
+
+`POST /api/v1/me/receipt-exports` accepts the same filters and requires `Idempotency-Key`. It exports only the requester's final `PAYMENT` records. Each record must match its bounty, organization, escrow, claim ID, saved researcher, and claimant address. It uses the same final event checks and CSV integrity checks as organization exports.
+
+`GET /api/v1/me/receipt-exports` lists the requester's latest 20 personal exports. Use the shared `/api/v1/exports/:id/status` and `/api/v1/exports/:id` routes for status and download. Only the requester can read the file. Removing organization membership does not remove personal payment access.
+
+Personal exports use snapshot version `2` and a null `organization_id`. Organization exports retain snapshot version `1` and a required organization ID. The database preserves this distinction and prevents a saved export from changing accounts. Personal snapshots accept only payment records with a bounty ID. Existing organization exports keep their original bytes and access rules.

@@ -1,0 +1,35 @@
+{
+  "schemaVersion": "1",
+  "scope": "LIVE_RESEARCHER_RECEIPT_EXPORT",
+  "capturedAt": "2026-09-08T14:16:23.169Z",
+  "baseCommit": "a7730cf7c9339fd223dc73e8fc39bee23e03c72d",
+  "exportId": "427fa358-8cab-424f-9ffb-b94c06d54c0c",
+  "chainId": "5042002",
+  "evidenceScope": "FIXTURE_ONLY",
+  "verifierMode": "TRUSTED_SERVICE",
+  "contentHash": "e454e443aa299aedf63b2a5d4032cefeeccdbca28e4dd41ea3bf207efcc51a27",
+  "downloadedBytesMatchSavedExport": true,
+  "exactCsvFromImmutableSnapshot": true,
+  "records": [
+    {
+      "category": "PAYMENT",
+      "amountBaseUnits": "1000000",
+      "asset": "0x3600000000000000000000000000000000000000",
+      "transactionHash": "0x4a4855d9db78ac02c3e255009d97b0682a3feda5a1d391f32bbd3793938c31a4",
+      "blockNumber": "61073578",
+      "blockHash": "0xf8aacdd7e7e32db2a0b6eb1fb5bc096d35902811ba341d1483d85421b788c54d",
+      "logIndex": "121",
+      "eventName": "Paid",
+      "canonicalFinalizedEvent": true
+    }
+  ],
+  "queue": {
+    "jobId": "0a29da6d-a205-4331-be8f-6200a087c5c3",
+    "state": "completed",
+    "completedAt": "2026-09-08T14:15:25.513Z"
+  },
+  "limits": [
+    "This capture verifies one receipt export through the local app and live Arc Testnet.",
+    "It does not prove hosted operation or access checks between separate live users."
+  ]
+}

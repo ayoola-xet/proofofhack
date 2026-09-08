@@ -46,13 +46,29 @@ export const exportRecordSchema = z.strictObject({
   logIndex: uint(),
   payload: z.record(z.string(), z.union([z.string(), z.boolean()])),
 });
-export const exportSnapshotSchema = z.strictObject({
+const organizationSnapshotSchema = z.strictObject({
   version: z.literal("1"),
   organizationId: z.uuid(),
   requestedBy: z.uuid(),
   filters: filtersSchema,
   records: z.array(exportRecordSchema).max(1000),
 });
+export const exportSnapshotSchema = z.discriminatedUnion("version", [
+  organizationSnapshotSchema,
+  z.strictObject({
+    version: z.literal("2"),
+    organizationId: z.null(),
+    requestedBy: z.uuid(),
+    filters: filtersSchema,
+    records: z
+      .array(
+        exportRecordSchema.refine(
+          (record) => record.category === "PAYMENT" && record.bountyId !== null,
+        ),
+      )
+      .max(1000),
+  }),
+]);
 export type ExportRecord = z.infer<typeof exportRecordSchema>;
 export const contentHash = (text: string) => createHash("sha256").update(text).digest("hex");
 const events = {
