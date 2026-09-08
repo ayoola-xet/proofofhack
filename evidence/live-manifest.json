@@ -1,0 +1,87 @@
+{
+  "schemaVersion": "1",
+  "scope": "TESTNET_SUBMISSION_EVIDENCE_INDEX",
+  "generatedAt": "2026-09-08T14:42:13.440Z",
+  "sourceCommit": "d3c959a2691d30b5b167d38ec96aa387d051a83c",
+  "sponsors": [
+    "The Graph",
+    "Arc",
+    "Privy"
+  ],
+  "chainId": "5042002",
+  "asset": "0x3600000000000000000000000000000000000000",
+  "evidenceScope": "FIXTURE_ONLY",
+  "verifierMode": "TRUSTED_SERVICE",
+  "submissionReady": false,
+  "artifacts": {
+    "graph": {
+      "path": "evidence/the-graph/live-query.json",
+      "sha256": "f2ca9a399218d76c1e45f4205fc9d8528a15158b4a50a8bc2ec89b77273be06d"
+    },
+    "escrow": {
+      "path": "evidence/arc/escrow-deployment.json",
+      "sha256": "893d974767df6d14bac594626d4155ef1903b702faf9e03b80066b883c2e46d6"
+    },
+    "controller": {
+      "path": "evidence/arc/controller-c9d8a04b-4f44-4336-846d-4d484e4dc8f4.json",
+      "sha256": "2ac1ab1d4cca6471ce5ed1ee368c688e01b5db1e79930d7a86e25201086ffe48"
+    },
+    "funding": {
+      "path": "evidence/arc/bounty-funding.json",
+      "sha256": "ef2ecdcfa7058cba817e2757da6be15f5c4594a49b2103218a4492ecbd98abc5"
+    },
+    "claims": {
+      "path": "evidence/arc/claim-journey-0xa3147639ed3a03f68dab3f18cbb81d249c23ff6efb452f25b56c12ae8ba34a68.json",
+      "sha256": "26752327a4e6697e60fffe30ea1b150d906661840c3837f86c4c9439740a9879"
+    },
+    "budget": {
+      "path": "evidence/arc/budget-allocation-9c60762d-cd1d-4fad-ace3-b45f971d9c6e.json",
+      "sha256": "b4494382264f28142808339324d62552a16db6ea5bb54edc9a2511db41fef9e4"
+    },
+    "refund": {
+      "path": "evidence/arc/recovery-0xa26a9f3f8c56461e41ed35f85af089ef63617692a1e284abe60ad1953c813b87.json",
+      "sha256": "3eb14a9c0de438586514fcb70b9ac0b4139bea18c495838d758dcaafcc18edd6"
+    },
+    "ownerActions": {
+      "path": "evidence/privy/owner-actions-0e36ddc6-5cfa-46cf-8c2f-6e9ad0d5fdb8.json",
+      "sha256": "7fd28718eed22ce84fe73ccdd63dbd0653ea1a1c480027396386ee9116897fee"
+    },
+    "outgoing": {
+      "path": "evidence/privy/outgoing-transfer-bd232fd2-fd37-442e-9a22-969d8fa7e35c.json",
+      "sha256": "c2e226b334356cc0a003fa7701d7577a828e7d2a23fe2e4f41f205e70dee0ce7"
+    },
+    "policyDenied": {
+      "path": "evidence/privy/treasury-funding-over-cap-92a15f31-8003-4cfd-a30a-103eb855fe6d.json",
+      "sha256": "d2db0d71f9b0673f60b8e49018c091baeaed72fce0704913f0cd41dd16a19c5f"
+    },
+    "organizationExport": {
+      "path": "evidence/arc/receipt-export-7e79696a-9135-41a3-818c-e73f0540f4ab.json",
+      "sha256": "a2c33bb58e2c0c9bfe738d0adb13ace3b5ebc4f208b32822a8b249461785c642"
+    },
+    "researcherExport": {
+      "path": "evidence/arc/receipt-export-427fa358-8cab-424f-9ffb-b94c06d54c0c.json",
+      "sha256": "26ea8144bc6a819cf66f2394c8eeb857613d20976b29822a06df485a6f358a81"
+    },
+    "containers": {
+      "path": "evidence/local/container-check.json",
+      "sha256": "f641cc96cb57467bb5ccdb69c3b25dadf833826a8c5130891be5495ae9087775"
+    }
+  },
+  "remainingRequirements": [
+    "Complete the requirement-by-requirement acceptance mapping and test summary.",
+    "Implement the required test:e2e and seed:local commands.",
+    "Generate the OpenAPI specification.",
+    "Verify live model recommendations and changed-source behavior.",
+    "Verify separate live organization and researcher accounts.",
+    "Verify live reservation expiry.",
+    "Deploy on the approved public host and verify backup, restore, and pending financial recovery.",
+    "Run the staging performance and complete responsive accessibility checks.",
+    "Verify source publication, CI execution, event eligibility, and named team contributions.",
+    "Record the required demo video and complete the final submission assets."
+  ],
+  "limits": [
+    "Artifact hashes detect changed files. They do not certify that an artifact's claims are true.",
+    "Each source retains its own capture time and scope. Historical evidence is not a current provider check.",
+    "The index does not establish sponsor eligibility or award stacking."
+  ]
+}

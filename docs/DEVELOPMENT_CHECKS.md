@@ -54,9 +54,28 @@ The shared stylesheet has selectors for separate page components and intentional
 
 ## Release limits
 
-These commands prove local behavior. They do not prove the live owner, claim, settlement, report, or recovery journeys. The live model check, hosted deployment, backup controls, and submission assets remain required. Dedicated `test:e2e`, `test:live`, `seed:local`, and `evidence:validate` commands remain unimplemented.
+These commands prove local behavior. They do not prove the live owner, claim, settlement, report, or recovery journeys. The live model check, hosted deployment, backup controls, and submission assets remain required. Dedicated `test:e2e` and `seed:local` commands remain unimplemented. The read-only live check and evidence validator are described below.
 
 
 ## Deployment containers
 
 Read [container deployment](CONTAINER_DEPLOYMENT.md) for the separate container stack. `pnpm containers:prepare` creates an ignored local check environment. `pnpm containers:check` checks the running stack and saves its results. The check validates local TLS, public route restrictions, file permissions, and deployment environment guards. It uses a separate database and excludes financial provider credentials. It does not replace the live release scenario.
+
+
+## Release evidence commands
+
+`pnpm evidence:manifest` indexes the thirteen selected capture files in `evidence/live-manifest.json`. The index records the selected sponsors, Arc Testnet asset, source commit, file hashes, trust limits, and remaining release requirements. This index deliberately records `submissionReady: false`. The final acceptance audit must replace this incomplete state before release.
+
+`pnpm evidence:validate --files-only` checks the index schema, expected artifact paths, exact file hashes, and known credential fields. Evidence paths must stay inside the evidence directory. Symbolic links cannot escape that directory. These checks detect common credential fields. They do not replace a full privacy review of public source and evidence.
+
+`pnpm evidence:validate` also checks release gaps and the saved live read result. Exit code `0` is limited to the file-only check while release requirements remain open. Exit code `1` means invalid evidence files. Exit code `2` means that release requirements remain incomplete. A failed, missing, or changed-index live read result cannot satisfy its check.
+
+Run `LIVE_READ_ONLY=arc-testnet pnpm test:live` to recheck the public provider data. The environment must also set `ARC_CHAIN_ID=5042002`, `ARC_USDC_ADDRESS=0x3600000000000000000000000000000000000000`, `GRAPH_ENDPOINT`, and `GRAPH_DEPLOYMENT_ID`. The Graph settings must match the indexed deployment. The optional Graph key uses `GRAPH_QUERY_KEY`.
+
+The command uses read-only Arc requests and a Graph query. It needs no database, browser session, signing key, or wallet confirmation. It checks the escrow deployment receipt and code at deployment and at the final head. It checks all three Graph vaults and their observation and indexed-head ages. Both ages must be at most five minutes. Future times have a thirty-second tolerance.
+
+The command also checks seven financial receipt events, seven claim events, and the post-payment token transfer. It compares the saved transaction, block hash, block number, contract, event name, and selected event fields. It links the outgoing sender to the paid claimant and checks block order. Duplicate matching events fail. The command sends no transactions.
+
+The result is saved in `evidence/live-read-checks.json`. A provider error or mismatched event gives a failed result. Provider error bodies are omitted. These checks do not repeat browser login, wallet authorization, confidential report access, model generation, policy rejection, or limit simulations. A passing read-only check does not establish submission readiness.
+
+After a selected capture changes, review it and rebuild the index. Then run the live check against that index. Each capture keeps its original scope and time. The index does not turn historical evidence into a current provider check.

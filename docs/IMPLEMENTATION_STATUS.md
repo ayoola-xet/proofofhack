@@ -39,7 +39,7 @@ Privy app configuration is stored in the ignored .env file with mode 0600. Graph
 
 ## Current verification
 
-- The latest full run passes all 143 TypeScript tests in 22 files. These tests include real PostgreSQL transactions, local chain settlement, concurrent allocation jobs, current role checks, encrypted storage integrity, exact payment gating, owner controls, retention, isolated restore, expiry/refund receipt recovery, checkpoint replay, and durable automatic recovery.
+- The latest full run passes all 146 TypeScript tests in 23 files. These tests include real PostgreSQL transactions, local chain settlement, concurrent allocation jobs, current role checks, encrypted storage integrity, exact payment gating, owner controls, retention, isolated restore, expiry/refund receipt recovery, checkpoint replay, and durable automatic recovery.
 - Pass 17 Solidity tests with Foundry v1.5.0 in the foundation stage.
 - Pass TypeScript type checking.
 - Pass the production frontend and Graph package builds after the foundation changes. Vite reports one large dependency chunk.
@@ -361,3 +361,16 @@ The live local container check uses a new database and empty storage. It include
 The check verifies the local TLS certificate, expected public responses, denied unauthenticated report requests, blocked internal routes, and actual file access. It checks that the API cannot read verifier or report keys. It checks that the verifier cannot write evidence and that the report service cannot write report ciphertext. The retention container removes the temporary permission probes. It also checks rejection of local mode and local identity files before service startup.
 
 Evidence is in `evidence/local/container-check.json`. The artifact records exact image hashes. These checks prove local container boundaries. Public hosting, separate database roles, live Linux Circle authentication, browser login through the deployed origin, backup and restore, and full staging acceptance remain incomplete.
+
+
+## Release evidence index and live recheck
+
+`evidence/live-manifest.json` indexes thirteen selected capture files. It records The Graph, Arc, and Privy as the three sponsors. It preserves `FIXTURE_ONLY`, `TRUSTED_SERVICE`, and the Arc Testnet asset. It lists the remaining submission requirements and records that the submission is incomplete.
+
+The new `test:live` command requires explicit read-only testnet configuration. Its live run passes the escrow deployment and runtime-code checks, the fresh three-vault Graph query, and fifteen recorded event checks. The events cover financial receipts, the three-case claim journey, and the claimant's outgoing transfer. Evidence is in `evidence/live-read-checks.json`. This is a public data recheck. It does not repeat the private browser or wallet-provider flows.
+
+The evidence validator checks paths, file hashes, and credential-like fields. Its file-only mode passes. Its default release check returns exit code 2 because acceptance mapping, required commands, model access, public deployment, and submission assets remain open. This result is expected. It must not be reported as submission readiness.
+
+Three new unit tests reject changed event amounts, recipients, block references, missing and duplicate events, path escapes, symbolic-link escapes, and nested credentials. Type checking and repository lint pass.
+
+The full local suite passes all 146 TypeScript tests in 23 files after the evidence command changes.

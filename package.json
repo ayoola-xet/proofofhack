@@ -32,7 +32,10 @@
     "test:unit": "vitest run --project unit",
     "test:integration": "pnpm contracts:build && vitest run --project integration",
     "containers:prepare": "tsx scripts/prepare-container-check.ts",
-    "containers:check": "tsx scripts/check-containers.ts"
+    "containers:check": "tsx scripts/check-containers.ts",
+    "evidence:manifest": "tsx scripts/build-live-manifest.ts",
+    "evidence:validate": "tsx scripts/validate-evidence.ts",
+    "test:live": "tsx scripts/test-live.ts"
   },
   "devDependencies": {
     "@biomejs/biome": "^2.5.12",

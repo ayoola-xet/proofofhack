@@ -1,0 +1,340 @@
+{
+  "schemaVersion": "1",
+  "scope": "LIVE_READ_ONLY_RECHECK",
+  "capturedAt": "2026-09-08T14:42:46.112Z",
+  "sourceCommit": "d3c959a2691d30b5b167d38ec96aa387d051a83c",
+  "manifest": {
+    "path": "evidence/live-manifest.json",
+    "sha256": "4925dda3ce4efdb0ede9636e2231c30d54c7b41b203deeb69fd1aae8eab2ef03"
+  },
+  "chainId": "5042002",
+  "transactionsSent": false,
+  "result": "PASS",
+  "results": [
+    {
+      "id": "ARC_DEPLOYMENT",
+      "result": "PASS",
+      "detail": {
+        "address": "0x01742711ee569a0186349e54cffe805209808292",
+        "transactionHash": "0xfb959bbe3be6c7c15afe536412e9c7df9689257a706efd0cab4cbab288282fd0",
+        "runtimeCodeHash": "0x6e5d26099564900cd8add3b06f37ea95cdeff6f77a957b2c4daed377a64c32b5"
+      }
+    },
+    {
+      "id": "GRA-01",
+      "result": "PASS",
+      "detail": {
+        "endpoint": "https://api.studio.thegraph.com/query/1758914/vuln-proof-coverage/v0.1.0",
+        "deployment": "QmPiYxxLnHQczzQHcFHxsBdD7cxjdVQ2i4PjPeuMgUg4EC",
+        "rows": [
+          {
+            "sourceId": "1:0x83f20f44975d03b1b09e64809b757c47f942beea:25933310",
+            "vaultId": "1:0x83f20f44975d03b1b09e64809b757c47f942beea",
+            "chainId": "1",
+            "address": "0x83f20f44975d03b1b09e64809b757c47f942beea",
+            "asset": "0x6b175474e89094c44da98b954eedeac495271d0f",
+            "assetDecimals": 18,
+            "schemaVersion": "1",
+            "deploymentId": "QmPiYxxLnHQczzQHcFHxsBdD7cxjdVQ2i4PjPeuMgUg4EC",
+            "queryTime": "2026-09-08T14:42:40.227Z",
+            "observedBlock": "25933310",
+            "observedHash": "0xe3c9bc3f241f594f13e7b3810e98e831012b2b8a0bcf66cc589adab77f60e17f",
+            "observedAt": "2026-09-08T14:41:59.000Z",
+            "indexedHead": "25933312",
+            "indexedHeadAt": "2026-09-08T14:42:23.000Z",
+            "totalAssets": "165509707027631003160844942",
+            "totalSupply": "140229141778497791345910615",
+            "readStatus": "OK",
+            "hasIndexingErrors": false,
+            "label": "Sky sDAI"
+          },
+          {
+            "sourceId": "1:0x9d39a5de30e57443bff2a8307a4256c8797a3497:25933310",
+            "vaultId": "1:0x9d39a5de30e57443bff2a8307a4256c8797a3497",
+            "chainId": "1",
+            "address": "0x9d39a5de30e57443bff2a8307a4256c8797a3497",
+            "asset": "0x4c9edd5852cd905f086c759e8383e09bff1e68b3",
+            "assetDecimals": 18,
+            "schemaVersion": "1",
+            "deploymentId": "QmPiYxxLnHQczzQHcFHxsBdD7cxjdVQ2i4PjPeuMgUg4EC",
+            "queryTime": "2026-09-08T14:42:40.227Z",
+            "observedBlock": "25933310",
+            "observedHash": "0xe3c9bc3f241f594f13e7b3810e98e831012b2b8a0bcf66cc589adab77f60e17f",
+            "observedAt": "2026-09-08T14:41:59.000Z",
+            "indexedHead": "25933312",
+            "indexedHeadAt": "2026-09-08T14:42:23.000Z",
+            "totalAssets": "1365940298877290990218871483",
+            "totalSupply": "1095296086909279223615159062",
+            "readStatus": "OK",
+            "hasIndexingErrors": false,
+            "label": "Ethena sUSDe"
+          },
+          {
+            "sourceId": "1:0xa3931d71877c0e7a3148cb7eb4463524fec27fbd:25933310",
+            "vaultId": "1:0xa3931d71877c0e7a3148cb7eb4463524fec27fbd",
+            "chainId": "1",
+            "address": "0xa3931d71877c0e7a3148cb7eb4463524fec27fbd",
+            "asset": "0xdc035d45d973e3ec169d2276ddab16f1e407384f",
+            "assetDecimals": 18,
+            "schemaVersion": "1",
+            "deploymentId": "QmPiYxxLnHQczzQHcFHxsBdD7cxjdVQ2i4PjPeuMgUg4EC",
+            "queryTime": "2026-09-08T14:42:40.227Z",
+            "observedBlock": "25933310",
+            "observedHash": "0xe3c9bc3f241f594f13e7b3810e98e831012b2b8a0bcf66cc589adab77f60e17f",
+            "observedAt": "2026-09-08T14:41:59.000Z",
+            "indexedHead": "25933312",
+            "indexedHeadAt": "2026-09-08T14:42:23.000Z",
+            "totalAssets": "4672680572664244768609705207",
+            "totalSupply": "4213889098212301818050301386",
+            "readStatus": "OK",
+            "hasIndexingErrors": false,
+            "label": "Sky sUSDS"
+          }
+        ]
+      }
+    },
+    {
+      "id": "ARC_EVENT_1",
+      "result": "PASS",
+      "detail": {
+        "name": "BountyFunded",
+        "contract": "0x01742711ee569a0186349e54cffe805209808292",
+        "transactionHash": "0xdf7bdf668bed86d952f4444722d947138b9055153fc9062b971091d2013beb59",
+        "blockNumber": "61070007",
+        "blockHash": "0x5130ecae3201b034d401c291e75533c49d687f546091f4d348e5a05e9084fb30",
+        "logIndex": 28,
+        "fields": {
+          "reward": "1000000",
+          "asset": "0x3600000000000000000000000000000000000000"
+        }
+      }
+    },
+    {
+      "id": "ARC_EVENT_2",
+      "result": "PASS",
+      "detail": {
+        "name": "Paid",
+        "contract": "0x01742711ee569a0186349e54cffe805209808292",
+        "transactionHash": "0x4a4855d9db78ac02c3e255009d97b0682a3feda5a1d391f32bbd3793938c31a4",
+        "blockNumber": "61073578",
+        "blockHash": "0xf8aacdd7e7e32db2a0b6eb1fb5bc096d35902811ba341d1483d85421b788c54d",
+        "logIndex": 121,
+        "fields": {
+          "amount": "1000000",
+          "asset": "0x3600000000000000000000000000000000000000",
+          "claimant": "0xcef31a2417a0edce2f4082bda2cb64b5a5b9ba9b"
+        }
+      }
+    },
+    {
+      "id": "ARC_EVENT_3",
+      "result": "PASS",
+      "detail": {
+        "name": "Transfer",
+        "contract": "0x3600000000000000000000000000000000000000",
+        "transactionHash": "0x499182287493d834b2991e89f460324c2800331459dfdf72a2f9e60f61a47362",
+        "blockNumber": "61075005",
+        "blockHash": "0x19dee3ca9f0a231459b169c409804c24d85561da0de46c0cf3ee546fce33f10a",
+        "logIndex": 12,
+        "fields": {
+          "value": "1500000"
+        }
+      }
+    },
+    {
+      "id": "ARC_EVENT_4",
+      "result": "PASS",
+      "detail": {
+        "name": "BudgetAllocated",
+        "contract": "0x999c73e9bb9f70013f7a20cddd97c9633b094dda",
+        "transactionHash": "0x782193671c9e19d808fd0401997aef5a8e925b7c05ef5217da2441709d249e2f",
+        "blockNumber": "61075747",
+        "blockHash": "0xb270b23ade7eae471df912fe9a64d4120f502128955d80597986bbd82ae2e916",
+        "logIndex": 55,
+        "fields": {
+          "amount": "1000000"
+        }
+      }
+    },
+    {
+      "id": "ARC_EVENT_5",
+      "result": "PASS",
+      "detail": {
+        "name": "BudgetWithdrawn",
+        "contract": "0x999c73e9bb9f70013f7a20cddd97c9633b094dda",
+        "transactionHash": "0xe3e1930abfb2b1cc06d63cb3b39b7a402d9facaaec6fca25ca834f82c7df8003",
+        "blockNumber": "61077333",
+        "blockHash": "0x439133662591b40a9dfa858fd9766dacee8e5ece532dcb3c631c226f2ed8f86d",
+        "logIndex": 16,
+        "fields": {
+          "amount": "500000"
+        }
+      }
+    },
+    {
+      "id": "ARC_EVENT_6",
+      "result": "PASS",
+      "detail": {
+        "name": "BountyFunded",
+        "contract": "0x01742711ee569a0186349e54cffe805209808292",
+        "transactionHash": "0x1b22b48794686838b61a226b12cd12f7b204e5e624a0197918fdf3514b5ecfd2",
+        "blockNumber": "61078481",
+        "blockHash": "0x43d03cb422de5fc2d060ed59616e47f0cc479941674fe6602bab68c7438ebc31",
+        "logIndex": 18,
+        "fields": {
+          "reward": "250000",
+          "asset": "0x3600000000000000000000000000000000000000"
+        }
+      }
+    },
+    {
+      "id": "ARC_EVENT_7",
+      "result": "PASS",
+      "detail": {
+        "name": "BountyRefunded",
+        "contract": "0x01742711ee569a0186349e54cffe805209808292",
+        "transactionHash": "0x3a3e9da124616ca88f3e13cc70f33ed8ca276282c1253629a5239218171e0c0e",
+        "blockNumber": "61079388",
+        "blockHash": "0xe400ea501bd65b067f2cbacdce7b67c159039d88522609b15ad2e3b75437d306",
+        "logIndex": 13,
+        "fields": {
+          "amount": "250000"
+        }
+      }
+    },
+    {
+      "id": "ARC_EVENT_8",
+      "result": "PASS",
+      "detail": {
+        "name": "ClaimReserved",
+        "contract": "0x01742711ee569a0186349e54cffe805209808292",
+        "transactionHash": "0xeaf43989678e481de7b4624e4d6b77c15c299244ef2be1a28489740a4e41e24b",
+        "blockNumber": "61073002",
+        "blockHash": "0xc5372962643444f097a39d789d5c103e07b87c304b9a96d18901d877d7285cbd",
+        "logIndex": 28,
+        "fields": {
+          "claimId": "0x51ccd604a5201d8d19a59814cbb3fae6800870aec009913484c291017df2fc38",
+          "bountyId": "0xa3147639ed3a03f68dab3f18cbb81d249c23ff6efb452f25b56c12ae8ba34a68"
+        }
+      }
+    },
+    {
+      "id": "ARC_EVENT_9",
+      "result": "PASS",
+      "detail": {
+        "name": "ClaimRejected",
+        "contract": "0x01742711ee569a0186349e54cffe805209808292",
+        "transactionHash": "0xdd344dc6ef129584fe6aa86e59c3285501e1ec624590e316672893a653a788a6",
+        "blockNumber": "61073024",
+        "blockHash": "0x0f4921025c65e404c2388f5855a1f2ac1031b6a91bc47812c735b8d9069baf54",
+        "logIndex": 30,
+        "fields": {
+          "claimId": "0x51ccd604a5201d8d19a59814cbb3fae6800870aec009913484c291017df2fc38",
+          "bountyId": "0xa3147639ed3a03f68dab3f18cbb81d249c23ff6efb452f25b56c12ae8ba34a68"
+        }
+      }
+    },
+    {
+      "id": "ARC_EVENT_10",
+      "result": "PASS",
+      "detail": {
+        "name": "ClaimReserved",
+        "contract": "0x01742711ee569a0186349e54cffe805209808292",
+        "transactionHash": "0xaa4c8979cca2245c8d98a890fa6543fafbcd5ccc2c0763efbc6be3c854c15ac9",
+        "blockNumber": "61073240",
+        "blockHash": "0x09608d66e3feb0a67ac1d14a1333aa7e1d29cce7fd747d7a28895dc03459ec36",
+        "logIndex": 38,
+        "fields": {
+          "claimId": "0xf9ef9cf369e1877e8909511c1e735271d57d968a71b043e01b62fd49e90f7bfa",
+          "bountyId": "0xa3147639ed3a03f68dab3f18cbb81d249c23ff6efb452f25b56c12ae8ba34a68"
+        }
+      }
+    },
+    {
+      "id": "ARC_EVENT_11",
+      "result": "PASS",
+      "detail": {
+        "name": "ClaimRejected",
+        "contract": "0x01742711ee569a0186349e54cffe805209808292",
+        "transactionHash": "0x1656bd04bc49c19963f0e9b280a0f514d7389b8efa74d557d4dcc7c414f26b6f",
+        "blockNumber": "61073266",
+        "blockHash": "0xb1c3cba86a2740b8af14a8d3732a55921e29486859f0958454ba0cf5e9a3cda0",
+        "logIndex": 22,
+        "fields": {
+          "claimId": "0xf9ef9cf369e1877e8909511c1e735271d57d968a71b043e01b62fd49e90f7bfa",
+          "bountyId": "0xa3147639ed3a03f68dab3f18cbb81d249c23ff6efb452f25b56c12ae8ba34a68"
+        }
+      }
+    },
+    {
+      "id": "ARC_EVENT_12",
+      "result": "PASS",
+      "detail": {
+        "name": "ClaimReserved",
+        "contract": "0x01742711ee569a0186349e54cffe805209808292",
+        "transactionHash": "0x835a4b5ada18dc935f6295645ced185eb9e1c52c51be46d4791622348649b81e",
+        "blockNumber": "61073531",
+        "blockHash": "0xb75d57d7365f572a07455e84b7f9d51d6e784115f4c65399d1e643f9f889e21e",
+        "logIndex": 71,
+        "fields": {
+          "claimId": "0xc497553a6a9aee8e371f6efb58b63135cb40fc7648d9afa933a09e9b514e52e5",
+          "bountyId": "0xa3147639ed3a03f68dab3f18cbb81d249c23ff6efb452f25b56c12ae8ba34a68"
+        }
+      }
+    },
+    {
+      "id": "ARC_EVENT_13",
+      "result": "PASS",
+      "detail": {
+        "name": "ClaimQualified",
+        "contract": "0x01742711ee569a0186349e54cffe805209808292",
+        "transactionHash": "0x016c1c758172fb36b37f8ce7903a430459ae0168bb129b579813d0d3c13b3bc2",
+        "blockNumber": "61073555",
+        "blockHash": "0x3417bd73e0a457dbe983c14e64e7a517e025f8e3dfe1865b0d6ab42e018a37a8",
+        "logIndex": 49,
+        "fields": {
+          "claimId": "0xc497553a6a9aee8e371f6efb58b63135cb40fc7648d9afa933a09e9b514e52e5",
+          "bountyId": "0xa3147639ed3a03f68dab3f18cbb81d249c23ff6efb452f25b56c12ae8ba34a68",
+          "reportHash": "0xf600bb842e2825318bb1ea20d1422968a711cfa2b7dc586694f31ae099180513"
+        }
+      }
+    },
+    {
+      "id": "ARC_EVENT_14",
+      "result": "PASS",
+      "detail": {
+        "name": "Paid",
+        "contract": "0x01742711ee569a0186349e54cffe805209808292",
+        "transactionHash": "0x4a4855d9db78ac02c3e255009d97b0682a3feda5a1d391f32bbd3793938c31a4",
+        "blockNumber": "61073578",
+        "blockHash": "0xf8aacdd7e7e32db2a0b6eb1fb5bc096d35902811ba341d1483d85421b788c54d",
+        "logIndex": 121,
+        "fields": {
+          "claimId": "0xc497553a6a9aee8e371f6efb58b63135cb40fc7648d9afa933a09e9b514e52e5",
+          "bountyId": "0xa3147639ed3a03f68dab3f18cbb81d249c23ff6efb452f25b56c12ae8ba34a68"
+        }
+      }
+    },
+    {
+      "id": "ARC_EVENT_15",
+      "result": "PASS",
+      "detail": {
+        "name": "Transfer",
+        "contract": "0x3600000000000000000000000000000000000000",
+        "transactionHash": "0xfa7444fa2f6785c27d8c9a00623b3662d7b48511051b8eae34f59b1961367e5a",
+        "blockNumber": "61074499",
+        "blockHash": "0x03a0e3bc49e7bdf4df12ebead2fd1d71dfe7614c32a3f2c5a19aefe593c600d5",
+        "fields": {
+          "from": "0xcef31a2417a0edce2f4082bda2cb64b5a5b9ba9b",
+          "to": "0x6dd9e77782bbb10268abfa04663a062f3ca30768",
+          "value": "1000000"
+        }
+      }
+    }
+  ],
+  "limits": [
+    "This command rechecks public data and recorded event fields. It does not repeat browser or wallet authorization flows.",
+    "It does not recheck confidential report access, model output, provider policy rejection, or budget limit simulations.",
+    "A passing read-only check is not submission readiness."
+  ]
+}
