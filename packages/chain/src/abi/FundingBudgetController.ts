@@ -1,3 +1,4 @@
+// Generated from contracts/src/FundingBudgetController.sol.
 export const fundingBudgetControllerAbi = [
   {
     type: "constructor",

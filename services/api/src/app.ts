@@ -9,6 +9,7 @@ import type { WalletIdentityProvider } from "../../../packages/privy/src/wallets
 import { registerAssistantRoutes } from "./assistant-routes.ts";
 import type { AuthProvider } from "./auth.ts";
 import { type BountyServices, registerBountyRoutes } from "./bounty-routes.ts";
+import { type BudgetServices, registerBudgetRoutes } from "./budget-routes.ts";
 import { type ClaimServices, registerClaimRoutes } from "./claim-routes.ts";
 import { expectedVersion, first, idParams, member, mutate, pageParams } from "./context.ts";
 import { registerCoverageRoutes } from "./coverage-routes.ts";
@@ -27,6 +28,7 @@ export type ApiOptions = {
   bountyServices?: BountyServices;
   claimServices?: ClaimServices;
   assistantModel?: string;
+  budgetServices?: BudgetServices;
 };
 const nameSchema = z.string().trim().min(2).max(80);
 export async function createApp(options: ApiOptions) {
@@ -326,6 +328,7 @@ export async function createApp(options: ApiOptions) {
   registerFundingRoutes(app, pool, options.bountyServices?.escrow, options.walletIdentity);
   registerClaimRoutes(app, pool, options.claimServices, options.walletIdentity);
   registerCoverageRoutes(app, pool);
+  registerBudgetRoutes(app, pool, options.budgetServices);
   registerAssistantRoutes(app, pool, options.assistantModel);
   registerWalletRoutes(app, pool, options.walletIdentity);
   return app;

@@ -192,11 +192,15 @@ export function registerBountyRoutes(app: FastifyInstance, pool: Pool, services?
     const input = z
       .strictObject({
         manifestId: z.uuid(),
-        refundWalletId: z.uuid(),
+        refundWalletId: z.uuid().optional(),
+        controllerId: z.uuid().optional(),
         reward: uint().refine((v) => BigInt(v) > 0n),
         minimumDiscrepancy: uint().refine((v) => BigInt(v) > 0n),
         submissionDeadline: uint(64),
         reservationDurationSeconds: z.number().int().min(60).max(1800),
+      })
+      .refine((v) => Boolean(v.refundWalletId) !== Boolean(v.controllerId), {
+        message: "Select one refund wallet or budget controller.",
       })
       .parse(request.body);
     const result = await mutate(
@@ -230,11 +234,17 @@ export function registerBountyRoutes(app: FastifyInstance, pool: Pool, services?
             "The manifest belongs to another organization.",
             400,
           );
-        const refund = await first(
-          c,
-          "select address from wallets where id=$1 and owner_type='ORGANIZATION' and owner_id=$2 and chain_id='5042002' and provider='PRIVY'",
-          [input.refundWalletId, program.organization_id],
-        );
+        const refund = input.controllerId
+          ? await first(
+              c,
+              "select address from budget_controllers where id=$1 and organization_id=$2 and chain_id='5042002' and asset=$3 and limit_projection_json->>'escrow'=$4",
+              [input.controllerId, program.organization_id, ARC_USDC, config.escrow],
+            )
+          : await first(
+              c,
+              "select address from wallets where id=$1 and owner_type='ORGANIZATION' and owner_id=$2 and chain_id='5042002' and provider='PRIVY'",
+              [input.refundWalletId, program.organization_id],
+            );
         const key = await first(
           c,
           "select key_id from organization_keys where organization_id=$1 and status='ACTIVE'",

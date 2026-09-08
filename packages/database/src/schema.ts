@@ -413,7 +413,10 @@ export const budgetControllers = pgTable(
     limitProjection: json("limit_projection_json").notNull(),
     ...dates(),
   },
-  (t) => [uniqueIndex("controller_unique").on(t.organizationId, t.chainId, t.address)],
+  (t) => [
+    uniqueIndex("controller_unique").on(t.organizationId, t.chainId, t.address),
+    uniqueIndex("controller_organization_chain").on(t.organizationId, t.chainId),
+  ],
 );
 export const approvedAllocations = pgTable(
   "approved_allocations",
@@ -454,22 +457,26 @@ export const transactionIntents = pgTable(
     index("intent_reconciliation").on(t.state),
   ],
 );
-export const agentActions = pgTable("agent_actions", {
-  id: uuid("id").primaryKey().defaultRandom(),
-  controllerId: uuid("controller_id")
-    .notNull()
-    .references(() => budgetControllers.id),
-  recommendationId: uuid("recommendation_id")
-    .notNull()
-    .references(() => recommendations.id),
-  policyHash: text("policy_hash").notNull(),
-  idempotencyKey: text("idempotency_key").notNull().unique(),
-  providerRequestId: text("provider_request_id"),
-  txIntentId: uuid("tx_intent_id").references(() => transactionIntents.id),
-  state: text("state").notNull(),
-  rejectionCode: text("rejection_code"),
-  ...dates(),
-});
+export const agentActions = pgTable(
+  "agent_actions",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    controllerId: uuid("controller_id")
+      .notNull()
+      .references(() => budgetControllers.id),
+    recommendationId: uuid("recommendation_id")
+      .notNull()
+      .references(() => recommendations.id),
+    policyHash: text("policy_hash").notNull(),
+    idempotencyKey: text("idempotency_key").notNull().unique(),
+    providerRequestId: text("provider_request_id"),
+    txIntentId: uuid("tx_intent_id").references(() => transactionIntents.id),
+    state: text("state").notNull(),
+    rejectionCode: text("rejection_code"),
+    ...dates(),
+  },
+  (t) => [uniqueIndex("agent_action_policy").on(t.controllerId, t.policyHash)],
+);
 export const receipts = pgTable(
   "receipts",
   {

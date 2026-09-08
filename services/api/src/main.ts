@@ -1,3 +1,5 @@
+import { ARC_USDC } from "../../../packages/chain/src/arc.ts";
+import { ReadOnlyBudgetChain } from "../../../packages/chain/src/budget.ts";
 import { FileCiphertextStore } from "../../../packages/ciphertext-store/src/index.ts";
 import { address } from "../../../packages/domain/src/index.ts";
 import { InternalClient } from "../../../packages/service-auth/src/http.ts";
@@ -59,6 +61,22 @@ const bountyServices =
       }
     : undefined;
 const app = await createApp({
+  budgetServices:
+    bountyServices && process.env.CIRCLE_AGENT_ADDRESS
+      ? {
+          chain: new ReadOnlyBudgetChain(
+            "https://rpc.testnet.arc.io",
+            5042002,
+            bountyServices.escrow,
+          ),
+          network: {
+            chainId: 5042002,
+            asset: ARC_USDC,
+            escrow: bountyServices.escrow,
+            operator: address.parse(process.env.CIRCLE_AGENT_ADDRESS),
+          },
+        }
+      : undefined,
   assistantModel:
     process.env.MODEL_API_KEY || process.env.OPENAI_API_KEY ? process.env.MODEL_ID : undefined,
   bountyServices,

@@ -7,15 +7,15 @@ The full submission objective remains active. Live Graph indexing and the initia
 | Package | Status | Evidence |
 | --- | --- | --- |
 | WP-01 Foundation | IN_PROGRESS | Workspace, local infrastructure, and provider preflight created. Type check passes. |
-| WP-02 Domain and database | IN_PROGRESS | Strict schemas, policy hashing, 32 database tables, and ten applied migrations. OpenAPI generation pending. |
+| WP-02 Domain and database | IN_PROGRESS | Strict schemas, policy hashing, 32 database tables, and eleven applied migrations. OpenAPI generation pending. |
 | WP-03 Escrow | IN_PROGRESS | Contract implemented. Financial suite: 17 passing tests, including 256-run fuzz cases. Arc Testnet deployment verified. Draft approval and durable funding are connected through the API and worker. Database and failure-path tests pass. The live bounty funding test remains pending. |
-| WP-04 Budget controller | IN_PROGRESS | Exact policy approval and cumulative limits implemented and tested locally. Live Circle path pending. |
+| WP-04 Budget controller | IN_PROGRESS | Controller registration, exact policy approval, durable allocation, and cumulative limits pass local chain tests. Live Circle allocation and owner controls remain pending. |
 | WP-05 Identity and Privy | IN_PROGRESS | Live login, current role checks, and user wallet transfers work. The organization wallet has a verified Privy owner and policy. Live signing checks accept an allowed approval and reject an unapproved spender. Bounty funding remains pending. |
 | WP-06 Graph data | IN_PROGRESS | One shared schema indexes three live vaults. The Studio query returns fresh observations without indexing errors. |
 | WP-07 Coverage intelligence | IN_PROGRESS | Deterministic coverage calculations, source checks, and exact approved policy selection pass tests. Durable database updates and rule-based explanations work. The model adapter, saved requests, current-source checks, and source validation pass local tests. Live model verification needs credentials. |
 | WP-08 Confidential service | IN_PROGRESS | Fixed fixture assessment, atomic encrypted file storage, service tokens, and payment-gated report access implemented. The report service runs separately on port 4190 and creates organization keys. Encrypted fixture admission, signed assessment, and separate report download services pass a full local chain test. Live operation remains pending. |
 | WP-09 Settlement worker | IN_PROGRESS | Funding confirms the canonical Arc receipt and exact approval, funding, and USDC transfer events. It saves signed bytes before broadcast and resumes the same intent after a lost response. The claim settlement core passes a local chain test. The queue and Circle execution connection are configured. Local tests also reconcile a payment collected outside the worker. The live claim test remains pending. |
-| WP-10 Circle agent | IN_PROGRESS | Circle CLI 1.0.0 is authenticated. The agent wallet received test USDC and deployed the escrow. Bounded funding remains pending. |
+| WP-10 Circle agent | IN_PROGRESS | Circle CLI 1.0.0 is authenticated. The agent wallet received test USDC and deployed the escrow. Bounded allocation passes local tests with the Circle argument format. Live allocation remains pending. |
 | WP-11 Application | IN_PROGRESS | Responsive workspace, live Privy login, organization and program setup, vault coverage, and wallet transfers work. The new bounty page prepares signed fixtures, downloads cases, approves terms, and requests Privy funding confirmation. Its live browser test waits for the Mac to be unlocked. |
 | WP-12 Deployment and evidence | NOT_STARTED | No evidence yet |
 
@@ -37,7 +37,7 @@ Privy app configuration is stored in the ignored .env file with mode 0600. Graph
 
 ## Current verification
 
-- Pass the 56-test TypeScript suite and two added Arc finality tests. These tests include real PostgreSQL transactions, concurrent retries, current role checks, encrypted storage integrity, and exact payment gating.
+- Pass all 83 TypeScript tests in 17 files. These tests include real PostgreSQL transactions, local chain settlement, concurrent allocation jobs, current role checks, encrypted storage integrity, and exact payment gating.
 - Pass 17 Solidity tests from the contract stage.
 - Pass TypeScript type checking.
 - Pass the production frontend build after the organization wallet changes. Vite reports one large dependency chunk.
@@ -145,3 +145,16 @@ The live model gate remains incomplete. `MODEL_API_KEY` and `MODEL_ID` are empty
 ## Report download integrity
 
 The browser now compares downloaded report bytes with the report hash from authenticated metadata. It creates a download only after the hash matches. A unit test changes a byte and verifies rejection. The claim journey tests still pass. This completes the byte-check implementation for PRI-05. The live browser check remains pending.
+
+
+## Bounded budget allocation
+
+The API registers a controller only after it checks the finalized deployment, exact creation code, and constructor fields. The database preserves the organization, owner, operator, asset, escrow, and deployment proof. The current registration check supports direct contract creation. Circle deploys through a factory. Factory deployment verification remains pending. No live budget controller is registered.
+
+An approved draft can return unused funds to its organization wallet or its registered controller. The API requires exactly one refund destination. The controller approval must match the exact draft hash and reward. The allocation worker checks fresh Graph context, the current coverage policy, the current chain approval, the controller balance, the spending limits, and the operator gas reserve.
+
+The worker saves one immutable Circle request before it calls the provider. It checks finalized `BudgetAllocated`, `BountyFunded`, and token transfer events before it records funding. A lost response can reconcile the existing allocation. Concurrent jobs cannot send two allocations for one controller. A pending request can retry through the API with its original transaction terms.
+
+The worker refreshes registered controllers and queues current recommendations only when the controller is enabled. The owner must approve the exact policy on chain. The language model has no allocation authority. Controller owner controls and their Privy policy extension remain pending.
+
+Ten budget tests pass. They cover lost responses, concurrent jobs, daily spending, per-action limits, disabled controllers, absent approval, stale sources, deployment bindings, and the installed Circle tuple parser. The complete TypeScript suite has 83 passing tests. Type checking and the full build pass. These results use local test chains and a simulated Circle response. They do not prove live Circle allocation.

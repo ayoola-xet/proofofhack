@@ -1,5 +1,7 @@
 import { z } from "zod";
 import { ReadOnlyBountyChain } from "../../../packages/chain/src/bounty-reader.ts";
+import { ReadOnlyBudgetChain } from "../../../packages/chain/src/budget.ts";
+import { CircleBudgetExecutor } from "../../../packages/circle/src/budget.ts";
 import { configuredCircleRelayer } from "../../../packages/circle/src/claims.ts";
 import { address } from "../../../packages/domain/src/index.ts";
 import { PrivyTreasury } from "../../../packages/privy/src/treasury.ts";
@@ -7,6 +9,7 @@ import { InternalClient } from "../../../packages/service-auth/src/http.ts";
 import { loadTestnetSecret } from "../../../packages/service-config/src/index.ts";
 import { configuredExplanationProvider } from "../../assistant/src/provider.ts";
 import { startAssistantJobs } from "./assistant-jobs.ts";
+import { startBudgetJobs } from "./budget-jobs.ts";
 import { startClaimJobs } from "./claim-jobs.ts";
 import { startTreasuryJobs } from "./treasury-jobs.ts";
 import "dotenv/config";
@@ -24,11 +27,8 @@ boss.on("error", () =>
   process.stderr.write("Worker operation failed. The durable job can retry.\n"),
 );
 await boss.start();
-await startCoverageJobs(
-  boss,
-  pool,
-  new GraphCoverageClient(endpoint, deployment, process.env.GRAPH_QUERY_KEY),
-);
+const coverageSource = new GraphCoverageClient(endpoint, deployment, process.env.GRAPH_QUERY_KEY);
+await startCoverageJobs(boss, pool, coverageSource);
 if (process.env.PRIVY_APP_ID && process.env.PRIVY_APP_SECRET) {
   const key = z
     .object({
@@ -49,6 +49,15 @@ if (process.env.PRIVY_APP_ID && process.env.PRIVY_APP_SECRET) {
 }
 if (process.env.CIRCLE_AGENT_ADDRESS && process.env.ESCROW_ADDRESS) {
   const escrow = address.parse(process.env.ESCROW_ADDRESS);
+  const operator = address.parse(process.env.CIRCLE_AGENT_ADDRESS);
+  const relayer = await configuredCircleRelayer(pool, operator, escrow);
+  await startBudgetJobs(
+    boss,
+    pool,
+    new ReadOnlyBudgetChain("https://rpc.testnet.arc.io", 5042002, escrow),
+    new CircleBudgetExecutor(relayer.walletId, operator, escrow),
+    coverageSource,
+  );
   const identity = z
     .object({ privateKey: z.string().startsWith("-----BEGIN PRIVATE KEY-----") })
     .parse(
@@ -60,7 +69,7 @@ if (process.env.CIRCLE_AGENT_ADDRESS && process.env.ESCROW_ADDRESS) {
     boss,
     pool,
     new ReadOnlyBountyChain("https://rpc.testnet.arc.io", 5042002, escrow),
-    await configuredCircleRelayer(pool, address.parse(process.env.CIRCLE_AGENT_ADDRESS), escrow),
+    relayer,
     new InternalClient(
       process.env.VERIFIER_INTERNAL_URL ?? "http://127.0.0.1:4191",
       "worker",
@@ -77,7 +86,9 @@ if (process.env.CIRCLE_AGENT_ADDRESS && process.env.ESCROW_ADDRESS) {
 }
 const explanationProvider = configuredExplanationProvider();
 if (explanationProvider) await startAssistantJobs(boss, pool, explanationProvider);
-process.stdout.write("Configured coverage, treasury, claim, and assistant workers are ready.\n");
+process.stdout.write(
+  "Configured coverage, treasury, budget, claim, and assistant workers are ready.\n",
+);
 for (const signal of ["SIGINT", "SIGTERM"] as const)
   process.once(signal, async () => {
     await boss.stop({ graceful: true, timeout: 20_000 });
