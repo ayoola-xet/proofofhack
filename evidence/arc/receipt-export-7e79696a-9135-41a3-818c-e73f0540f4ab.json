@@ -1,0 +1,101 @@
+{
+  "schemaVersion": "1",
+  "scope": "LIVE_ORGANIZATION_RECEIPT_EXPORT",
+  "capturedAt": "2026-09-08T14:09:24.466Z",
+  "baseCommit": "500f6edd04497ef5a17f0cc20537d31f96a89987",
+  "exportId": "7e79696a-9135-41a3-818c-e73f0540f4ab",
+  "chainId": "5042002",
+  "evidenceScope": "FIXTURE_ONLY",
+  "verifierMode": "TRUSTED_SERVICE",
+  "contentHash": "64a3b5839eaa51690e72a5d15a34cd8b7dd67727b26e4dca6bbd0cd2a9a88c9d",
+  "downloadedBytesMatchSavedExport": true,
+  "exactCsvFromImmutableSnapshot": true,
+  "records": [
+    {
+      "category": "FUNDING",
+      "amountBaseUnits": "1000000",
+      "asset": "0x3600000000000000000000000000000000000000",
+      "transactionHash": "0xdf7bdf668bed86d952f4444722d947138b9055153fc9062b971091d2013beb59",
+      "blockNumber": "61070007",
+      "blockHash": "0x5130ecae3201b034d401c291e75533c49d687f546091f4d348e5a05e9084fb30",
+      "logIndex": "28",
+      "eventName": "BountyFunded",
+      "canonicalFinalizedEvent": true
+    },
+    {
+      "category": "PAYMENT",
+      "amountBaseUnits": "1000000",
+      "asset": "0x3600000000000000000000000000000000000000",
+      "transactionHash": "0x4a4855d9db78ac02c3e255009d97b0682a3feda5a1d391f32bbd3793938c31a4",
+      "blockNumber": "61073578",
+      "blockHash": "0xf8aacdd7e7e32db2a0b6eb1fb5bc096d35902811ba341d1483d85421b788c54d",
+      "logIndex": "121",
+      "eventName": "Paid",
+      "canonicalFinalizedEvent": true
+    },
+    {
+      "category": "BUDGET_DEPOSIT",
+      "amountBaseUnits": "1500000",
+      "asset": "0x3600000000000000000000000000000000000000",
+      "transactionHash": "0x499182287493d834b2991e89f460324c2800331459dfdf72a2f9e60f61a47362",
+      "blockNumber": "61075005",
+      "blockHash": "0x19dee3ca9f0a231459b169c409804c24d85561da0de46c0cf3ee546fce33f10a",
+      "logIndex": "12",
+      "eventName": "Transfer",
+      "canonicalFinalizedEvent": true
+    },
+    {
+      "category": "BUDGET_ALLOCATION",
+      "amountBaseUnits": "1000000",
+      "asset": "0x3600000000000000000000000000000000000000",
+      "transactionHash": "0x782193671c9e19d808fd0401997aef5a8e925b7c05ef5217da2441709d249e2f",
+      "blockNumber": "61075747",
+      "blockHash": "0xb270b23ade7eae471df912fe9a64d4120f502128955d80597986bbd82ae2e916",
+      "logIndex": "55",
+      "eventName": "BudgetAllocated",
+      "canonicalFinalizedEvent": true
+    },
+    {
+      "category": "BUDGET_WITHDRAW",
+      "amountBaseUnits": "500000",
+      "asset": "0x3600000000000000000000000000000000000000",
+      "transactionHash": "0xe3e1930abfb2b1cc06d63cb3b39b7a402d9facaaec6fca25ca834f82c7df8003",
+      "blockNumber": "61077333",
+      "blockHash": "0x439133662591b40a9dfa858fd9766dacee8e5ece532dcb3c631c226f2ed8f86d",
+      "logIndex": "16",
+      "eventName": "BudgetWithdrawn",
+      "canonicalFinalizedEvent": true
+    },
+    {
+      "category": "FUNDING",
+      "amountBaseUnits": "250000",
+      "asset": "0x3600000000000000000000000000000000000000",
+      "transactionHash": "0x1b22b48794686838b61a226b12cd12f7b204e5e624a0197918fdf3514b5ecfd2",
+      "blockNumber": "61078481",
+      "blockHash": "0x43d03cb422de5fc2d060ed59616e47f0cc479941674fe6602bab68c7438ebc31",
+      "logIndex": "18",
+      "eventName": "BountyFunded",
+      "canonicalFinalizedEvent": true
+    },
+    {
+      "category": "REFUND",
+      "amountBaseUnits": "250000",
+      "asset": "0x3600000000000000000000000000000000000000",
+      "transactionHash": "0x3a3e9da124616ca88f3e13cc70f33ed8ca276282c1253629a5239218171e0c0e",
+      "blockNumber": "61079388",
+      "blockHash": "0xe400ea501bd65b067f2cbacdce7b67c159039d88522609b15ad2e3b75437d306",
+      "logIndex": "13",
+      "eventName": "BountyRefunded",
+      "canonicalFinalizedEvent": true
+    }
+  ],
+  "queue": {
+    "jobId": "56586763-ff99-4052-ae9e-5c2aea6a35c5",
+    "state": "completed",
+    "completedAt": "2026-09-08T14:08:14.370Z"
+  },
+  "limits": [
+    "This capture verifies one organization export through the local app and live Arc Testnet.",
+    "It does not prove hosted operation, separate live user access, or researcher receipt export."
+  ]
+}

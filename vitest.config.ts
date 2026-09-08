@@ -12,6 +12,7 @@ const integration = [
   "tests/recovery.test.ts",
   "tests/report-access.test.ts",
   "tests/retention.test.ts",
+  "tests/receipt-exports.test.ts",
   "tests/treasury.test.ts",
 ];
 export default defineConfig({

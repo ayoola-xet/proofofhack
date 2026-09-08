@@ -412,3 +412,18 @@ Recovery transaction intents use `RECOVERY_expireReservation` or `RECOVERY_refun
 The bounty draft request accepts `settlementGraceSeconds`. It is an integer from 0 to 86,400. Its default is 3,600. The API sets `settlementDeadline` to `submissionDeadline + reservationDurationSeconds + settlementGraceSeconds`. The approved policy fixes that result.
 
 The organization draft read also returns `chain_state` and `creation_tx` from the confirmed bounty projection. Both values are null before funding is recorded. Both direct wallet funding and controller allocation use this projection. A draft approval alone is not funding evidence.
+
+
+## Organization receipt exports
+
+`GET /api/v1/organizations/:id/receipts` accepts `category`, `from`, `to`, `limit`, and `cursor`. Categories are `FUNDING`, `PAYMENT`, `REFUND`, `BUDGET_ALLOCATION`, `BUDGET_DEPOSIT`, and `BUDGET_WITHDRAW`. Date filters use ISO UTC timestamps on the receipt creation time. `from` is inclusive. `to` is exclusive. Both read and export routes require a current owner or treasury role.
+
+`POST /api/v1/organizations/:id/receipt-exports` accepts the same category and date filters. It requires `Idempotency-Key`. It selects all matching final receipts and final chain events. It returns HTTP 202 with `id`, `state`, `created_at`, and `rowCount`. More than 1,000 rows returns `400 EXPORT_TOO_LARGE`. Narrow the filters and use a new request key. The export does not truncate results.
+
+`GET /api/v1/organizations/:id/receipt-exports` lists the requester's latest 20 exports. `GET /api/v1/exports/:id/status` returns status for one owned export. Metadata includes `id`, `state`, `errorCode`, `contentHash`, `rowCount`, `createdAt`, and `completedAt`. States are `QUEUED`, `RUNNING`, `RETRYING`, `READY`, `FAILED`, and `CANCELLED`. The worker retries unavailable finality checks up to five attempts. A changed chain event fails the export. Removed membership cancels pending work.
+
+`GET /api/v1/exports/:id` returns HTTP 202 with metadata until the export is ready. A ready export returns a CSV attachment with `X-Content-SHA256` and `Cache-Control: no-store`. Every read checks the requesting user and current role. Another organization member cannot download the file. The browser compares the downloaded bytes with the saved hash and response hash before it starts the download.
+
+The `receipt_exports` table stores the requesting user, organization, filters, source records, input hash, status, attempts, fixed error code, CSV bytes, file hash, and completion time. Database checks preserve the snapshot and completed output. The worker verifies each source event against a canonical final Arc receipt. No export creates a chain transaction.
+
+The CSV states `FIXTURE_ONLY`, `TRUSTED_SERVICE`, and Arc Testnet. Amounts use six decimal places and exact base-unit strings. Import long base-unit values as text in spreadsheet software. Funding, budget transfers, and payments are separate categories. Do not add all categories as revenue.

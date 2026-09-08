@@ -1,0 +1,35 @@
+{
+  "schemaVersion": "1",
+  "scope": "LIVE_ORGANIZATION_RECEIPT_EXPORT",
+  "capturedAt": "2026-09-08T14:11:01.571Z",
+  "baseCommit": "500f6edd04497ef5a17f0cc20537d31f96a89987",
+  "exportId": "e3eff377-6aca-454d-a2bf-187872f6b984",
+  "chainId": "5042002",
+  "evidenceScope": "FIXTURE_ONLY",
+  "verifierMode": "TRUSTED_SERVICE",
+  "contentHash": "405855580e0bf7e9bf05b759f24a45c657d811700418e3dfe6cf2d383932d5d4",
+  "downloadedBytesMatchSavedExport": true,
+  "exactCsvFromImmutableSnapshot": true,
+  "records": [
+    {
+      "category": "REFUND",
+      "amountBaseUnits": "250000",
+      "asset": "0x3600000000000000000000000000000000000000",
+      "transactionHash": "0x3a3e9da124616ca88f3e13cc70f33ed8ca276282c1253629a5239218171e0c0e",
+      "blockNumber": "61079388",
+      "blockHash": "0xe400ea501bd65b067f2cbacdce7b67c159039d88522609b15ad2e3b75437d306",
+      "logIndex": "13",
+      "eventName": "BountyRefunded",
+      "canonicalFinalizedEvent": true
+    }
+  ],
+  "queue": {
+    "jobId": "4ead2b43-9b3a-412a-b412-66d5591f077a",
+    "state": "completed",
+    "completedAt": "2026-09-08T14:09:43.409Z"
+  },
+  "limits": [
+    "This capture verifies one organization export through the local app and live Arc Testnet.",
+    "It does not prove hosted operation, separate live user access, or researcher receipt export."
+  ]
+}

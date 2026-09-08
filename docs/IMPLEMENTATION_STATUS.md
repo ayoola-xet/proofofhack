@@ -7,7 +7,7 @@ The full submission objective remains active. Live Graph indexing, Arc claim set
 | Package | Status | Evidence |
 | --- | --- | --- |
 | WP-01 Foundation | IN_PROGRESS | Workspace, local infrastructure, provider preflight, service start command, test groups, and pinned CI workflow created. Root lint, type checks, builds, and unit checks pass. The full integration rerun passes. CI execution remains pending. |
-| WP-02 Domain and database | IN_PROGRESS | Strict schemas, policy hashing, 34 database tables, and sixteen applied migrations. OpenAPI generation pending. |
+| WP-02 Domain and database | IN_PROGRESS | Strict schemas, policy hashing, 35 database tables, and seventeen applied migrations. OpenAPI generation pending. |
 | WP-03 Escrow | IN_PROGRESS | Contract implemented. Financial suite: 17 passing tests, including 256-run fuzz cases. Arc Testnet deployment verified. Draft approval and durable funding are connected through the API and worker. Database and failure-path tests pass. The signed-in browser funds a one-test-USDC bounty on Arc. The live three-case claim journey completes. A live automatic refund has final receipt evidence. Live reservation expiry and hosted recovery remain pending. |
 | WP-04 Budget controller | IN_PROGRESS | Controller registration, owner controls, exact policy approval, durable allocation, and cumulative limits pass local tests. Live Privy owner transactions configure limits, deposit funds, approve exact policies, enable allocation, and withdraw unused funds. Circle funds one test-USDC bounty. The worker and deployed controller reject the daily-limit control. |
 | WP-05 Identity and Privy | IN_PROGRESS | Live login, current role checks, and user wallet transfers work. The organization wallet has a verified Privy owner and policy. Live signing checks accept an allowed approval and reject an unapproved spender. A signed-in owner authorizes and funds a one-test-USDC bounty on Arc. The paid claimant later sends one test USDC through the embedded wallet. |
@@ -39,11 +39,11 @@ Privy app configuration is stored in the ignored .env file with mode 0600. Graph
 
 ## Current verification
 
-- The latest full run passes all 131 TypeScript tests in 21 files. These tests include real PostgreSQL transactions, local chain settlement, concurrent allocation jobs, current role checks, encrypted storage integrity, exact payment gating, owner controls, retention, isolated restore, expiry/refund receipt recovery, checkpoint replay, and durable automatic recovery.
+- The latest full run passes all 141 TypeScript tests in 22 files. These tests include real PostgreSQL transactions, local chain settlement, concurrent allocation jobs, current role checks, encrypted storage integrity, exact payment gating, owner controls, retention, isolated restore, expiry/refund receipt recovery, checkpoint replay, and durable automatic recovery.
 - Pass 17 Solidity tests with Foundry v1.5.0 in the foundation stage.
 - Pass TypeScript type checking.
 - Pass the production frontend and Graph package builds after the foundation changes. Vite reports one large dependency chunk.
-- Pass repository-wide lint for 167 source and configuration files. Pass all 36 unit tests in nine files. The full suite also passes after Docker recovery and the test-chain history change.
+- Pass repository-wide lint for the current source and configuration files. Pass all 36 unit tests in nine files. The full suite also passes after Docker recovery and the test-chain history change.
 - Open the live Privy login window through the new app. The user has signed in to the local workspace. Live claim settlement and budget allocation now have separate evidence records.
 - Check the desktop landing page and the 390-pixel mobile page. Mobile scroll width equals viewport width. Browser evidence is in the ignored output/playwright folder.
 
@@ -326,3 +326,14 @@ The worker records earlier retry states before the refund completes. Direct scan
 All 19 recovery tests pass after the diagnostic change. Type checks and repository lint pass. The most recent full runtime run, before this logging change, passes 133 tests. Evidence is in `evidence/arc/recovery-0xa26a9f3f8c56461e41ed35f85af089ef63617692a1e284abe60ad1953c813b87.json`. The live capture command is `pnpm exec tsx scripts/capture-recovery-evidence.ts <bountyId>`. It reads state and writes public evidence. It sends no transactions.
 
 The three sponsor README files now map selected tracks to code, setup, evidence, feedback, and limits. Event rules are checked again on 8 September 2026. The live model, separate live accounts, hosting, staging backup and restore, receipt exports, remaining release commands, performance checks, public repository, and video remain open. The full submission goal remains active.
+
+
+## Verified receipt exports
+
+Owners and treasury members can filter receipts by category and recorded date. An export saves an immutable snapshot of at most 1,000 final receipts. The worker checks the canonical final transaction, event, amount, contract, block hash, and saved event fields before it creates CSV bytes. New receipts do not change an existing export.
+
+The queue resumes pending exports. It limits failed checks to five attempts. Removed membership cancels pending work. Only the requester with a current owner or treasury role can read the saved export. The API and browser both check its SHA-256 file hash. The CSV keeps test-USDC base units as exact strings.
+
+The live browser downloads seven organization receipts. The capture script checks the downloaded bytes against the saved snapshot and rechecks all seven final Arc events. Evidence: `evidence/arc/receipt-export-7e79696a-9135-41a3-818c-e73f0540f4ab.json`. This proves the local organization export with live testnet data. Researcher exports and hosted operation remain incomplete.
+
+Seven new integration tests cover duplicate requests, immutable snapshots and files, current access, changed amounts and blocks, finality retries, filters, pagination, and the PostgreSQL job queue. All 141 TypeScript tests in 22 files pass. Type checking, lint, and the production build pass.

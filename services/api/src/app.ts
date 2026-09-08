@@ -17,6 +17,7 @@ import { registerCoverageRoutes } from "./coverage-routes.ts";
 import { registerFundingRoutes } from "./funding-routes.ts";
 import { registerOwnerRoutes } from "./owner-routes.ts";
 import { registerReadRoutes } from "./read-routes.ts";
+import { registerReceiptRoutes } from "./receipt-routes.ts";
 import { registerRecoveryRoutes } from "./recovery-routes.ts";
 import { registerRpcRoutes } from "./rpc-routes.ts";
 import { registerTreasuryRoutes } from "./treasury-routes.ts";
@@ -310,21 +311,7 @@ export async function createApp(options: ApiOptions) {
       nextCursor: rows.length > page.limit ? rows[page.limit - 1].id : null,
     };
   });
-  app.get("/api/v1/organizations/:id/receipts", async (request) => {
-    const { id } = idParams(request);
-    await member(pool, request.actor, id, ["OWNER", "TREASURY"]);
-    const page = pageParams.parse(request.query);
-    const rows = (
-      await pool.query(
-        "select r.*, e.transaction_hash, e.block_number, e.finality_state from receipts r join chain_events e on e.id=r.event_id where r.organization_id=$1 and ($2::uuid is null or r.id>$2) order by r.id limit $3",
-        [id, page.cursor ?? null, page.limit + 1],
-      )
-    ).rows;
-    return {
-      items: rows.slice(0, page.limit),
-      nextCursor: rows.length > page.limit ? rows[page.limit - 1].id : null,
-    };
-  });
+  registerReceiptRoutes(app, pool);
   registerRpcRoutes(app, pool);
   registerReadRoutes(app, pool);
   registerRecoveryRoutes(app, pool, options.recoveryChain);

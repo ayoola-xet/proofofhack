@@ -13,6 +13,7 @@ import { startAssistantJobs } from "./assistant-jobs.ts";
 import { startBudgetJobs } from "./budget-jobs.ts";
 import { startClaimJobs } from "./claim-jobs.ts";
 import { startOwnerJobs } from "./owner-jobs.ts";
+import { startReceiptExportJobs } from "./receipt-jobs.ts";
 import { startRecoveryJobs } from "./recovery-jobs.ts";
 import { startTreasuryJobs } from "./treasury-jobs.ts";
 import "dotenv/config";
@@ -63,6 +64,11 @@ if (process.env.CIRCLE_AGENT_ADDRESS && process.env.ESCROW_ADDRESS) {
   const escrow = address.parse(process.env.ESCROW_ADDRESS);
   const operator = address.parse(process.env.CIRCLE_AGENT_ADDRESS);
   const relayer = await configuredCircleRelayer(pool, operator, escrow);
+  await startReceiptExportJobs(
+    boss,
+    pool,
+    new ReadOnlyBountyChain("https://rpc.testnet.arc.io", 5042002, escrow),
+  );
   await startRecoveryJobs(
     boss,
     pool,

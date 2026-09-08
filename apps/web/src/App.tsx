@@ -1,6 +1,5 @@
 import { usePrivy } from "@privy-io/react-auth";
 import {
-  ArrowDownLeft,
   ArrowRight,
   ArrowUpRight,
   BookOpen,
@@ -26,6 +25,7 @@ import { BountyWorkspace } from "./pages/BountyWorkspace.tsx";
 import { Budget } from "./pages/Budget.tsx";
 import { ClaimSubmission, MyClaims, ReportDownload } from "./pages/Claims.tsx";
 import { Coverage } from "./pages/Coverage.tsx";
+import { ReceiptsPage } from "./pages/Receipts.tsx";
 import { Recovery } from "./pages/Recovery.tsx";
 import {
   ReportRetention,
@@ -259,7 +259,7 @@ export function App() {
             />
             <Route path="/reports" element={<Reports organization={organization} />} />
             <Route path="/wallet" element={<WalletPage />} />
-            <Route path="/receipts" element={<Receipts organization={organization} />} />
+            <Route path="/receipts" element={<ReceiptsPage organization={organization} />} />
             <Route
               path="/team"
               element={<Team organization={organization} me={me.data} refresh={me.refresh} />}
@@ -554,50 +554,6 @@ function Reports({ organization }: { organization: Membership | null }) {
             {r.state === "AVAILABLE" && reportIsRetained(r) && (
               <ReportDownload id={r.id} mode="organization" expectedHash={r.report_hash} />
             )}
-          </div>
-        ))}
-      </section>
-    </>
-  );
-}
-function Receipts({ organization }: { organization: Membership | null }) {
-  const result = useResource<{
-    items: {
-      id: string;
-      category: string;
-      amount: string;
-      status: string;
-      transaction_hash: string;
-    }[];
-  }>(organization ? `/organizations/${organization.organization_id}/receipts` : null);
-  return (
-    <>
-      <PageTitle
-        eyebrow="PAYMENT RECORDS"
-        title="Receipts"
-        description="Check confirmed payments and their transaction records."
-      />
-      <section className="panel">
-        <State
-          loading={result.loading}
-          error={result.error}
-          empty={
-            !organization
-              ? "Select an organization to view receipts."
-              : result.data?.items.length === 0
-                ? "No payment receipts yet."
-                : undefined
-          }
-        />
-        {result.data?.items.map((r) => (
-          <div className="record" key={r.id}>
-            <ArrowDownLeft size={22} />
-            <div>
-              <strong>{r.category}</strong>
-              <small className="mono">{short(r.transaction_hash)}</small>
-            </div>
-            <strong>{formatMoney(BigInt(r.amount))} USDC</strong>
-            <Pill>{r.status}</Pill>
           </div>
         ))}
       </section>

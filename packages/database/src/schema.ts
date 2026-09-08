@@ -521,6 +521,24 @@ export const bountyRecovery = pgTable(
   },
   (t) => [index("recovery_due").on(t.status, t.nextCheckAt)],
 );
+export const receiptExports = pgTable("receipt_exports", {
+  id: uuid("id").primaryKey().defaultRandom(),
+  organizationId: uuid("organization_id")
+    .notNull()
+    .references(() => organizations.id),
+  requestedBy: uuid("requested_by")
+    .notNull()
+    .references(() => users.id),
+  snapshot: json("snapshot_json").notNull(),
+  inputHash: text("input_hash").notNull(),
+  state: text("state").notNull().default("QUEUED"),
+  attempts: integer("attempts").notNull().default(0),
+  errorCode: text("error_code"),
+  csv: text("csv"),
+  contentHash: text("content_hash"),
+  completedAt: timestamp("completed_at", { withTimezone: true }),
+  ...dates(),
+});
 export const outbox = pgTable("outbox", {
   id: uuid("id").primaryKey().defaultRandom(),
   deduplicationKey: text("deduplication_key").notNull().unique(),
