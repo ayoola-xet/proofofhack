@@ -3,6 +3,12 @@ import { DomainError } from "../../domain/src/index.ts";
 import { fundingBudgetControllerAbi as abi } from "./abi/FundingBudgetController.ts";
 import { ReadOnlyBountyChain } from "./bounty-reader.ts";
 import bytecode from "./bytecode/FundingBudgetController.json";
+import {
+  circleArcFactory,
+  type DeploymentFactory,
+  factoryCreationProof,
+  matchesControllerRuntime,
+} from "./controller-deployment.ts";
 import type { FundingReceipt } from "./funding.ts";
 export type ControllerBinding = {
   chainId: number;
@@ -43,11 +49,16 @@ export interface BudgetChain {
 export class ReadOnlyBudgetChain implements BudgetChain {
   private client;
   private finality;
+  private factory?: DeploymentFactory;
   constructor(
     rpc: string,
     private chainId: number,
     private escrow: Hex,
+    localFactory?: DeploymentFactory,
   ) {
+    if (localFactory && chainId !== 31337)
+      throw new Error("A custom deployment factory requires the local test chain.");
+    this.factory = chainId === 5042002 ? circleArcFactory : localFactory;
     this.finality = new ReadOnlyBountyChain(rpc, chainId, escrow);
     this.client = createPublicClient({ transport: http(rpc, { timeout: 15000, retryCount: 1 }) });
   }
@@ -97,13 +108,33 @@ export class ReadOnlyBudgetChain implements BudgetChain {
       bytecode: bytecode.creationBytecode as Hex,
       args: [binding.owner, binding.operator, binding.organizationId, binding.escrow],
     });
-    if (
+    let creation: Record<string, unknown> = { method: "CREATE" };
+    if (transaction.to !== null && this.factory) {
+      const factoryProof = factoryCreationProof(final, expected, binding.address, this.factory);
+      const [factoryCode, previousCode] = await Promise.all([
+        this.client.getCode({ address: this.factory.address, blockNumber: final.blockNumber }),
+        this.client.getCode({ address: binding.address, blockNumber: final.blockNumber - 1n }),
+      ]);
+      if (
+        !factoryCode ||
+        keccak256(factoryCode) !== this.factory.runtimeCodeHash ||
+        (previousCode && previousCode !== "0x")
+      )
+        throw new DomainError(
+          "CONTROLLER_CODE_MISMATCH",
+          "The factory code or controller creation block differs from the saved proof.",
+        );
+      creation = { method: "CREATE2", ...factoryProof };
+    } else if (
       transaction.to !== null ||
       transaction.input.toLowerCase() !== expected.toLowerCase() ||
-      receipt.contractAddress?.toLowerCase() !== binding.address.toLowerCase() ||
-      !code ||
-      code === "0x"
+      receipt.contractAddress?.toLowerCase() !== binding.address.toLowerCase()
     )
+      throw new DomainError(
+        "CONTROLLER_CODE_MISMATCH",
+        "The deployment does not match the approved controller code and constructor.",
+      );
+    if (!code || !matchesControllerRuntime(code))
       throw new DomainError(
         "CONTROLLER_CODE_MISMATCH",
         "The deployment does not match the approved controller code and constructor.",
@@ -114,6 +145,7 @@ export class ReadOnlyBudgetChain implements BudgetChain {
       blockHash: final.blockHash,
       transactionHash: hash,
       runtimeCodeHash: keccak256(code),
+      creation,
     };
   }
   async read(binding: ControllerBinding, policyHash: Hex): Promise<ControllerSnapshot> {

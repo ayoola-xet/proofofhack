@@ -149,7 +149,7 @@ The browser now compares downloaded report bytes with the report hash from authe
 
 ## Bounded budget allocation
 
-The API registers a controller only after it checks the finalized deployment, exact creation code, and constructor fields. The database preserves the organization, owner, operator, asset, escrow, and deployment proof. The current registration check supports direct contract creation. Circle deploys through a factory. Factory deployment verification remains pending. No live budget controller is registered.
+The API registers a controller only after it checks the finalized deployment, exact creation code, and constructor fields. The database preserves the organization, owner, operator, asset, escrow, and deployment proof. The registration check supports direct creation and Circle factory creation. Factory checks bind the exact creation code and constructor to the deployed address. They also check the pinned factory code, creation event, prior empty address, runtime code, and immutable fields.
 
 An approved draft can return unused funds to its organization wallet or its registered controller. The API requires exactly one refund destination. The controller approval must match the exact draft hash and reward. The allocation worker checks fresh Graph context, the current coverage policy, the current chain approval, the controller balance, the spending limits, and the operator gas reserve.
 
@@ -157,4 +157,15 @@ The worker saves one immutable Circle request before it calls the provider. It c
 
 The worker refreshes registered controllers and queues current recommendations only when the controller is enabled. The owner must approve the exact policy on chain. The language model has no allocation authority. Controller owner controls and their Privy policy extension remain pending.
 
-Ten budget tests pass. They cover lost responses, concurrent jobs, daily spending, per-action limits, disabled controllers, absent approval, stale sources, deployment bindings, and the installed Circle tuple parser. The complete TypeScript suite has 83 passing tests. Type checking and the full build pass. These results use local test chains and a simulated Circle response. They do not prove live Circle allocation.
+Eleven budget tests pass. They cover lost responses, concurrent jobs, daily spending, per-action limits, disabled controllers, absent approval, stale sources, deployment bindings, and the installed Circle tuple parser. The full 83-test suite passed before the factory change. All eleven budget tests and type checking pass after that change. These allocation tests use local chains and a simulated Circle response. They do not prove live Circle allocation.
+
+
+## Circle controller deployment
+
+Circle deployed controller `0x999c73e9bb9f70013f7a20cddd97c9633b094dda` on Arc Testnet. Transaction `0x66863e8a40c34811e1427202db91bb64a1270ccc9e3e246cb862e74ccb87d4a2` is finalized. The controller is disabled. Its token balance and spending limits are zero. Its owner is the existing organization Privy wallet. Its operator is the existing Circle service wallet.
+
+The deployment script checks the testnet chain and fee estimate before deployment. It saves one provider request ID and the returned transaction before registration. A retry reuses the saved result. The script does not approve policies, deposit funds, or enable allocation.
+
+The factory uses the address derivation defined by [EIP-1014](https://eips.ethereum.org/EIPS/eip-1014). The adapter checks the creation code, constructor, event salt, and factory address against the deployed address. It pins the factory runtime hash observed on Arc. It also checks the controller runtime template and all five immutable fields.
+
+Evidence is in `evidence/arc/controller-c9d8a04b-4f44-4336-846d-4d484e4dc8f4.json`. This proves deployment and registration. Owner controls, a live approved allocation, and a live rejected limit case remain pending.

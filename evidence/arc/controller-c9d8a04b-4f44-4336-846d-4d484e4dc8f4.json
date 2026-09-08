@@ -1,0 +1,42 @@
+{
+  "capturedAt": "2026-09-08T08:04:51.227Z",
+  "network": "Arc Testnet",
+  "chainId": 5042002,
+  "organizationId": "c9d8a04b-4f44-4336-846d-4d484e4dc8f4",
+  "controllerId": "0e36ddc6-5cfa-46cf-8c2f-6e9ad0d5fdb8",
+  "address": "0x999c73e9bb9f70013f7a20cddd97c9633b094dda",
+  "owner": "0x6dd9e77782bbb10268abfa04663a062f3ca30768",
+  "operator": "0xb0ec625a625556d999d271c0addd441dac7b1dcc",
+  "asset": "0x3600000000000000000000000000000000000000",
+  "escrow": "0x01742711ee569a0186349e54cffe805209808292",
+  "enabled": false,
+  "projection": {
+    "escrow": "0x01742711ee569a0186349e54cffe805209808292",
+    "balance": "0",
+    "enabled": false,
+    "blockHash": "0x8519b6f856546db34e992bb8e078386fbf69f66b9c66d559b11c5a0190a878d7",
+    "timestamp": "1788854690",
+    "dailyLimit": "0",
+    "spentToday": "0",
+    "blockNumber": "61044790",
+    "lastAllocation": "0",
+    "perActionLimit": "0",
+    "deploymentProof": {
+      "creation": {
+        "salt": "0x53dc0f907b14df7e106b45e20fb176e63e8504bfd9694f58ae1e7e7fac18286b",
+        "method": "CREATE2",
+        "factory": "0xa3039a54856ed74b5aec999eef3fc954ab010cf6",
+        "factoryCodeHash": "0x6ceb9d3b4b7d218f5eec7f87313dc82ca3a01f01d3ff7a50757177a776bbb496",
+        "deploymentLogIndex": 33
+      },
+      "blockHash": "0x0dbb735a9d2a62b09cb302e8f1d8b99952458b96fb7271e832c7e5fb2896c85c",
+      "blockNumber": "61044778",
+      "runtimeCodeHash": "0xcbf54e3019a8a02741fc2a68666cd37d109a7c900f5e2f9115c41a44cc763e78",
+      "transactionHash": "0x66863e8a40c34811e1427202db91bb64a1270ccc9e3e246cb862e74ccb87d4a2"
+    },
+    "minimumInterval": "0",
+    "operatorGasBalance": "16010000000000000000"
+  },
+  "provider": "Circle Agent Stack",
+  "deploymentOnly": true
+}

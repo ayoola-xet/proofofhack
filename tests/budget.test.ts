@@ -7,8 +7,10 @@ import {
   createPublicClient,
   createWalletClient,
   defineChain,
+  encodeDeployData,
   encodeFunctionData,
   erc20Abi,
+  getCreate2Address,
   type Hex,
   http,
   keccak256,
@@ -20,6 +22,7 @@ import { bountyEscrowAbi } from "../packages/chain/src/abi/BountyEscrow.ts";
 import { fundingBudgetControllerAbi as abi } from "../packages/chain/src/abi/FundingBudgetController.ts";
 import { type ControllerBinding, ReadOnlyBudgetChain } from "../packages/chain/src/budget.ts";
 import bytecode from "../packages/chain/src/bytecode/FundingBudgetController.json";
+import { matchesControllerRuntime } from "../packages/chain/src/controller-deployment.ts";
 import { contractPolicy } from "../packages/chain/src/policy.ts";
 import {
   type BudgetExecutor,
@@ -528,6 +531,61 @@ it("verifies the deployed bytecode and every immutable controller field", async 
   await expect(reader.read({ ...f.binding, operator: a(99) }, h(0))).rejects.toMatchObject({
     code: "CONTROLLER_BINDING_MISMATCH",
   });
+}, 30000);
+
+it("verifies factory creation with the exact code, constructor, salt, and factory code", async () => {
+  const f = await fixture();
+  const artifact = JSON.parse(
+    await readFile("contracts/out/LocalDeploymentFactory.sol/LocalDeploymentFactory.json", "utf8"),
+  );
+  const deployed = await ownerWallet.deployContract({
+    account: owner,
+    chain: null,
+    abi: artifact.abi,
+    bytecode: artifact.bytecode.object,
+  });
+  const factory = (
+    await client.waitForTransactionReceipt({ hash: deployed })
+  ).contractAddress?.toLowerCase() as Hex;
+  const creationCode = encodeDeployData({
+      abi,
+      bytecode: bytecode.creationBytecode as Hex,
+      args: [f.binding.owner, f.binding.operator, f.binding.organizationId, escrow],
+    }),
+    salt = h(888);
+  const target = getCreate2Address({
+    from: factory,
+    salt,
+    bytecode: creationCode,
+  }).toLowerCase() as Hex;
+  const tx = await send(
+    factory,
+    encodeFunctionData({ abi: artifact.abi, functionName: "deploy", args: [creationCode, salt] }),
+  );
+  const factoryCode = await client.getCode({ address: factory });
+  if (!factoryCode) throw new Error("Missing factory code");
+  const adapter = new ReadOnlyBudgetChain(rpc, 31337, escrow, {
+      address: factory,
+      runtimeCodeHash: keccak256(factoryCode),
+    }),
+    binding = { ...f.binding, address: target };
+  expect(await adapter.verifyDeployment(binding, tx)).toMatchObject({
+    transactionHash: tx,
+    creation: { method: "CREATE2", salt, factory },
+  });
+  await expect(adapter.verifyDeployment({ ...binding, owner: a(100) }, tx)).rejects.toMatchObject({
+    code: "CONTROLLER_CODE_MISMATCH",
+  });
+  await expect(
+    new ReadOnlyBudgetChain(rpc, 31337, escrow, {
+      address: factory,
+      runtimeCodeHash: h(99),
+    }).verifyDeployment(binding, tx),
+  ).rejects.toMatchObject({ code: "CONTROLLER_CODE_MISMATCH" });
+  const runtime = await client.getCode({ address: target });
+  if (!runtime) throw new Error("Missing controller code");
+  expect(matchesControllerRuntime(runtime)).toBe(true);
+  expect(matchesControllerRuntime(`0xff${runtime.slice(4)}`)).toBe(false);
 }, 30000);
 
 it("round-trips the exact budget tuple through the Circle CLI parser", async () => {
