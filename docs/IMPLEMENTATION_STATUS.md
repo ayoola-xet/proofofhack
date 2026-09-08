@@ -14,7 +14,7 @@ The full submission objective remains active. Live Graph indexing and the initia
 | WP-06 Graph data | IN_PROGRESS | One shared schema indexes three live vaults. The Studio query returns fresh observations without indexing errors. |
 | WP-07 Coverage intelligence | IN_PROGRESS | Deterministic coverage calculations, source checks, and exact approved policy selection pass tests. Durable database updates and rule-based explanations work. Model explanations are pending. |
 | WP-08 Confidential service | IN_PROGRESS | Fixed fixture assessment, atomic encrypted file storage, service tokens, and payment-gated report access implemented. The report service runs separately on port 4190 and creates organization keys. Encrypted fixture admission, signed assessment, and separate report download services pass a full local chain test. Live operation remains pending. |
-| WP-09 Settlement worker | IN_PROGRESS | Funding confirms the canonical Arc receipt and exact approval, funding, and USDC transfer events. It saves signed bytes before broadcast and resumes the same intent after a lost response. The claim settlement core passes a local chain test. Queue and Circle execution integration remain pending. |
+| WP-09 Settlement worker | IN_PROGRESS | Funding confirms the canonical Arc receipt and exact approval, funding, and USDC transfer events. It saves signed bytes before broadcast and resumes the same intent after a lost response. The claim settlement core passes a local chain test. The queue and Circle execution connection are configured. Local tests also reconcile a payment collected outside the worker. The live claim test remains pending. |
 | WP-10 Circle agent | IN_PROGRESS | Circle CLI 1.0.0 is authenticated. The agent wallet received test USDC and deployed the escrow. Bounded funding remains pending. |
 | WP-11 Application | IN_PROGRESS | Responsive workspace, live Privy login, organization and program setup, vault coverage, and wallet transfers work. The new bounty page prepares signed fixtures, downloads cases, approves terms, and requests Privy funding confirmation. Its live browser test waits for the Mac to be unlocked. |
 | WP-12 Deployment and evidence | NOT_STARTED | No evidence yet |
@@ -116,4 +116,16 @@ The API accepts only ciphertext for a claim. It binds the file hash, size, verif
 
 The verifier saves two separately encrypted report copies before it signs an assessment. The researcher report service checks claim ownership. The organization report service checks current membership and final payment. An organization role does not grant early access to the organization copy.
 
-Three integration tests use an isolated database and a local chain. They cover malformed evidence, both nonqualifying controls, a qualifying payment, report integrity, role removal, and a report service failure after payment. A retry releases the report without another payment. All 61 TypeScript tests pass. The live Circle claim path and browser claim flow remain pending.
+Three integration tests use an isolated database and a local chain. They cover malformed evidence, both nonqualifying controls, a qualifying payment, report integrity, role removal, and a report service failure after payment. A retry releases the report without another payment. All 65 TypeScript tests pass. The live Circle claim test and browser claim test remain pending.
+
+## Claim worker and browser controls
+
+The local worker now consumes durable claim jobs. It uses the configured Circle agent wallet on Arc Testnet. It restricts calls to the configured escrow and the three claim functions. Each stage derives one provider request ID from its saved claim ID. It checks the returned wallet, chain, contract, and request ID. Final receipt checks determine payment status.
+
+Circle CLI 1.0.0 needs a small local package patch to accept JSON arrays as tuple arguments. The patch changes only argument parsing for `wallet execute`. Circle supports array values in [contract execution parameters](https://developers.circle.com/api-reference/wallets/user-controlled-wallets/create-user-transaction-contract-execution-challenge). A test uses the installed parser and confirms that each claim call preserves all signed fields. The lock file records the patch.
+
+The browser accepts the downloaded synthetic case bundle. The user selects one case and a verified reward wallet. The browser encrypts the case before upload. A failed upload retries the saved encrypted bytes and request ID while the page stays open. Reload recovery remains pending.
+
+The reports page shows personal claim status and separate researcher report downloads. Organization report downloads require final payment. The production frontend build passes. Live browser checks remain pending while the Mac is locked.
+
+The local verifier listens on port 4191. Researcher reports use port 4192. The organization report service uses port 4193. The internal report release service remains on port 4190. These local endpoints are not a hosted submission.

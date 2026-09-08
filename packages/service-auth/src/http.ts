@@ -31,18 +31,16 @@ export function internalService(name: string, allowedCallers: Record<string, str
           : "SERVICE_ERROR";
     const status =
       error instanceof DomainError ? error.status : error instanceof z.ZodError ? 400 : 503;
-    reply
-      .code(status)
-      .send({
-        error: {
-          code,
-          message:
-            error instanceof DomainError
-              ? error.message
-              : "The service cannot complete this request.",
-          requestId: request.id,
-        },
-      });
+    reply.code(status).send({
+      error: {
+        code,
+        message:
+          error instanceof DomainError
+            ? error.message
+            : "The service cannot complete this request.",
+        requestId: request.id,
+      },
+    });
   });
   app.get("/health", async () => ({ status: "available", service: name }));
   return app;
@@ -69,12 +67,20 @@ export class InternalClient {
       redirect: "error",
       signal: AbortSignal.timeout(20000),
     });
-    if (!response.ok)
+    if (!response.ok) {
+      const body = await response.json().catch(() => null);
+      if (response.status === 422 && body?.error?.code === "INVALID_FIXTURE")
+        throw new DomainError(
+          "INVALID_FIXTURE",
+          "The encrypted file is not a valid signed fixture case.",
+          422,
+        );
       throw new DomainError(
         "INTERNAL_SERVICE_UNAVAILABLE",
         "The confidential service cannot complete this request.",
         503,
       );
+    }
     return response.json() as Promise<T>;
   }
 }

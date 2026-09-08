@@ -1,6 +1,11 @@
 import { z } from "zod";
+import { ReadOnlyBountyChain } from "../../../packages/chain/src/bounty-reader.ts";
+import { configuredCircleRelayer } from "../../../packages/circle/src/claims.ts";
+import { address } from "../../../packages/domain/src/index.ts";
 import { PrivyTreasury } from "../../../packages/privy/src/treasury.ts";
+import { InternalClient } from "../../../packages/service-auth/src/http.ts";
 import { loadTestnetSecret } from "../../../packages/service-config/src/index.ts";
+import { startClaimJobs } from "./claim-jobs.ts";
 import { startTreasuryJobs } from "./treasury-jobs.ts";
 import "dotenv/config";
 import { PgBoss } from "pg-boss";
@@ -40,7 +45,35 @@ if (process.env.PRIVY_APP_ID && process.env.PRIVY_APP_SECRET) {
     new PrivyTreasury(process.env.PRIVY_APP_ID, process.env.PRIVY_APP_SECRET, key),
   );
 }
-process.stdout.write("Coverage and treasury workers are ready.\n");
+if (process.env.CIRCLE_AGENT_ADDRESS && process.env.ESCROW_ADDRESS) {
+  const escrow = address.parse(process.env.ESCROW_ADDRESS);
+  const identity = z
+    .object({ privateKey: z.string().startsWith("-----BEGIN PRIVATE KEY-----") })
+    .parse(
+      await loadTestnetSecret(
+        process.env.WORKER_IDENTITY_KEY ?? ".local/keys/worker-identity.json",
+      ),
+    );
+  await startClaimJobs(
+    boss,
+    pool,
+    new ReadOnlyBountyChain("https://rpc.testnet.arc.io", 5042002, escrow),
+    await configuredCircleRelayer(pool, address.parse(process.env.CIRCLE_AGENT_ADDRESS), escrow),
+    new InternalClient(
+      process.env.VERIFIER_INTERNAL_URL ?? "http://127.0.0.1:4191",
+      "worker",
+      "verifier",
+      identity.privateKey,
+    ),
+    new InternalClient(
+      process.env.REPORT_INTERNAL_URL ?? "http://127.0.0.1:4190",
+      "worker",
+      "report-release",
+      identity.privateKey,
+    ),
+  );
+}
+process.stdout.write("Configured coverage, treasury, and claim workers are ready.\n");
 for (const signal of ["SIGINT", "SIGTERM"] as const)
   process.once(signal, async () => {
     await boss.stop({ graceful: true, timeout: 20_000 });

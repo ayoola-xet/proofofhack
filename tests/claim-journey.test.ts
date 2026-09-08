@@ -111,6 +111,7 @@ let vApp: ReturnType<typeof createVerifierApp>,
   researcher: ReturnType<typeof createReportDownloadApp>,
   organization: ReturnType<typeof createReportDownloadApp>;
 let publicClient: ReturnType<typeof createPublicClient>;
+let fundNext: () => Promise<void>, collectExternally: () => Promise<Hex>;
 const cases = createManifestCases([h(100), h(101), h(102)], [h(200), h(201), h(202)]);
 const headers = (i = 1) => ({
   authorization: `Bearer ${users[i].token}`,
@@ -283,6 +284,47 @@ beforeAll(async () => {
     "insert into bounties(bounty_id,program_id,policy_hash,policy_json,chain_id,escrow,reward,unallocated_reward,chain_state,creation_tx) values($1,$2,$1,$3,'31337',$4,'1000000','1000000','FUNDED',$5)",
     [hashPolicy(policy), programId, JSON.stringify(policy), policy.escrow, funded.transactionHash],
   );
+  fundNext = async () => {
+    policy = { ...policy, organizationNonce: h(45) };
+    await publicClient.waitForTransactionReceipt({
+      hash: await wallet.writeContract({
+        address: asset,
+        abi: erc20Abi,
+        functionName: "approve",
+        args: [escrow, 1000000n],
+      }),
+    });
+    const receipt = await publicClient.waitForTransactionReceipt({
+      hash: await wallet.writeContract({
+        address: escrow,
+        abi: bountyEscrowAbi,
+        functionName: "createAndFund",
+        args: [contractPolicy(policy)],
+      }),
+    });
+    await finalize();
+    await pool.query(
+      "insert into bounties(bounty_id,program_id,policy_hash,policy_json,chain_id,escrow,reward,unallocated_reward,chain_state,creation_tx) values($1,$2,$1,$3,'31337',$4,'1000000','1000000','FUNDED',$5)",
+      [
+        hashPolicy(policy),
+        programId,
+        JSON.stringify(policy),
+        policy.escrow,
+        receipt.transactionHash,
+      ],
+    );
+  };
+  collectExternally = async () => {
+    const hash = await wallet.writeContract({
+      address: escrow,
+      abi: bountyEscrowAbi,
+      functionName: "collectPayment",
+      args: [hashPolicy(policy)],
+    });
+    await publicClient.waitForTransactionReceipt({ hash });
+    await finalize();
+    return hash;
+  };
   await pool.query(
     "insert into wallets(provider,provider_wallet_id,owner_type,owner_id,chain_id,address) values('PRIVY','test-researcher','USER',$1,'31337',$2)",
     [ids[1], accounts[1].address.toLowerCase()],
@@ -502,4 +544,47 @@ it("Pays the qualifying claim once and releases the exact report after final pay
       })
     ).statusCode,
   ).toBe(200);
+}, 20000);
+
+it("Reconciles an external payment after a lost assessment response", async () => {
+  await fundNext();
+  const claimId = await upload(cases.fixtures[0].fixture);
+  let externalHash: Hex | undefined;
+  const concurrent: ClaimRelayer = {
+    walletId: relayer.walletId,
+    send: async (key, escrow, call) => {
+      const result = await relayer.send(key, escrow, call);
+      if (call.method === "submitAssessment" && !externalHash) {
+        externalHash = await collectExternally();
+        throw new Error("Lost assessment response after external payment");
+      }
+      return result;
+    },
+  };
+  await expect(
+    processClaim(pool, reader, concurrent, verifierClient, releaseClient, claimId),
+  ).rejects.toThrow("Lost assessment response");
+  const sent = calls.size;
+  await processClaim(pool, reader, concurrent, verifierClient, releaseClient, claimId);
+  expect(calls.size).toBe(sent);
+  expect(calls.has(`${claimId}:collectPayment`)).toBe(false);
+  expect(
+    (await pool.query("select state from reports where claim_id=$1", [claimId])).rows[0].state,
+  ).toBe("AVAILABLE");
+  const payment = (
+    await pool.query(
+      "select transaction_hash from chain_events where name='Paid' and payload_json->>'claimId'=$1",
+      [claimId],
+    )
+  ).rows[0];
+  expect(payment.transaction_hash).toBe(externalHash);
+  const qualified = (
+    await pool.query(
+      "select block_number from chain_events where name='ClaimQualified' and payload_json->>'claimId'=$1",
+      [claimId],
+    )
+  ).rows[0];
+  await expect(
+    reader.findPaid(policy, h(999), BigInt(qualified.block_number)),
+  ).rejects.toMatchObject({ code: "PAYMENT_NOT_INDEXED" });
 }, 20000);

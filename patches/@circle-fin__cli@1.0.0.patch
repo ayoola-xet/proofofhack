@@ -1,0 +1,18 @@
+diff --git a/dist/index.js b/dist/index.js
+index 29f999cc08a0552b06375354d55ada4b99d3a470..aa72e0f17aca2d8a42709959fb553a7726f2ece5 100755
+--- a/dist/index.js
++++ b/dist/index.js
+@@ -51717,7 +51717,12 @@ async function walletExecuteCommand(signer, args2) {
+     process.exitCode = 1;
+     return;
+   }
+-  const abiParameters = pos.slice(1);
++  const abiParameters = pos.slice(1).map((value) => {
++    if (!value.startsWith("[")) return value;
++    const parsed = JSON.parse(value);
++    if (!Array.isArray(parsed)) throw new Error("ABI tuple parameters must be JSON arrays.");
++    return parsed;
++  });
+   const estimate = args2.includes("--estimate");
+   const resolved = await resolveOrReport(signer, address, blockchain, args2);
+   if (!resolved) return;

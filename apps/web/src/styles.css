@@ -1114,3 +1114,7 @@ code {
 .coverage-decision p {
   overflow-wrap: anywhere;
 }
+
+.claim-form { display: grid; gap: 1rem; margin-top: 1.5rem; padding-top: 1.5rem; border-top: 1px solid var(--border, #e1e5e9); }
+.claim-form label { display: grid; gap: .5rem; font-size: .85rem; }
+.claim-form input, .claim-form select { min-width: 0; width: 100%; }

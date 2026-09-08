@@ -23,6 +23,7 @@ import { Link, NavLink, Route, Routes } from "react-router-dom";
 import { formatMoney } from "../../../packages/domain/src/index.ts";
 import { type Me, type Membership, useApi, useResource } from "./api.ts";
 import { BountyWorkspace } from "./pages/BountyWorkspace.tsx";
+import { ClaimSubmission, MyClaims, ReportDownload } from "./pages/Claims.tsx";
 import { Coverage } from "./pages/Coverage.tsx";
 import { Treasury } from "./pages/Treasury.tsx";
 import { WalletPage } from "./pages/Wallet.tsx";
@@ -480,9 +481,7 @@ function Bounties({ organization, actorId }: { organization: Membership | null; 
                 <dt>Evidence scope</dt>
                 <dd>Synthetic fixture</dd>
               </dl>
-              <p className="muted">
-                Claim submission is enabled when settlement services are connected.
-              </p>
+              <ClaimSubmission bounty={b} onSubmitted={result.refresh} />
             </article>
           ))}
         </div>
@@ -508,6 +507,7 @@ function Reports({ organization }: { organization: Membership | null }) {
         title="Private reports"
         description="Organization access starts after the claimant's payment is final."
       />
+      <MyClaims />
       <div className="notice">
         <LockKeyhole size={18} />
         <span>Your current role is checked each time you open a report.</span>
@@ -532,6 +532,7 @@ function Reports({ organization }: { organization: Membership | null }) {
               <small className="mono">{short(r.report_hash)}</small>
             </div>
             <Pill>{r.state}</Pill>
+            {r.state === "AVAILABLE" && <ReportDownload id={r.id} mode="organization" />}
           </div>
         ))}
       </section>

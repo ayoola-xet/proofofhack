@@ -13,7 +13,14 @@ export interface ClaimRelayer {
   walletId: string;
   send(key: string, escrow: Hex, call: ClaimCall): Promise<{ hash: Hex; providerId: string }>;
 }
-export type ClaimChain = BountyReader & { finalReceipt(hash: Hex): Promise<FundingReceipt | null> };
+export type ClaimChain = BountyReader & {
+  finalReceipt(hash: Hex): Promise<FundingReceipt | null>;
+  findPaid(
+    policy: ReturnType<typeof policySchema.parse>,
+    claimId: Hex,
+    fromBlock: bigint,
+  ): Promise<FundingReceipt | null>;
+};
 export async function processClaim(
   pool: Pool,
   chain: ClaimChain,
@@ -67,7 +74,20 @@ export async function processClaim(
           [relayer.walletId, key],
         )
       ).rows[0];
-      if (!intent) {
+      let externalReceipt: FundingReceipt | null = null;
+      if (method === "collectPayment") {
+        const qualified = await first(
+          c,
+          "select block_number from chain_events where chain_id=$1 and contract_address=$2 and name='ClaimQualified' and finality_state='FINAL' and payload_json->>'claimId'=$3 order by block_number desc limit 1",
+          [policy.settlementChainId, policy.escrow, claimId],
+        );
+        externalReceipt = await chain.findPaid(
+          policy,
+          bytes32.parse(claimId),
+          BigInt(qualified.block_number),
+        );
+      }
+      if (!intent && !externalReceipt) {
         const response =
           method === "collectPayment"
             ? { payload: { bountyId: row.bounty_id } }
@@ -101,46 +121,55 @@ export async function processClaim(
           ],
         );
       }
-      const request = intent.request_json,
+      let call: ClaimCall = { method: "collectPayment", payload: { bountyId: row.bounty_id } };
+      let receipt = externalReceipt;
+      if (!externalReceipt) {
+        const request = intent.request_json;
         call = claimCallSchema.parse(request.call);
-      if (
-        hashCanonical(request) !== intent.request_hash ||
-        request.claimId !== claimId ||
-        request.escrow !== policy.escrow ||
-        request.chainId !== policy.settlementChainId ||
-        call.method !== method ||
-        call.payload.bountyId !== row.bounty_id
-      )
-        throw new DomainError(
-          "CLAIM_INTENT_MISMATCH",
-          "The saved claim transaction does not match.",
-        );
-      if (!intent.transaction_hash) {
-        if (Date.now() - intent.created_at.getTime() > 23 * 3600000)
+        /* persisted transaction validation */
+
+        if (
+          hashCanonical(request) !== intent.request_hash ||
+          request.claimId !== claimId ||
+          request.escrow !== policy.escrow ||
+          request.chainId !== policy.settlementChainId ||
+          call.method !== method ||
+          call.payload.bountyId !== row.bounty_id
+        )
           throw new DomainError(
-            "RECONCILIATION_REQUIRED",
-            "The Circle request needs operator reconciliation before another provider call.",
+            "CLAIM_INTENT_MISMATCH",
+            "The saved claim transaction does not match.",
           );
-        await c.query(
-          "update transaction_intents set state='SUBMITTED',updated_at=now() where id=$1",
-          [intent.id],
-        );
-        const sent = await relayer.send(intent.idempotency_key, policy.escrow, call);
-        bytes32.parse(sent.hash);
-        await c.query(
-          "update transaction_intents set transaction_hash=$2,provider_request_id=$3,state='BROADCAST',updated_at=now() where id=$1",
-          [intent.id, sent.hash, sent.providerId],
-        );
-        intent.transaction_hash = sent.hash;
+        if (!intent.transaction_hash) {
+          if (Date.now() - intent.created_at.getTime() > 23 * 3600000)
+            throw new DomainError(
+              "RECONCILIATION_REQUIRED",
+              "The Circle request needs operator reconciliation before another provider call.",
+            );
+          await c.query(
+            "update transaction_intents set state='SUBMITTED',updated_at=now() where id=$1",
+            [intent.id],
+          );
+          const sent = await relayer.send(intent.idempotency_key, policy.escrow, call);
+          bytes32.parse(sent.hash);
+          await c.query(
+            "update transaction_intents set transaction_hash=$2,provider_request_id=$3,state='BROADCAST',updated_at=now() where id=$1",
+            [intent.id, sent.hash, sent.providerId],
+          );
+          intent.transaction_hash = sent.hash;
+        }
+        receipt = await chain.finalReceipt(intent.transaction_hash);
       }
-      const receipt = await chain.finalReceipt(intent.transaction_hash);
       if (!receipt)
         throw new DomainError(
           "AWAITING_FINALITY",
           "The saved claim transaction awaits a final receipt.",
           503,
         );
-      if (receipt.hash !== intent.transaction_hash || receipt.status !== "success")
+      if (
+        (!externalReceipt && receipt.hash !== intent.transaction_hash) ||
+        receipt.status !== "success"
+      )
         throw new DomainError(
           "CLAIM_TRANSACTION_FAILED",
           "The saved claim transaction did not complete successfully.",
@@ -231,13 +260,18 @@ export async function processClaim(
           escrow: policy.escrow,
           reward: policy.reward,
           asset: policy.asset,
-          intentId: intent.id,
+          intentId: externalReceipt ? undefined : intent.id,
         },
         receipt,
         event.logIndex,
         event.eventName,
         payload,
       );
+      if (externalReceipt && intent)
+        await c.query(
+          "update transaction_intents set state='RECONCILED',updated_at=now() where id=$1 and state<>'CONFIRMED'",
+          [intent.id],
+        );
       return receipt;
     };
     await step("reserveClaim");
@@ -273,7 +307,7 @@ async function saveEvent(
     escrow: string;
     reward: string;
     asset: string;
-    intentId: string;
+    intentId?: string;
   },
   receipt: FundingReceipt,
   index: number | null,
@@ -335,9 +369,11 @@ async function saveEvent(
         "update claims set job_state='RESERVED',reservation_expiry=$2,updated_at=now() where claim_id=$1 and job_state in('ADMISSION_PENDING','RESERVING')",
         [context.claimId, new Date(Number(payload.expiresAt) * 1000)],
       );
-    await c.query("update transaction_intents set state='CONFIRMED',updated_at=now() where id=$1", [
-      context.intentId,
-    ]);
+    if (context.intentId)
+      await c.query(
+        "update transaction_intents set state='CONFIRMED',updated_at=now() where id=$1",
+        [context.intentId],
+      );
     if (name === "Paid")
       await c.query(
         "insert into receipts(organization_id,claimant_user_id,bounty_id,category,amount,asset,event_id,status) values($1,$2,$3,'PAYMENT',$4,$5,$6,'FINAL') on conflict(event_id,category) do nothing",

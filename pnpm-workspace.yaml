@@ -2,3 +2,5 @@ packages:
   - apps/*
   - services/*
   - packages/*
+patchedDependencies:
+  '@circle-fin/cli@1.0.0': patches/@circle-fin__cli@1.0.0.patch

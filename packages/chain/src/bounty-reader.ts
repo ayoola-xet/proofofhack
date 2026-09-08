@@ -80,6 +80,40 @@ export class ReadOnlyBountyChain implements BountyReader {
       reservation: state.reservation,
     };
   }
+  async findPaid(
+    policy: BountyPolicy,
+    claimId: Hex,
+    fromBlock: bigint,
+  ): Promise<FundingReceipt | null> {
+    const snapshot = await this.read(policy);
+    if (snapshot.state !== 4) return null;
+    const end = snapshot.blockNumber;
+    if (fromBlock < 0n || end - fromBlock > 64000n)
+      throw new DomainError(
+        "RECONCILIATION_REQUIRED",
+        "The payment search needs an operator checkpoint.",
+        503,
+      );
+    for (let start = fromBlock; start <= end; start += 2000n) {
+      const toBlock = start + 1999n < end ? start + 1999n : end;
+      const logs = await this.client.getContractEvents({
+        address: this.escrow,
+        abi: bountyEscrowAbi,
+        eventName: "Paid",
+        args: { bountyId: hashPolicy(policy), claimId },
+        fromBlock: start,
+        toBlock,
+        strict: true,
+      });
+      if (logs.length > 1) throw new Error("Multiple payment events need review.");
+      if (logs[0]) return this.finalReceipt(logs[0].transactionHash);
+    }
+    throw new DomainError(
+      "PAYMENT_NOT_INDEXED",
+      "The final paid state has no matching payment receipt yet.",
+      503,
+    );
+  }
   async finalReceipt(hash: Hex): Promise<FundingReceipt | null> {
     let receipt: Awaited<ReturnType<typeof this.client.getTransactionReceipt>>;
     try {
