@@ -1,0 +1,18 @@
+{
+  "schemaVersion": "1",
+  "scope": "ARC_TESTNET_ONLY",
+  "setupId": "92a15f31-8003-4cfd-a30a-103eb855fe6d",
+  "wallet": "0x6dd9e77782bbb10268abfa04663a062f3ca30768",
+  "policyId": "gampesyejoktdqd4v8cnrmr6",
+  "verifiedAt": "2026-09-08T04:36:03.795Z",
+  "broadcast": false,
+  "action": {
+    "method": "eth_signTransaction",
+    "function": "approve",
+    "spender": "0x01742711ee569a0186349e54cffe805209808292",
+    "amount": "0",
+    "idempotencyKey": "603199cd-ee9d-4f71-a92c-070dea4d90f0"
+  },
+  "result": "SIGNED_AND_VERIFIED",
+  "hash": "0x1b1cba0f11fbce58d59df5a299e65a3d805380f9dd1b63c5baabbe766c304961"
+}

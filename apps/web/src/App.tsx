@@ -23,6 +23,7 @@ import { Link, NavLink, Route, Routes } from "react-router-dom";
 import { formatMoney } from "../../../packages/domain/src/index.ts";
 import { type Me, type Membership, useApi, useResource } from "./api.ts";
 import { Coverage } from "./pages/Coverage.tsx";
+import { Treasury } from "./pages/Treasury.tsx";
 import { WalletPage } from "./pages/Wallet.tsx";
 
 function Brand() {
@@ -613,6 +614,9 @@ function Team({
         <h2>Create an organization</h2>
         <OrganizationForm refresh={refresh} />
       </section>
+      {organization && ["OWNER", "TREASURY"].includes(organization.role) && (
+        <Treasury key={organization.organization_id} organization={organization} />
+      )}
       {organization && (
         <section className="panel">
           <div className="section-heading">

@@ -12,6 +12,7 @@ import { expectedVersion, first, idParams, member, mutate, pageParams } from "./
 import { registerCoverageRoutes } from "./coverage-routes.ts";
 import { registerReadRoutes } from "./read-routes.ts";
 import { registerRpcRoutes } from "./rpc-routes.ts";
+import { registerTreasuryRoutes } from "./treasury-routes.ts";
 import { registerWalletRoutes } from "./wallet-routes.ts";
 
 export type ApiOptions = {
@@ -316,6 +317,7 @@ export async function createApp(options: ApiOptions) {
   registerRpcRoutes(app, pool);
   registerReadRoutes(app, pool);
   registerBountyRoutes(app, pool, options.bountyServices);
+  registerTreasuryRoutes(app, pool, options.bountyServices?.escrow);
   registerCoverageRoutes(app, pool);
   registerWalletRoutes(app, pool, options.walletIdentity);
   return app;

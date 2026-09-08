@@ -510,3 +510,23 @@ export const organizationKeys = pgTable(
       .where(sql`${t.status}='ACTIVE'`),
   ],
 );
+
+export const walletSetups = pgTable("wallet_setups", {
+  id: uuid("id").primaryKey().defaultRandom(),
+  organizationId: uuid("organization_id")
+    .notNull()
+    .references(() => organizations.id)
+    .unique(),
+  requestedBy: uuid("requested_by")
+    .notNull()
+    .references(() => users.id),
+  maxPerAction: amount("max_per_action").notNull(),
+  providerPolicyId: text("provider_policy_id"),
+  providerWalletId: text("provider_wallet_id"),
+  ownerId: text("owner_id"),
+  walletId: uuid("wallet_id").references(() => wallets.id),
+  state: text("state").notNull().default("QUEUED"),
+  configuration: json("configuration_json").notNull(),
+  attemptStartedAt: timestamp("attempt_started_at", { withTimezone: true }),
+  ...dates(),
+});

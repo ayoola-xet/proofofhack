@@ -146,6 +146,8 @@ importers:
 
   services/report-release: {}
 
+  services/treasury: {}
+
   services/verifier: {}
 
   services/worker: {}

@@ -36,6 +36,13 @@
       "when": 1788840496188,
       "tag": "0004_immutable_approvals",
       "breakpoints": true
+    },
+    {
+      "idx": 5,
+      "version": "7",
+      "when": 1788841092589,
+      "tag": "0005_small_praxagora",
+      "breakpoints": true
     }
   ]
 }

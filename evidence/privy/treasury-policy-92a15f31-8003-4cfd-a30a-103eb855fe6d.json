@@ -1,0 +1,25 @@
+{
+  "schemaVersion": "1",
+  "scope": "ARC_TESTNET_ONLY",
+  "setupId": "92a15f31-8003-4cfd-a30a-103eb855fe6d",
+  "wallet": "0x6dd9e77782bbb10268abfa04663a062f3ca30768",
+  "providerWalletId": "c5nzu3qih5q181qp40rmnulb",
+  "policyId": "gampesyejoktdqd4v8cnrmr6",
+  "configuration": {
+    "escrow": "0x01742711ee569a0186349e54cffe805209808292",
+    "maxPerAction": "5000000",
+    "organizationId": "0xc02d3cf75cff91c4bd4eb4a15a038b1e2eea6429d4fb0274c378a67c685ee3c6"
+  },
+  "verifiedAt": "2026-09-08T04:30:25.250Z",
+  "deniedAction": {
+    "method": "eth_sendTransaction",
+    "function": "approve",
+    "spender": "0xb0ec625a625556d999d271c0addd441dac7b1dcc",
+    "amount": "0",
+    "idempotencyKey": "e7811612-11e8-46d5-89b4-c681b1bd7434"
+  },
+  "result": "DIRECT_BROADCAST_UNAVAILABLE",
+  "httpStatus": 401,
+  "providerCode": "App is not authorized to transact on chain eip155:5042002",
+  "providerMessage": null
+}
