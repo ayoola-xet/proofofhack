@@ -2,13 +2,14 @@ import { randomBytes, randomUUID } from "node:crypto";
 import type { FastifyInstance } from "fastify";
 import type { Pool } from "pg";
 import { keccak256 } from "viem";
-import { z } from "zod";
 import { protectCiphertextWrite } from "../../../packages/ciphertext-store/src/coordination.ts";
 import type { CiphertextStore } from "../../../packages/ciphertext-store/src/index.ts";
-import { bytes32, DomainError, MAX_EVIDENCE_BYTES } from "../../../packages/domain/src/index.ts";
+import { DomainError } from "../../../packages/domain/src/index.ts";
 import type { WalletIdentityProvider } from "../../../packages/privy/src/wallets.ts";
 import type { PublicServiceConfig } from "../../../packages/service-config/src/index.ts";
 import { first, mutate } from "./context.ts";
+import { parseApiBody } from "./parse-body.ts";
+import { pathSchemas } from "./request-schemas.ts";
 
 export type ClaimServices = { evidence: CiphertextStore; config: PublicServiceConfig };
 export function registerClaimRoutes(
@@ -23,20 +24,8 @@ export function registerClaimRoutes(
   app.post("/api/v1/bounties/:id/uploads", async (request, reply) => {
     if (!services || !identities)
       throw new DomainError("SERVICE_NOT_CONFIGURED", "Claim services are not configured.", 503);
-    const { id } = z.object({ id: bytes32 }).parse(request.params);
-    const input = z
-      .strictObject({
-        keyId: bytes32,
-        algorithm: z.literal("X25519_SEALED_BOX"),
-        ciphertextHash: bytes32,
-        byteLength: z
-          .number()
-          .int()
-          .min(49)
-          .max(MAX_EVIDENCE_BYTES + 48),
-        claimantWalletId: z.uuid(),
-      })
-      .parse(request.body);
+    const { id } = pathSchemas.hash.parse(request.params);
+    const input = parseApiBody("upload", request);
     if (input.keyId !== services.config.evidenceKeyId)
       throw new DomainError("EVIDENCE_KEY_MISMATCH", "Refresh the verifier encryption key.");
     const wallet = await first(
@@ -129,7 +118,7 @@ export function registerClaimRoutes(
   app.put("/api/v1/uploads/:id/ciphertext", async (request) => {
     if (!services)
       throw new DomainError("SERVICE_NOT_CONFIGURED", "Claim services are not configured.", 503);
-    const { id } = z.object({ id: z.uuid() }).parse(request.params);
+    const { id } = pathSchemas.uuid.parse(request.params);
     if (!Buffer.isBuffer(request.body))
       throw new DomainError(
         "CIPHERTEXT_REQUIRED",

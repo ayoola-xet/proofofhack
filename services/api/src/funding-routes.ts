@@ -2,11 +2,9 @@ import { randomUUID } from "node:crypto";
 import type { FastifyInstance } from "fastify";
 import type { Pool } from "pg";
 import { type Hex, recoverMessageAddress } from "viem";
-import { z } from "zod";
 import { ARC_USDC } from "../../../packages/chain/src/arc.ts";
 import {
   address,
-  bytes32,
   DomainError,
   hashPolicy,
   policySchema,
@@ -14,6 +12,7 @@ import {
 import { fundingAuthorizationMessage } from "../../../packages/privy/src/funding-authorization.ts";
 import type { WalletIdentityProvider } from "../../../packages/privy/src/wallets.ts";
 import { expectedVersion, first, idParams, member, mutate } from "./context.ts";
+import { parseApiBody } from "./parse-body.ts";
 
 export function registerFundingRoutes(
   app: FastifyInstance,
@@ -23,9 +22,7 @@ export function registerFundingRoutes(
 ) {
   app.post("/api/v1/bounty-drafts/:id/funding-requests", async (request, reply) => {
     const { id } = idParams(request);
-    const input = z
-      .strictObject({ policyHash: bytes32, walletId: z.uuid(), authorizationWalletId: z.uuid() })
-      .parse(request.body);
+    const input = parseApiBody("fundingRequest", request);
     const result = await mutate(
       pool,
       request,
@@ -124,9 +121,7 @@ export function registerFundingRoutes(
   app.post("/api/v1/funding-requests/:id/authorize", async (request, reply) => {
     const { id } = idParams(request),
       version = expectedVersion(request);
-    const input = z
-      .strictObject({ signature: z.string().regex(/^0x[0-9a-fA-F]{130}$/) })
-      .parse(request.body);
+    const input = parseApiBody("signature", request);
     const result = await mutate(
       pool,
       request,
@@ -197,7 +192,7 @@ export function registerFundingRoutes(
   });
   app.post("/api/v1/funding-requests/:id/cancel", async (request, reply) => {
     const { id } = idParams(request);
-    z.strictObject({}).parse(request.body ?? {});
+    parseApiBody("empty", request);
     const result = await mutate(
       pool,
       request,
@@ -232,7 +227,7 @@ export function registerFundingRoutes(
   });
   app.post("/api/v1/funding-requests/:id/retry", async (request, reply) => {
     const { id } = idParams(request);
-    z.strictObject({}).parse(request.body ?? {});
+    parseApiBody("empty", request);
     const result = await mutate(
       pool,
       request,

@@ -30,7 +30,8 @@ Press Ctrl+C to stop the group. The command sends a termination signal to its ch
 | --- | --- | --- |
 | `pnpm lint` | Source style and root TypeScript configuration | None |
 | `pnpm typecheck` | TypeScript types | None |
-| `pnpm build` | Web application and Graph package | None |
+| `pnpm build` | Generated API contract, web application, and Graph package | None |
+| `pnpm openapi:check` | OpenAPI validity, exact generated files, and registered route inventory | None |
 | `pnpm test:unit` | Tests without PostgreSQL | None |
 | `pnpm test:integration` | PostgreSQL, local-chain, queue, encryption, and recovery tests | Local PostgreSQL and Docker |
 | `pnpm test` | All unit and integration tests | Local PostgreSQL and Docker |

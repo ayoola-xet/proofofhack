@@ -7,7 +7,7 @@ The full submission objective remains active. Live Graph indexing, Arc claim set
 | Package | Status | Evidence |
 | --- | --- | --- |
 | WP-01 Foundation | IN_PROGRESS | Workspace, local infrastructure, provider preflight, service start command, test groups, and pinned CI workflow created. Root lint, type checks, builds, and unit checks pass. The full integration rerun passes. CI execution remains pending. |
-| WP-02 Domain and database | IN_PROGRESS | Strict schemas, policy hashing, 35 database tables, and eighteen applied migrations. OpenAPI generation pending. |
+| WP-02 Domain and database | IN_PROGRESS | Strict schemas, policy hashing, 35 database tables, and eighteen applied migrations. Generated OpenAPI covers the registered application routes and shared request schemas. Full response field models and original-route parity review remain pending. |
 | WP-03 Escrow | IN_PROGRESS | Contract implemented. Financial suite: 17 passing tests, including 256-run fuzz cases. Arc Testnet deployment verified. Draft approval and durable funding are connected through the API and worker. Database and failure-path tests pass. The signed-in browser funds a one-test-USDC bounty on Arc. The live three-case claim journey completes. A live automatic refund has final receipt evidence. Live reservation expiry and hosted recovery remain pending. |
 | WP-04 Budget controller | IN_PROGRESS | Controller registration, owner controls, exact policy approval, durable allocation, and cumulative limits pass local tests. Live Privy owner transactions configure limits, deposit funds, approve exact policies, enable allocation, and withdraw unused funds. Circle funds one test-USDC bounty. The worker and deployed controller reject the daily-limit control. |
 | WP-05 Identity and Privy | IN_PROGRESS | Live login, current role checks, and user wallet transfers work. The organization wallet has a verified Privy owner and policy. Live signing checks accept an allowed approval and reject an unapproved spender. A signed-in owner authorizes and funds a one-test-USDC bounty on Arc. The paid claimant later sends one test USDC through the embedded wallet. |
@@ -39,7 +39,7 @@ Privy app configuration is stored in the ignored .env file with mode 0600. Graph
 
 ## Current verification
 
-- The latest full run passes all 153 TypeScript tests in 26 files. These tests include real PostgreSQL transactions, local chain settlement, concurrent allocation jobs, current role checks, encrypted storage integrity, exact payment gating, owner controls, retention, isolated restore, expiry/refund receipt recovery, checkpoint replay, and durable automatic recovery.
+- The latest full run passes all 157 TypeScript tests in 27 files. These tests include real PostgreSQL transactions, local chain settlement, concurrent allocation jobs, current role checks, encrypted storage integrity, exact payment gating, owner controls, retention, isolated restore, expiry/refund receipt recovery, checkpoint replay, and durable automatic recovery.
 - Pass 17 Solidity tests with Foundry v1.5.0 in the foundation stage.
 - Pass TypeScript type checking.
 - Pass the production frontend and Graph package builds after the foundation changes. Vite reports one large dependency chunk.
@@ -391,3 +391,13 @@ The required `seed:local` command creates a separate migrated database, five loc
 Four seed tests pass. They run the actual command against PostgreSQL and Anvil, verify final funding and access boundaries, and check rejection before database creation. Local substitutes are labelled in the seed completion record. This command does not establish a live sponsor or browser result.
 
 The full application suite passes after the seed command: 153 tests in 26 files. Type checks and lint pass. The seed integration test removes its own database and files after verification.
+
+## Generated application API contract
+
+The application now uses one shared set of JSON input, path, and header schemas. Each JSON mutation checks that its assigned schema matches the registered route. The generated OpenAPI 3.1.1 document covers all 74 application operations. The route table is generated from the same inventory. Root builds fail if either generated file changes or a registered route lacks a matching entry.
+
+The pinned OpenAPI validator checks the document without external reference resolution. Generation requires no database, account, or provider access. Financial refinements remain active in the API. The documentation states which constraints require code and current state. The original design tables remain available for parity review.
+
+All 157 application tests in 27 files pass. Four contract-generation tests check route coverage, reference resolution, strict financial input, authentication declarations, binary uploads, export polling, RPC limits, and the route-to-schema binding. Type checks and lint pass. Full response field models, separate-service contracts, and original endpoint parity remain open work.
+
+The root build also passes. It validates the API contract before building the frontend and Graph package.

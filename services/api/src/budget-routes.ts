@@ -1,9 +1,8 @@
 import type { FastifyInstance } from "fastify";
 import type { Pool } from "pg";
 import type { Hex } from "viem";
-import { z } from "zod";
 import type { BudgetChain } from "../../../packages/chain/src/budget.ts";
-import { address, bytes32, DomainError } from "../../../packages/domain/src/index.ts";
+import { DomainError } from "../../../packages/domain/src/index.ts";
 import {
   controllerContext,
   registerController,
@@ -12,6 +11,7 @@ import {
 } from "../../budget/src/controllers.ts";
 import { enqueueAllocation } from "../../budget/src/enqueue.ts";
 import { first, idParams, member, mutate } from "./context.ts";
+import { parseApiBody } from "./parse-body.ts";
 export type BudgetServices = {
   chain: BudgetChain;
   network: { chainId: number; asset: Hex; escrow: Hex; operator: Hex };
@@ -36,14 +36,7 @@ export function registerBudgetRoutes(app: FastifyInstance, pool: Pool, services?
   });
   app.post("/api/v1/organizations/:id/controllers", async (request, reply) => {
     const { id } = idParams(request),
-      input = z
-        .strictObject({
-          address,
-          deploymentHash: bytes32,
-          ownerWalletId: z.uuid(),
-          operatorWalletId: z.uuid(),
-        })
-        .parse(request.body),
+      input = parseApiBody("controller", request),
       service = configured();
     await member(pool, request.actor, id, ["OWNER"]);
     const result = await mutate(
@@ -65,7 +58,7 @@ export function registerBudgetRoutes(app: FastifyInstance, pool: Pool, services?
   app.post("/api/v1/controllers/:id/refresh", async (request, reply) => {
     const { id } = idParams(request),
       service = configured();
-    z.strictObject({}).parse(request.body ?? {});
+    parseApiBody("empty", request);
     const result = await mutate(
       pool,
       request,
@@ -91,7 +84,7 @@ export function registerBudgetRoutes(app: FastifyInstance, pool: Pool, services?
   });
   app.post("/api/v1/controllers/:id/approvals/sync", async (request, reply) => {
     const { id } = idParams(request),
-      { draftId } = z.strictObject({ draftId: z.uuid() }).parse(request.body),
+      { draftId } = parseApiBody("syncApproval", request),
       service = configured();
     const result = await mutate(
       pool,
@@ -131,7 +124,7 @@ export function registerBudgetRoutes(app: FastifyInstance, pool: Pool, services?
   });
   app.post("/api/v1/organizations/:id/allocations", async (request, reply) => {
     const { id } = idParams(request),
-      { recommendationId } = z.strictObject({ recommendationId: z.uuid() }).parse(request.body);
+      { recommendationId } = parseApiBody("allocation", request);
     configured();
     const result = await mutate(
       pool,
@@ -165,7 +158,7 @@ export function registerBudgetRoutes(app: FastifyInstance, pool: Pool, services?
   });
   app.post("/api/v1/allocations/:id/retry", async (request, reply) => {
     const { id } = idParams(request);
-    z.strictObject({}).parse(request.body ?? {});
+    parseApiBody("empty", request);
     configured();
     const result = await mutate(
       pool,

@@ -1,18 +1,15 @@
 import type { FastifyInstance } from "fastify";
 import type { Pool } from "pg";
 import { erc20Abi, type Hex } from "viem";
-import { z } from "zod";
 import { ARC_USDC, arcClient } from "../../../packages/chain/src/arc.ts";
-import { address, DomainError, uint } from "../../../packages/domain/src/index.ts";
+import { address, DomainError } from "../../../packages/domain/src/index.ts";
 import { first, idParams, member, mutate } from "./context.ts";
+import { parseApiBody } from "./parse-body.ts";
+import { pathSchemas } from "./request-schemas.ts";
 export function registerTreasuryRoutes(app: FastifyInstance, pool: Pool, escrow?: Hex) {
   app.post("/api/v1/organizations/:id/wallets", async (request, reply) => {
     const { id } = idParams(request);
-    const input = z
-      .strictObject({
-        maxPerAction: uint().refine((v) => BigInt(v) > 0n && BigInt(v) <= 100000000n),
-      })
-      .parse(request.body);
+    const input = parseApiBody("treasurySetup", request);
     if (!escrow)
       throw new DomainError(
         "SERVICE_NOT_CONFIGURED",
@@ -77,7 +74,7 @@ export function registerTreasuryRoutes(app: FastifyInstance, pool: Pool, escrow?
     };
   });
   app.get("/api/v1/organizations/:id/wallets/:walletId/balance", async (request) => {
-    const { id, walletId } = z.object({ id: z.uuid(), walletId: z.uuid() }).parse(request.params);
+    const { id, walletId } = pathSchemas.wallet.parse(request.params);
     await member(pool, request.actor, id, ["OWNER", "TREASURY"]);
     const wallet = await first(
       pool,

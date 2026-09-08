@@ -2,16 +2,13 @@ import { randomBytes } from "node:crypto";
 import type { FastifyInstance } from "fastify";
 import type { Pool } from "pg";
 import type { Hex } from "viem";
-import { z } from "zod";
 import { ARC_USDC } from "../../../packages/chain/src/arc.ts";
 import {
   ADAPTER_ID,
   address,
-  bytes32,
   DomainError,
   hashPolicy,
   policySchema,
-  uint,
 } from "../../../packages/domain/src/index.ts";
 import {
   createManifestCases,
@@ -22,6 +19,7 @@ import {
 import type { InternalClient } from "../../../packages/service-auth/src/http.ts";
 import type { PublicServiceConfig } from "../../../packages/service-config/src/index.ts";
 import { expectedVersion, first, idParams, member, mutate } from "./context.ts";
+import { parseApiBody } from "./parse-body.ts";
 export type BountyServices = {
   publicConfig: PublicServiceConfig;
   escrow: Hex;
@@ -49,7 +47,7 @@ export function registerBountyRoutes(app: FastifyInstance, pool: Pool, services?
   });
   app.post("/api/v1/organizations/:id/report-key", async (request, reply) => {
     const { id } = idParams(request);
-    z.strictObject({}).parse(request.body ?? {});
+    parseApiBody("empty", request);
     await member(pool, request.actor, id, ["OWNER"]);
     const key = await configured().release.post<{ keyId: string; publicKey: string }>(
       "/internal/organization-keys",
@@ -65,9 +63,7 @@ export function registerBountyRoutes(app: FastifyInstance, pool: Pool, services?
   });
   app.post("/api/v1/organizations/:id/fixture-manifests/prepare", async (request, reply) => {
     const { id } = idParams(request);
-    const input = z
-      .strictObject({ vaultId: z.uuid(), signingWalletId: z.uuid() })
-      .parse(request.body);
+    const input = parseApiBody("prepareManifest", request);
     const result = await mutate(
       pool,
       request,
@@ -137,9 +133,7 @@ export function registerBountyRoutes(app: FastifyInstance, pool: Pool, services?
   app.post("/api/v1/fixture-manifests/:id/sign", async (request, reply) => {
     const { id } = idParams(request);
     const version = expectedVersion(request);
-    const input = z
-      .strictObject({ signature: z.string().regex(/^0x[0-9a-fA-F]{130}$/) })
-      .parse(request.body);
+    const input = parseApiBody("signature", request);
     const result = await mutate(
       pool,
       request,
@@ -189,21 +183,7 @@ export function registerBountyRoutes(app: FastifyInstance, pool: Pool, services?
   app.post("/api/v1/programs/:id/bounty-drafts", async (request, reply) => {
     const { id } = idParams(request);
     const config = configured();
-    const input = z
-      .strictObject({
-        manifestId: z.uuid(),
-        refundWalletId: z.uuid().optional(),
-        controllerId: z.uuid().optional(),
-        reward: uint().refine((v) => BigInt(v) > 0n),
-        minimumDiscrepancy: uint().refine((v) => BigInt(v) > 0n),
-        submissionDeadline: uint(64),
-        reservationDurationSeconds: z.number().int().min(60).max(1800),
-        settlementGraceSeconds: z.number().int().min(0).max(86400).default(3600),
-      })
-      .refine((v) => Boolean(v.refundWalletId) !== Boolean(v.controllerId), {
-        message: "Select one refund wallet or budget controller.",
-      })
-      .parse(request.body);
+    const input = parseApiBody("bountyDraft", request);
     const result = await mutate(
       pool,
       request,
@@ -316,7 +296,7 @@ export function registerBountyRoutes(app: FastifyInstance, pool: Pool, services?
   app.post("/api/v1/bounty-drafts/:id/approve", async (request, reply) => {
     const { id } = idParams(request);
     const version = expectedVersion(request);
-    const input = z.strictObject({ policyHash: bytes32 }).parse(request.body);
+    const input = parseApiBody("policyHash", request);
     const result = await mutate(
       pool,
       request,

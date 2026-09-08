@@ -2,16 +2,13 @@ import { randomUUID } from "node:crypto";
 import type { FastifyInstance } from "fastify";
 import type { Pool } from "pg";
 import { type Hex, recoverMessageAddress } from "viem";
-import { z } from "zod";
-import {
-  ownerAuthorizationMessage,
-  ownerCommandSchema,
-} from "../../../packages/chain/src/owner-command.ts";
+import { ownerAuthorizationMessage } from "../../../packages/chain/src/owner-command.ts";
 import { address, DomainError } from "../../../packages/domain/src/index.ts";
 import type { WalletIdentityProvider } from "../../../packages/privy/src/wallets.ts";
 import { ownerContext, validateOwnerCommand } from "../../budget/src/owner-context.ts";
 import type { BudgetServices } from "./budget-routes.ts";
 import { expectedVersion, first, idParams, member, mutate } from "./context.ts";
+import { parseApiBody } from "./parse-body.ts";
 
 export function registerOwnerRoutes(
   app: FastifyInstance,
@@ -21,9 +18,7 @@ export function registerOwnerRoutes(
 ) {
   app.post("/api/v1/controllers/:id/owner-requests", async (request, reply) => {
     const { id } = idParams(request),
-      input = z
-        .strictObject({ command: ownerCommandSchema, authorizationWalletId: z.uuid() })
-        .parse(request.body);
+      input = parseApiBody("ownerRequest", request);
     if (!services || !identities)
       throw new DomainError(
         "OWNER_NOT_CONFIGURED",
@@ -119,9 +114,7 @@ export function registerOwnerRoutes(
   app.post("/api/v1/owner-requests/:id/authorize", async (request, reply) => {
     const { id } = idParams(request),
       version = expectedVersion(request),
-      input = z
-        .strictObject({ signature: z.string().regex(/^0x[0-9a-fA-F]{130}$/) })
-        .parse(request.body);
+      input = parseApiBody("signature", request);
     const result = await mutate(
       pool,
       request,
@@ -209,7 +202,7 @@ export function registerOwnerRoutes(
   });
   app.post("/api/v1/owner-requests/:id/cancel", async (request, reply) => {
     const { id } = idParams(request);
-    z.strictObject({}).parse(request.body ?? {});
+    parseApiBody("empty", request);
     const result = await mutate(
       pool,
       request,
@@ -237,7 +230,7 @@ export function registerOwnerRoutes(
   });
   app.post("/api/v1/owner-requests/:id/retry", async (request, reply) => {
     const { id } = idParams(request);
-    z.strictObject({}).parse(request.body ?? {});
+    parseApiBody("empty", request);
     const result = await mutate(
       pool,
       request,

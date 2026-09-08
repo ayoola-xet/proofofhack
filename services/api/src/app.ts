@@ -5,7 +5,7 @@ import Fastify from "fastify";
 import type { Pool } from "pg";
 import { z } from "zod";
 import type { RecoveryChain } from "../../../packages/chain/src/recovery.ts";
-import { DomainError, organizationHash, role, uint } from "../../../packages/domain/src/index.ts";
+import { DomainError, organizationHash } from "../../../packages/domain/src/index.ts";
 import type { WalletIdentityProvider } from "../../../packages/privy/src/wallets.ts";
 import { registerAssistantRoutes } from "./assistant-routes.ts";
 import type { AuthProvider } from "./auth.ts";
@@ -16,14 +16,17 @@ import { expectedVersion, first, idParams, member, mutate, pageParams } from "./
 import { registerCoverageRoutes } from "./coverage-routes.ts";
 import { registerFundingRoutes } from "./funding-routes.ts";
 import { registerOwnerRoutes } from "./owner-routes.ts";
+import { parseApiBody } from "./parse-body.ts";
 import { registerReadRoutes } from "./read-routes.ts";
 import { registerReceiptRoutes } from "./receipt-routes.ts";
 import { registerRecoveryRoutes } from "./recovery-routes.ts";
+import { pathSchemas } from "./request-schemas.ts";
 import { registerRpcRoutes } from "./rpc-routes.ts";
 import { registerTreasuryRoutes } from "./treasury-routes.ts";
 import { registerWalletRoutes } from "./wallet-routes.ts";
 
 export type ApiOptions = {
+  onRoute?: (route: { method: string | string[]; url: string }) => void;
   pool: Pool;
   auth: AuthProvider;
   appEnv: "local" | "arc-testnet";
@@ -35,7 +38,6 @@ export type ApiOptions = {
   budgetServices?: BudgetServices;
   recoveryChain?: RecoveryChain;
 };
-const nameSchema = z.string().trim().min(2).max(80);
 export async function createApp(options: ApiOptions) {
   const { pool } = options;
   const app = Fastify({
@@ -44,6 +46,7 @@ export async function createApp(options: ApiOptions) {
     genReqId: () => randomUUID(),
     trustProxy: false,
   });
+  if (options.onRoute) app.addHook("onRoute", options.onRoute);
   await app.register(cors, {
     origin: options.webOrigin,
     methods: ["GET", "POST", "PATCH", "PUT"],
@@ -114,7 +117,7 @@ export async function createApp(options: ApiOptions) {
   }));
 
   app.post("/api/v1/organizations", async (request, reply) => {
-    const input = z.strictObject({ name: nameSchema }).parse(request.body);
+    const input = parseApiBody("organization", request);
     const result = await mutate(
       pool,
       request,
@@ -155,7 +158,7 @@ export async function createApp(options: ApiOptions) {
   });
   app.post("/api/v1/organizations/:id/members", async (request, reply) => {
     const { id } = idParams(request);
-    const input = z.strictObject({ userId: z.uuid(), role }).parse(request.body);
+    const input = parseApiBody("member", request);
     const result = await mutate(
       pool,
       request,
@@ -178,11 +181,8 @@ export async function createApp(options: ApiOptions) {
     return reply.code(result.status).send(result.body);
   });
   app.patch("/api/v1/organizations/:id/members/:userId", async (request, reply) => {
-    const { id, userId } = z.object({ id: z.uuid(), userId: z.uuid() }).parse(request.params);
-    const input = z
-      .strictObject({ role: role.optional(), status: z.enum(["ACTIVE", "DISABLED"]).optional() })
-      .refine((v) => v.role !== undefined || v.status !== undefined)
-      .parse(request.body);
+    const { id, userId } = pathSchemas.member.parse(request.params);
+    const input = parseApiBody("memberUpdate", request);
     const version = expectedVersion(request);
     const result = await mutate(
       pool,
@@ -227,13 +227,7 @@ export async function createApp(options: ApiOptions) {
 
   app.post("/api/v1/organizations/:id/coverage-policies", async (request, reply) => {
     const { id } = idParams(request);
-    const input = z
-      .strictObject({
-        minReward: uint().refine((v) => BigInt(v) > 0n),
-        maxDataAgeSeconds: z.number().int().min(30).max(86400),
-        allowedVaultIds: z.array(z.uuid()).max(100),
-      })
-      .parse(request.body);
+    const input = parseApiBody("coveragePolicy", request);
     const result = await mutate(
       pool,
       request,
@@ -271,9 +265,7 @@ export async function createApp(options: ApiOptions) {
   });
   app.post("/api/v1/organizations/:id/programs", async (request, reply) => {
     const { id } = idParams(request);
-    const input = z
-      .strictObject({ name: nameSchema, coveragePolicyId: z.uuid().optional() })
-      .parse(request.body);
+    const input = parseApiBody("program", request);
     const result = await mutate(
       pool,
       request,

@@ -1,11 +1,11 @@
 import type { FastifyInstance } from "fastify";
 import type { Pool } from "pg";
-import { z } from "zod";
 import { hashCanonical } from "../../../packages/crypto-envelope/src/index.ts";
 import { DomainError } from "../../../packages/domain/src/index.ts";
 import { PROMPT_VERSION, snapshotSchema } from "../../assistant/src/contract.ts";
 import { loadCoverageSnapshot, snapshotStillCurrent } from "../../assistant/src/snapshot.ts";
 import { first, idParams, member, mutate } from "./context.ts";
+import { parseApiBody } from "./parse-body.ts";
 
 export function registerAssistantRoutes(app: FastifyInstance, pool: Pool, model?: string) {
   app.get("/api/v1/assistant/config", async () => ({
@@ -15,9 +15,7 @@ export function registerAssistantRoutes(app: FastifyInstance, pool: Pool, model?
   }));
   app.post("/api/v1/organizations/:id/assistant-runs", async (request, reply) => {
     const { id } = idParams(request),
-      { question } = z
-        .strictObject({ question: z.string().trim().min(3).max(500) })
-        .parse(request.body);
+      { question } = parseApiBody("assistantQuestion", request);
     await member(pool, request.actor, id);
     if (!model)
       throw new DomainError(

@@ -2,6 +2,8 @@
 
 Version: 1.0.0
 
+Current implementation: use the [generated application routes](API_ROUTES.md) and [OpenAPI contract](openapi.json). The numbered endpoint tables below preserve the original design scope. They are not a list of routes that all exist. [Contract maintenance](API_CONTRACT_MAINTENANCE.md) states the current coverage and remaining parity review.
+
 ## 1. Common rules
 
 Use PostgreSQL UUIDs for application entities. Use 32-byte hex strings for onchain IDs and hashes. `organizationIdOnchain = keccak256(UTF8("VulnProof:organization:v1:" + lowercaseUuid))`. Keep the UUID and hash in the same organization record.

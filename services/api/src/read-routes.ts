@@ -1,17 +1,11 @@
 import type { FastifyInstance } from "fastify";
 import type { Pool } from "pg";
-import { z } from "zod";
-import { bytes32 } from "../../../packages/domain/src/index.ts";
 import { first, idParams, member, pageParams } from "./context.ts";
+import { hashPageParams, pathSchemas } from "./request-schemas.ts";
 
 export function registerReadRoutes(app: FastifyInstance, pool: Pool) {
   app.get("/api/v1/bounties", async (request) => {
-    const query = z
-      .object({
-        limit: z.coerce.number().int().min(1).max(100).default(25),
-        cursor: bytes32.optional(),
-      })
-      .parse(request.query);
+    const query = hashPageParams.parse(request.query);
     const rows = (
       await pool.query(
         "select bounty_id, reward, chain_state, policy_json as policy, chain_id, escrow, version from bounties where ($1::text is null or bounty_id>$1) order by bounty_id limit $2",
@@ -24,7 +18,7 @@ export function registerReadRoutes(app: FastifyInstance, pool: Pool) {
     };
   });
   app.get("/api/v1/bounties/:id", async (request) => {
-    const { id } = z.object({ id: bytes32 }).parse(request.params);
+    const { id } = pathSchemas.hash.parse(request.params);
     return first(
       pool,
       "select bounty_id,reward,unallocated_reward,claimant_credit,chain_state,policy_json as policy,chain_id,escrow,creation_tx,version from bounties where bounty_id=$1",

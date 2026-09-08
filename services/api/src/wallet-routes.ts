@@ -2,12 +2,12 @@ import { createHash } from "node:crypto";
 import type { FastifyInstance } from "fastify";
 import type { Pool } from "pg";
 import { type Address, encodeFunctionData, erc20Abi } from "viem";
-import { z } from "zod";
 import { ARC_USDC, arcClient } from "../../../packages/chain/src/arc.ts";
 import { assertTransferMatches, hasExactTransfer } from "../../../packages/chain/src/transfers.ts";
-import { address, bytes32, DomainError, uint } from "../../../packages/domain/src/index.ts";
+import { DomainError } from "../../../packages/domain/src/index.ts";
 import type { WalletIdentityProvider } from "../../../packages/privy/src/wallets.ts";
 import { first, idParams, mutate } from "./context.ts";
+import { parseApiBody } from "./parse-body.ts";
 
 export function registerWalletRoutes(
   app: FastifyInstance,
@@ -33,7 +33,7 @@ export function registerWalletRoutes(
     );
   }
   app.post("/api/v1/wallets/sync", async (request, reply) => {
-    z.strictObject({}).parse(request.body ?? {});
+    parseApiBody("empty", request);
     const verified = await liveWallets(request.actor.id);
     const result = await mutate(
       pool,
@@ -86,9 +86,7 @@ export function registerWalletRoutes(
   });
   app.post("/api/v1/wallets/:id/transfers", async (request, reply) => {
     const { id } = idParams(request);
-    const input = z
-      .strictObject({ to: address, amount: uint().refine((v) => BigInt(v) > 0n) })
-      .parse(request.body);
+    const input = parseApiBody("transfer", request);
     if (input.to === "0x0000000000000000000000000000000000000000")
       throw new DomainError("INVALID_RECIPIENT", "Enter a nonzero recipient address.", 400);
     const wallet = await ownedWallet(request.actor.id, id);
@@ -175,7 +173,7 @@ export function registerWalletRoutes(
   });
   app.post("/api/v1/transfers/:id/broadcast", async (request, reply) => {
     const { id } = idParams(request);
-    const input = z.strictObject({ transactionHash: bytes32 }).parse(request.body);
+    const input = parseApiBody("transactionHash", request);
     const intent = await first(
       pool,
       "select t.*,w.address from transaction_intents t join wallets w on w.id=t.wallet_id where t.id=$1 and t.purpose='USER_TRANSFER' and w.owner_type='USER' and w.owner_id=$2",

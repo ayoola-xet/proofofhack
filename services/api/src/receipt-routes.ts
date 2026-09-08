@@ -10,6 +10,7 @@ import {
   filtersSchema,
 } from "../../receipts/src/records.ts";
 import { first, idParams, member, mutate, pageParams } from "./context.ts";
+import { parseApiBody } from "./parse-body.ts";
 
 type ExportRow = {
   id: string;
@@ -62,7 +63,7 @@ export function registerReceiptRoutes(app: FastifyInstance, pool: Pool) {
     });
     app.post(`${base}/receipt-exports`, async (request, reply) => {
       const id = scope === "organization" ? idParams(request).id : null,
-        filters = filtersSchema.parse(request.body ?? {});
+        filters = parseApiBody("receiptFilters", request);
       const result = await mutate(
         pool,
         request,

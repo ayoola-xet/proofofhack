@@ -1,21 +1,17 @@
 import type { FastifyInstance } from "fastify";
 import type { Pool } from "pg";
-import { z } from "zod";
 import type { RecoveryChain } from "../../../packages/chain/src/recovery.ts";
-import { bytes32, DomainError } from "../../../packages/domain/src/index.ts";
+import { DomainError } from "../../../packages/domain/src/index.ts";
 import { reconcileRecovery } from "../../worker/src/recovery-receipt.ts";
 import { first, idParams, member, mutate } from "./context.ts";
+import { parseApiBody } from "./parse-body.ts";
+import { hashPageParams, pathSchemas } from "./request-schemas.ts";
 
 export function registerRecoveryRoutes(app: FastifyInstance, pool: Pool, chain?: RecoveryChain) {
   app.get("/api/v1/organizations/:id/recovery", async (request) => {
     const { id } = idParams(request);
     await member(pool, request.actor, id, ["OWNER", "TREASURY"]);
-    const page = z
-      .object({
-        limit: z.coerce.number().int().min(1).max(100).default(25),
-        cursor: bytes32.optional(),
-      })
-      .parse(request.query);
+    const page = hashPageParams.parse(request.query);
     const rows = (
       await pool.query(
         `select b.bounty_id,b.reward,b.chain_state,b.policy_json->>'settlementDeadline' as settlement_deadline,
@@ -34,8 +30,8 @@ export function registerRecoveryRoutes(app: FastifyInstance, pool: Pool, chain?:
     };
   });
   app.post("/api/v1/bounties/:id/recovery/retry", async (request, reply) => {
-    const { id } = z.object({ id: bytes32 }).parse(request.params);
-    z.strictObject({}).parse(request.body ?? {});
+    const { id } = pathSchemas.hash.parse(request.params);
+    parseApiBody("empty", request);
     const result = await mutate(
       pool,
       request,
@@ -80,8 +76,8 @@ export function registerRecoveryRoutes(app: FastifyInstance, pool: Pool, chain?:
     return reply.code(result.status).send(result.body);
   });
   app.post("/api/v1/bounties/:id/recovery-receipts", async (request, reply) => {
-    const { id } = z.object({ id: bytes32 }).parse(request.params);
-    const { transactionHash } = z.strictObject({ transactionHash: bytes32 }).parse(request.body);
+    const { id } = pathSchemas.hash.parse(request.params);
+    const { transactionHash } = parseApiBody("transactionHash", request);
     const result = await mutate(
       pool,
       request,

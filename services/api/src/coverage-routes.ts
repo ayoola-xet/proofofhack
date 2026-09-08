@@ -1,9 +1,9 @@
 import type { FastifyInstance } from "fastify";
 import type { Pool } from "pg";
-import { z } from "zod";
 import { DomainError } from "../../../packages/domain/src/index.ts";
 import sources from "../../../packages/erc4626-coverage-data/sources.json";
 import { first, idParams, member, mutate } from "./context.ts";
+import { parseApiBody } from "./parse-body.ts";
 
 export function registerCoverageRoutes(app: FastifyInstance, pool: Pool) {
   app.get("/api/v1/coverage/sources", async () => ({
@@ -18,7 +18,7 @@ export function registerCoverageRoutes(app: FastifyInstance, pool: Pool) {
   }));
   app.post("/api/v1/organizations/:id/vaults", async (request, reply) => {
     const { id } = idParams(request);
-    const input = z.strictObject({ sourceId: z.string().max(100) }).parse(request.body);
+    const input = parseApiBody("vault", request);
     const source = sources.find((s) => `${s.chainId}:${s.address}` === input.sourceId);
     if (!source)
       throw new DomainError("UNSUPPORTED_SOURCE", "Select a configured source vault.", 400);
@@ -58,7 +58,7 @@ export function registerCoverageRoutes(app: FastifyInstance, pool: Pool) {
   });
   app.post("/api/v1/organizations/:id/coverage/refresh", async (request, reply) => {
     const { id } = idParams(request);
-    z.strictObject({}).parse(request.body ?? {});
+    parseApiBody("empty", request);
     const result = await mutate(
       pool,
       request,

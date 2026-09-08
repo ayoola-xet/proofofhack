@@ -9,13 +9,8 @@ import {
 } from "viem";
 import { z } from "zod";
 import { ARC_USDC } from "../../../packages/chain/src/arc.ts";
+import { parseApiBody } from "./parse-body.ts";
 
-const rpcSchema = z.strictObject({
-  jsonrpc: z.literal("2.0"),
-  id: z.union([z.string().max(100), z.number().int(), z.null()]),
-  method: z.string(),
-  params: z.array(z.unknown()).max(5).default([]),
-});
 const readMethods = new Set([
   "eth_chainId",
   "net_version",
@@ -44,12 +39,9 @@ export function registerRpcRoutes(app: FastifyInstance, pool: Pool) {
     "/api/v1/rpc/arc",
     { bodyLimit: 50000, config: { rateLimit: { max: 180, timeWindow: "1 minute" } } },
     async (request) => {
-      const batch = Array.isArray(request.body);
-      const inputs = z
-        .array(rpcSchema)
-        .min(1)
-        .max(10)
-        .parse(batch ? request.body : [request.body]);
+      const payload = parseApiBody("arcRpc", request);
+      const batch = Array.isArray(payload);
+      const inputs = Array.isArray(payload) ? payload : [payload];
       const outputs = [];
       for (const input of inputs) {
         try {

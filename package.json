@@ -8,7 +8,7 @@
     "node": ">=22.14"
   },
   "scripts": {
-    "build": "pnpm -r --if-present build",
+    "build": "pnpm openapi:check && pnpm -r --if-present build",
     "typecheck": "tsc --noEmit",
     "lint": "biome check apps packages services scripts tests infra package.json biome.json tsconfig.json vitest.config.ts",
     "format": "biome check --write apps packages services scripts tests",
@@ -36,9 +36,12 @@
     "evidence:manifest": "tsx scripts/build-live-manifest.ts",
     "evidence:validate": "tsx scripts/validate-evidence.ts",
     "test:live": "tsx scripts/test-live.ts",
-    "seed:local": "tsx scripts/seed-local.ts"
+    "seed:local": "tsx scripts/seed-local.ts",
+    "openapi:generate": "tsx scripts/generate-openapi.ts",
+    "openapi:check": "tsx scripts/generate-openapi.ts --check"
   },
   "devDependencies": {
+    "@apidevtools/swagger-parser": "13.0.0",
     "@biomejs/biome": "^2.5.12",
     "@playwright/test": "^1.63.0",
     "@types/node": "^26.5.0",

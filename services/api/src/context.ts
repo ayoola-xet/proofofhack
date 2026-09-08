@@ -3,6 +3,7 @@ import type { FastifyRequest } from "fastify";
 import type { Pool, PoolClient, QueryResultRow } from "pg";
 import { z } from "zod";
 import { DomainError } from "../../../packages/domain/src/index.ts";
+import { headerSchemas, pathSchemas } from "./request-schemas.ts";
 
 export type Actor = { id: string; displayName: string };
 declare module "fastify" {
@@ -37,19 +38,18 @@ export async function member(
 }
 export function expectedVersion(request: FastifyRequest): number {
   const value = request.headers["if-match"];
-  if (typeof value !== "string" || !/^"?[1-9][0-9]*"?$/.test(value))
+  if (!headerSchemas.version.safeParse(value).success)
     throw new DomainError(
       "VERSION_REQUIRED",
       "Send the current resource version in If-Match.",
       400,
     );
-  const version = Number(value.replaceAll('"', ""));
+  const version = Number(String(value).replaceAll('"', ""));
   if (!Number.isSafeInteger(version))
     throw new DomainError("VERSION_REQUIRED", "Resource version is invalid.", 400);
   return version;
 }
-export const idParams = (request: FastifyRequest) =>
-  z.object({ id: z.uuid() }).parse(request.params);
+export const idParams = (request: FastifyRequest) => pathSchemas.uuid.parse(request.params);
 export const pageParams = z.object({
   limit: z.coerce.number().int().min(1).max(100).default(25),
   cursor: z.uuid().optional(),
@@ -71,12 +71,7 @@ export async function mutate<T extends Record<string, unknown>>(
   authorize: (c: PoolClient) => Promise<unknown>,
   execute: (c: PoolClient) => Promise<{ status: number; body: T }>,
 ): Promise<{ status: number; body: T }> {
-  const key = z
-    .string()
-    .min(16)
-    .max(128)
-    .regex(/^[a-zA-Z0-9:_-]+$/)
-    .parse(request.headers["idempotency-key"]);
+  const key = headerSchemas.idempotency.parse(request.headers["idempotency-key"]);
   const route = `${request.method}:${request.url.split("?")[0]}`;
   const requestHash = createHash("sha256")
     .update(
