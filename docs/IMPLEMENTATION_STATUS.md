@@ -169,3 +169,12 @@ The deployment script checks the testnet chain and fee estimate before deploymen
 The factory uses the address derivation defined by [EIP-1014](https://eips.ethereum.org/EIPS/eip-1014). The adapter checks the creation code, constructor, event salt, and factory address against the deployed address. It pins the factory runtime hash observed on Arc. It also checks the controller runtime template and all five immutable fields.
 
 Evidence is in `evidence/arc/controller-c9d8a04b-4f44-4336-846d-4d484e4dc8f4.json`. This proves deployment and registration. Owner controls, a live approved allocation, and a live rejected limit case remain pending.
+
+
+## Budget workspace
+
+Organization settings now show the registered controller, available budget, spending limits, source time, policy approvals, and allocation history. Members can refresh chain state. Owners and treasury members can check existing owner approvals and retry a pending allocation. The API checks the current role and keeps retries idempotent. A new API test covers these access and retry rules.
+
+A bounty draft can select the organization wallet or the coverage budget as its funding source and refund destination. A budget draft does not show the direct wallet funding button. It requires the exact controller approval. Owner controls for deposits, policy approval, limits, and enablement remain pending.
+
+Type checking, changed-file lint, and the frontend build pass. The new budget API test passes. The browser check remains pending while the Mac is locked. These screens do not complete the live allocation journey.

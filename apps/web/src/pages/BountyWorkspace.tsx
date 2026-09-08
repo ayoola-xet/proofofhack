@@ -6,6 +6,7 @@ import {
   parseMoney,
 } from "../../../../packages/domain/src/index.ts";
 import { type Membership, useApi, useResource, type Wallet } from "../api.ts";
+import type { BudgetController } from "./Budget.tsx";
 
 type Draft = {
   id: string;
@@ -52,6 +53,8 @@ export function BountyWorkspace({
     base = `/organizations/${organization.organization_id}`;
   const { signMessage } = useSignMessage();
   const drafts = useResource<{ items: Draft[] }>(`${base}/bounty-drafts`);
+  const controllers = useResource<{ items: BudgetController[] }>(`${base}/controllers`);
+  const [controllerId, setControllerId] = useState("");
   const funding = useResource<{ items: Funding[] }>(`${base}/funding-requests`);
   const programs = useResource<{ items: { id: string; name: string }[] }>(`${base}/programs`);
   const vaults = useResource<{ items: { id: string; label: string }[] }>(`${base}/coverage`);
@@ -121,7 +124,7 @@ export function BountyWorkspace({
         key: `${key}:draft`,
         body: {
           manifestId: item.id,
-          refundWalletId: bank.id,
+          ...(controllerId ? { controllerId } : { refundWalletId: bank.id }),
           reward: parseMoney(reward).toString(),
           minimumDiscrepancy: "1000000",
           submissionDeadline: deadline,
@@ -216,7 +219,8 @@ export function BountyWorkspace({
         programs.error ||
         vaults.error ||
         wallets.error ||
-        treasury.error) && (
+        treasury.error ||
+        controllers.error) && (
         <p role="alert" className="notice">
           {error ||
             drafts.error ||
@@ -224,7 +228,8 @@ export function BountyWorkspace({
             programs.error ||
             vaults.error ||
             wallets.error ||
-            treasury.error}
+            treasury.error ||
+            controllers.error}
         </p>
       )}
       {notice && (
@@ -271,6 +276,21 @@ export function BountyWorkspace({
               onChange={(e) => setReward(e.target.value)}
               disabled={!!prepared || !!busy}
             />
+          </label>
+          <label>
+            Funding source and refund destination
+            <select
+              value={controllerId}
+              onChange={(event) => setControllerId(event.target.value)}
+              disabled={!!prepared || !!busy}
+            >
+              <option value="">Organization wallet</option>
+              {controllers.data?.items.map((c) => (
+                <option key={c.id} value={c.id}>
+                  Coverage budget {c.enabled ? "(enabled)" : "(disabled)"}
+                </option>
+              ))}
+            </select>
           </label>
           <button
             className="primary"
@@ -323,7 +343,7 @@ export function BountyWorkspace({
               </p>
               <p className="mono break">{draft.policy_hash}</p>
               <dl>
-                <dt>Refund wallet</dt>
+                <dt>Refund destination</dt>
                 <dd className="mono break">{draft.policy.refundRecipient}</dd>
                 <dt>Submission deadline</dt>
                 <dd>{new Date(Number(draft.policy.submissionDeadline) * 1000).toLocaleString()}</dd>
@@ -356,6 +376,7 @@ export function BountyWorkspace({
                 </button>
               )}
               {draft.status === "APPROVED" &&
+                draft.policy.refundRecipient === bank?.address &&
                 !request &&
                 ["OWNER", "TREASURY"].includes(organization.role) && (
                   <button
@@ -367,6 +388,12 @@ export function BountyWorkspace({
                     Review funding confirmation
                   </button>
                 )}
+              {controllers.data?.items.some((c) => c.address === draft.policy.refundRecipient) && (
+                <p>
+                  This draft uses the coverage budget. Check its owner approval and limits in
+                  organization settings.
+                </p>
+              )}
               {request?.state === "AWAITING_AUTHORIZATION" &&
                 request.requested_by === actorId &&
                 wallet && (

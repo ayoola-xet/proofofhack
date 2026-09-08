@@ -23,6 +23,7 @@ import { Link, NavLink, Route, Routes } from "react-router-dom";
 import { formatMoney } from "../../../packages/domain/src/index.ts";
 import { type Me, type Membership, useApi, useResource } from "./api.ts";
 import { BountyWorkspace } from "./pages/BountyWorkspace.tsx";
+import { Budget } from "./pages/Budget.tsx";
 import { ClaimSubmission, MyClaims, ReportDownload } from "./pages/Claims.tsx";
 import { Coverage } from "./pages/Coverage.tsx";
 import { Treasury } from "./pages/Treasury.tsx";
@@ -631,6 +632,9 @@ function Team({
       </section>
       {organization && ["OWNER", "TREASURY"].includes(organization.role) && (
         <Treasury key={organization.organization_id} organization={organization} />
+      )}
+      {organization && (
+        <Budget key={`budget:${organization.organization_id}`} organization={organization} />
       )}
       {organization && (
         <section className="panel">

@@ -116,6 +116,19 @@ export function registerBudgetRoutes(app: FastifyInstance, pool: Pool, services?
     );
     return reply.code(result.status).send(result.body);
   });
+  app.get("/api/v1/controllers/:id/approvals", async (request) => {
+    const { id } = idParams(request),
+      { row } = await controllerContext(pool, id);
+    await member(pool, request.actor, row.organization_id);
+    return {
+      items: (
+        await pool.query(
+          "select id,policy_hash,reward,expires_at,consumed_event_ref from approved_allocations where controller_id=$1 order by created_at desc limit 100",
+          [id],
+        )
+      ).rows,
+    };
+  });
   app.post("/api/v1/organizations/:id/allocations", async (request, reply) => {
     const { id } = idParams(request),
       { recommendationId } = z.strictObject({ recommendationId: z.uuid() }).parse(request.body);

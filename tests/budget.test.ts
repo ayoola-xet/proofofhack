@@ -3,6 +3,7 @@ import { randomUUID } from "node:crypto";
 import { readFile } from "node:fs/promises";
 import { createServer } from "node:net";
 import { migrate } from "drizzle-orm/node-postgres/migrator";
+import Fastify from "fastify";
 import {
   createPublicClient,
   createWalletClient,
@@ -30,8 +31,9 @@ import {
   CircleBudgetExecutor,
 } from "../packages/circle/src/budget.ts";
 import { connectDatabase, databaseUrl } from "../packages/database/src/index.ts";
-import { type BountyPolicy, hashPolicy } from "../packages/domain/src/index.ts";
+import { type BountyPolicy, DomainError, hashPolicy } from "../packages/domain/src/index.ts";
 import { normalizeGraph } from "../packages/erc4626-coverage-data/src/client.ts";
+import { registerBudgetRoutes } from "../services/api/src/budget-routes.ts";
 import { allocateBudget } from "../services/budget/src/allocate.ts";
 import { registerController, syncApproval } from "../services/budget/src/controllers.ts";
 import { enqueueAllocation } from "../services/budget/src/enqueue.ts";
@@ -607,6 +609,59 @@ it("round-trips the exact budget tuple through the Circle CLI parser", async () 
     encodeFunctionData({ abi, functionName: "fundApprovedPolicy", args: [contractPolicy(policy)] }),
   );
 });
+
+it("checks current membership for budget reads and preserves one retry request", async () => {
+  const f = await fixture(),
+    app = Fastify();
+  app.decorateRequest("actor");
+  app.addHook("onRequest", async (request) => {
+    request.actor = { id: userId, displayName: "Budget owner" };
+  });
+  app.setErrorHandler((error, _request, reply) =>
+    reply
+      .code(error instanceof DomainError ? error.status : 500)
+      .send({ message: error instanceof Error ? error.message : "Test error" }),
+  );
+  registerBudgetRoutes(app, pool, { chain: reader, network: f.binding });
+  try {
+    const path = `/api/v1/controllers/${f.controllerId}/approvals`;
+    const read = await app.inject({ url: path });
+    expect(read.statusCode).toBe(200);
+    expect(read.json().items[0].policy_hash).toBe(hashPolicy(f.policy));
+    const request = {
+      method: "POST" as const,
+      url: `/api/v1/allocations/${f.actionId}/retry`,
+      headers: { "idempotency-key": randomUUID() },
+      payload: {},
+    };
+    const retry = await app.inject(request);
+    expect(retry.statusCode).toBe(202);
+    expect((await app.inject(request)).json().version).toBe(retry.json().version);
+    expect(
+      (
+        await pool.query(
+          "select count(*) from outbox where aggregate_id=$1 and event_type='BUDGET_ALLOCATION'",
+          [f.actionId],
+        )
+      ).rows[0].count,
+    ).toBe("2");
+    await pool.query(
+      "update memberships set role='VIEWER' where organization_id=$1 and user_id=$2",
+      [f.orgId, userId],
+    );
+    expect(
+      (await app.inject({ ...request, headers: { "idempotency-key": randomUUID() } })).statusCode,
+    ).toBe(403);
+    expect((await app.inject({ url: path })).statusCode).toBe(200);
+    await pool.query("delete from memberships where organization_id=$1 and user_id=$2", [
+      f.orgId,
+      userId,
+    ]);
+    expect((await app.inject({ url: path })).statusCode).toBe(404);
+  } finally {
+    await app.close();
+  }
+}, 30000);
 
 it("keeps one Circle request ID on retries and rejects a different controller", async () => {
   const policy = { ...examplePolicy(), settlementChainId: "5042002" },
