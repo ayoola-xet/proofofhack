@@ -1,0 +1,57 @@
+{
+  "name": "vulnproof",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "packageManager": "pnpm@10.32.1",
+  "engines": {
+    "node": ">=22.14"
+  },
+  "scripts": {
+    "build": "pnpm -r --if-present build",
+    "typecheck": "tsc --noEmit",
+    "lint": "biome check packages services scripts tests",
+    "format": "biome check --write packages services scripts tests",
+    "test": "vitest run",
+    "test:contracts": "forge test --root contracts",
+    "contracts:build": "forge build --root contracts",
+    "preflight": "tsx scripts/preflight.ts",
+    "db:generate": "drizzle-kit generate",
+    "db:migrate": "tsx scripts/migrate.ts"
+  },
+  "devDependencies": {
+    "@biomejs/biome": "^2.5.12",
+    "@playwright/test": "^1.63.0",
+    "@types/node": "^26.5.0",
+    "@types/pg": "^8.23.1",
+    "@types/react": "^19.2.18",
+    "@types/react-dom": "^19.2.7",
+    "@vitejs/plugin-react": "^6.1.1",
+    "drizzle-kit": "^0.31.10",
+    "tsx": "^4.23.13",
+    "typescript": "^7.0.2",
+    "vite": "^8.2.2",
+    "vitest": "^5.0.0"
+  },
+  "dependencies": {
+    "@fastify/cors": "^11.3.0",
+    "@fastify/multipart": "^10.1.1",
+    "@fastify/rate-limit": "^11.2.0",
+    "@openzeppelin/contracts": "^5.6.1",
+    "@openzeppelin/merkle-tree": "^1.0.8",
+    "@privy-io/node": "^0.34.0",
+    "dotenv": "^17.4.2",
+    "drizzle-orm": "^0.45.2",
+    "fastify": "^5.12.3",
+    "jose": "^6.2.12",
+    "libsodium-wrappers-sumo": "^0.8.4",
+    "lucide-react": "^1.42.0",
+    "pg": "^8.23.0",
+    "pg-boss": "^12.30.0",
+    "react": "^19.2.8",
+    "react-dom": "^19.2.8",
+    "react-router-dom": "^7.18.3",
+    "viem": "^2.56.3",
+    "zod": "^4.5.4"
+  }
+}
