@@ -13,6 +13,7 @@ import { startAssistantJobs } from "./assistant-jobs.ts";
 import { startBudgetJobs } from "./budget-jobs.ts";
 import { startClaimJobs } from "./claim-jobs.ts";
 import { startOwnerJobs } from "./owner-jobs.ts";
+import { startRecoveryJobs } from "./recovery-jobs.ts";
 import { startTreasuryJobs } from "./treasury-jobs.ts";
 import "dotenv/config";
 import { PgBoss } from "pg-boss";
@@ -62,6 +63,12 @@ if (process.env.CIRCLE_AGENT_ADDRESS && process.env.ESCROW_ADDRESS) {
   const escrow = address.parse(process.env.ESCROW_ADDRESS);
   const operator = address.parse(process.env.CIRCLE_AGENT_ADDRESS);
   const relayer = await configuredCircleRelayer(pool, operator, escrow);
+  await startRecoveryJobs(
+    boss,
+    pool,
+    new ReadOnlyBountyChain("https://rpc.testnet.arc.io", 5042002, escrow),
+    relayer,
+  );
   await startBudgetJobs(
     boss,
     pool,
@@ -98,7 +105,7 @@ if (process.env.CIRCLE_AGENT_ADDRESS && process.env.ESCROW_ADDRESS) {
 const explanationProvider = configuredExplanationProvider();
 if (explanationProvider) await startAssistantJobs(boss, pool, explanationProvider);
 process.stdout.write(
-  "Configured coverage, treasury, owner, budget, claim, and assistant workers are ready.\n",
+  "Configured coverage, treasury, owner, budget, claim, recovery, and assistant workers are ready.\n",
 );
 for (const signal of ["SIGINT", "SIGTERM"] as const)
   process.once(signal, async () => {

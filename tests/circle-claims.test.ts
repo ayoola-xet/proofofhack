@@ -3,6 +3,11 @@ import { encodeFunctionData, type Hex, parseAbiItem } from "viem";
 import { describe, expect, it } from "vitest";
 import { type ClaimCall, encodeClaimCall } from "../packages/chain/src/claim-calls.ts";
 import {
+  encodeRecoveryCall,
+  type RecoveryCall,
+  recoveryRequestKey,
+} from "../packages/chain/src/recovery.ts";
+import {
   CircleClaimRelayer,
   circleClaimArguments,
   circleRequestId,
@@ -43,6 +48,55 @@ const calls: ClaimCall[] = [
   { method: "collectPayment", payload: { bountyId: h(1) } },
 ];
 describe("Circle claim bridge", () => {
+  it("pins recovery calls to the escrow, saved bounty, reservation, and zero native value", async () => {
+    const commands: string[][] = [];
+    const relayer = new CircleClaimRelayer(
+      "00000000-0000-4000-8000-000000000001",
+      a(8),
+      a(9),
+      async (args) => {
+        commands.push(args);
+        return {
+          id: "provider",
+          idempotencyKey: args[args.indexOf("--idempotency-key") + 1],
+          txHash: h(99),
+          blockchain: "ARC-TESTNET",
+          sourceAddress: a(8),
+          contractAddress: a(9),
+          state: "CONFIRMED",
+        };
+      },
+    );
+    const recovery: RecoveryCall[] = [
+      { method: "expireReservation", bountyId: h(1), claimId: h(2) },
+      { method: "refundExpired", bountyId: h(1) },
+    ];
+    for (const call of recovery) {
+      const key = recoveryRequestKey(call, "1");
+      await relayer.sendRecovery(key, a(9), call, "1");
+      const command = commands.at(-1) as string[];
+      expect(command[command.indexOf("--amount") + 1]).toBe("0");
+      expect(command[command.indexOf("--contract") + 1]).toBe(a(9));
+      expect(
+        encodeFunctionData({
+          abi: [parseAbiItem(`function ${command[2]}`)],
+          functionName: call.method,
+          args: [command[3]],
+        }),
+      ).toBe(encodeRecoveryCall(call));
+      await expect(relayer.sendRecovery(key, a(7), call, "1")).rejects.toMatchObject({
+        code: "RELAYER_SCOPE",
+      });
+      await expect(
+        relayer.sendRecovery(key, a(9), { ...call, bountyId: h(4) }, "1"),
+      ).rejects.toMatchObject({ code: "RELAYER_SCOPE" });
+      await expect(relayer.sendRecovery(key, a(9), call, "2")).rejects.toMatchObject({
+        code: "RELAYER_SCOPE",
+      });
+    }
+    expect(commands).toHaveLength(2);
+    expect(() => recoveryRequestKey(recovery[0], "6")).toThrow();
+  });
   it("round-trips all signed tuple fields through the installed CLI parser", async () => {
     const source = await readFile("node_modules/@circle-fin/cli/dist/index.js", "utf8");
     const match = source.match(

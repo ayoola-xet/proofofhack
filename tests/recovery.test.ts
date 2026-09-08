@@ -3,6 +3,7 @@ import { randomUUID } from "node:crypto";
 import { readFile } from "node:fs/promises";
 import { createServer } from "node:net";
 import { migrate } from "drizzle-orm/node-postgres/migrator";
+import { PgBoss } from "pg-boss";
 import {
   createPublicClient,
   createWalletClient,
@@ -14,17 +15,29 @@ import {
   toHex,
 } from "viem";
 import { generatePrivateKey, privateKeyToAccount } from "viem/accounts";
-import { afterAll, beforeAll, expect, it } from "vitest";
+import { afterAll, beforeAll, expect, it, vi } from "vitest";
 import { bountyEscrowAbi } from "../packages/chain/src/abi/BountyEscrow.ts";
 import { ReadOnlyBountyChain } from "../packages/chain/src/bounty-reader.ts";
 import type { FundingReceipt } from "../packages/chain/src/funding.ts";
 import { contractPolicy } from "../packages/chain/src/policy.ts";
-import { type RecoveryChain, recoveryEvents } from "../packages/chain/src/recovery.ts";
+import {
+  type RecoveryChain,
+  type RecoveryScanner,
+  recoveryEvents,
+} from "../packages/chain/src/recovery.ts";
 import { connectDatabase, databaseUrl } from "../packages/database/src/index.ts";
-import { admissionFields, hashPolicy, signingDomain } from "../packages/domain/src/index.ts";
+import {
+  admissionFields,
+  assessmentFields,
+  hashPolicy,
+  signingDomain,
+} from "../packages/domain/src/index.ts";
 import { createApp } from "../services/api/src/app.ts";
 import { LocalAuthProvider } from "../services/api/src/auth.ts";
 import { reportAccess } from "../services/report-release/src/access.ts";
+import { processClaim } from "../services/worker/src/claim-process.ts";
+import { startRecoveryJobs } from "../services/worker/src/recovery-jobs.ts";
+import { processRecovery, type RecoveryRelayer } from "../services/worker/src/recovery-process.ts";
 import { reconcileRecovery } from "../services/worker/src/recovery-receipt.ts";
 import { a, examplePolicy, h } from "./helpers/policy.ts";
 
@@ -43,6 +56,7 @@ const users = [0, 1, 2, 3].map((i) => ({
 const org = randomUUID(),
   program = randomUUID(),
   claimantWallet = randomUUID();
+const serviceWallet = randomUUID();
 let anvil: ChildProcess | undefined;
 let rpc: string, asset: Hex, escrow: Hex, reader: ReadOnlyBountyChain;
 let wallet: ReturnType<typeof createWalletClient>, client: ReturnType<typeof createPublicClient>;
@@ -61,7 +75,7 @@ async function control(method: string, params: unknown[]) {
   ).json();
   if (result.error) throw new Error("Local chain control failed.");
 }
-const finalize = () => control("anvil_mine", ["0x40"]);
+const finalize = () => control("anvil_mine", ["0x41"]);
 async function send(method: "expireReservation" | "refundExpired", bounty: Hex) {
   const hash = await wallet.writeContract({
     account,
@@ -107,7 +121,10 @@ beforeAll(async () => {
     ["--host", "127.0.0.1", "--port", String(port), "--chain-id", "31337", "--silent"],
     { stdio: "ignore" },
   );
-  client = createPublicClient({ transport: http(rpc, { retryCount: 0, timeout: 1000 }) });
+  client = createPublicClient({
+    pollingInterval: 50,
+    transport: http(rpc, { retryCount: 0, timeout: 1000 }),
+  });
   for (let i = 0; i < 50; i++) {
     try {
       await client.getChainId();
@@ -151,6 +168,10 @@ beforeAll(async () => {
     })
   ).contractAddress?.toLowerCase() as Hex;
   reader = new ReadOnlyBountyChain(rpc, 31337, escrow);
+  await pool.query(
+    "insert into wallets(id,provider,provider_wallet_id,owner_type,owner_id,chain_id,address) values($1::uuid,'CIRCLE',$1::text,'SERVICE',$1,'31337',$2)",
+    [serviceWallet, account.address.toLowerCase()],
+  );
   for (const u of users)
     await pool.query("insert into users(id,privy_user_id,display_name) values($1,$2,$3)", [
       u.id,
@@ -202,6 +223,7 @@ async function fixture(reserve = true) {
     escrow,
     asset,
     admissionSigner: account.address.toLowerCase() as Hex,
+    verdictSigner: account.address.toLowerCase() as Hex,
     organizationId: h(22),
     refundRecipient: account.address.toLowerCase() as Hex,
     reward: "1000000",
@@ -543,3 +565,460 @@ it("Defers recovery during claim processing and waits for an active assessment",
     c.release();
   }
 }, 15000);
+
+function localRelayer() {
+  const sent = new Map<string, Hex>();
+  let loseAfterSend = false,
+    failBeforeSend = false;
+  const relayer: RecoveryRelayer = {
+    walletId: serviceWallet,
+    sendRecovery: vi.fn(async (key, _escrow, call) => {
+      if (failBeforeSend) {
+        failBeforeSend = false;
+        throw new Error("Provider unavailable");
+      }
+      let hash = sent.get(key);
+      if (!hash) {
+        hash = await send(call.method, call.bountyId);
+        sent.set(key, hash);
+      }
+      if (loseAfterSend) {
+        loseAfterSend = false;
+        throw new Error("Lost response");
+      }
+      return { hash, providerId: key };
+    }),
+  };
+  return {
+    relayer,
+    sent,
+    lose: () => {
+      loseAfterSend = true;
+    },
+    fail: () => {
+      failBeforeSend = true;
+    },
+  };
+}
+function scanner(overrides: Partial<RecoveryScanner>): RecoveryScanner {
+  return {
+    read: (p) => reader.read(p),
+    finalReceipt: (h) => reader.finalReceipt(h),
+    blockHash: (b) => reader.blockHash(b),
+    recoveryRange: (p, f, t) => reader.recoveryRange(p, f, t),
+    ...overrides,
+  };
+}
+it("Automatically expires a reservation and refunds its remaining reward once", async () => {
+  const f = await fixture(),
+    relay = localRelayer();
+  expect((await processRecovery(pool, reader, relay.relayer, f.bounty)).status).toBe("WAITING");
+  expect(relay.relayer.sendRecovery).not.toHaveBeenCalled();
+  await control("evm_increaseTime", [100]);
+  await finalize();
+  await processRecovery(pool, reader, relay.relayer, f.bounty);
+  expect(
+    (await pool.query("select job_state from claims where claim_id=$1", [f.claim])).rows[0]
+      .job_state,
+  ).toBe("EXPIRED");
+  expect(
+    (await pool.query("select retention_hold from reports where id=$1", [f.report])).rows[0]
+      .retention_hold,
+  ).toBe(false);
+  await processRecovery(pool, reader, relay.relayer, f.bounty);
+  expect(relay.sent.size).toBe(1);
+  await control("evm_setNextBlockTimestamp", [Number(f.policy.settlementDeadline) + 1]);
+  await finalize();
+  await processRecovery(pool, reader, relay.relayer, f.bounty);
+  expect((await processRecovery(pool, reader, relay.relayer, f.bounty)).status).toBe("COMPLETE");
+  expect(relay.sent.size).toBe(2);
+  const rows = (
+    await pool.query("select * from transaction_intents where request_json->>'bountyId'=$1", [
+      f.bounty,
+    ])
+  ).rows;
+  expect(rows).toHaveLength(2);
+  expect(rows.every((r) => r.state === "CONFIRMED")).toBe(true);
+  expect(
+    (await pool.query("select amount,category from receipts where bounty_id=$1", [f.bounty])).rows,
+  ).toEqual([{ amount: f.policy.reward, category: "REFUND" }]);
+  await expect(
+    pool.query("update transaction_intents set request_json='{}' where id=$1", [rows[0].id]),
+  ).rejects.toMatchObject({ code: "23514" });
+  await expect(
+    pool.query("update transaction_intents set transaction_hash=$2 where id=$1", [
+      rows[0].id,
+      h(234),
+    ]),
+  ).rejects.toMatchObject({ code: "23514" });
+}, 15000);
+
+it("Discovers an accepted request after a lost response without sending it again", async () => {
+  const f = await fixture(),
+    relay = localRelayer();
+  await control("evm_increaseTime", [100]);
+  await finalize();
+  relay.lose();
+  expect((await processRecovery(pool, reader, relay.relayer, f.bounty)).status).toBe("RETRYING");
+  const before = (
+    await pool.query("select * from transaction_intents where request_json->>'bountyId'=$1", [
+      f.bounty,
+    ])
+  ).rows[0];
+  expect(before).toMatchObject({ state: "SUBMITTED", transaction_hash: null });
+  expect((await processRecovery(pool, reader, relay.relayer, f.bounty)).status).toBe("WAITING");
+  expect(relay.relayer.sendRecovery).toHaveBeenCalledTimes(1);
+  expect(
+    (await pool.query("select state from transaction_intents where id=$1", [before.id])).rows[0]
+      .state,
+  ).toBe("RECONCILED");
+  expect(
+    (await pool.query("select job_state from claims where claim_id=$1", [f.claim])).rows[0]
+      .job_state,
+  ).toBe("EXPIRED");
+}, 15000);
+
+it("Retries an unresolved request with the same provider key and does not resend a known pending hash", async () => {
+  const f = await fixture(),
+    relay = localRelayer();
+  await control("evm_increaseTime", [100]);
+  await finalize();
+  relay.fail();
+  await processRecovery(pool, reader, relay.relayer, f.bounty);
+  const before = (
+    await pool.query("select * from transaction_intents where request_json->>'bountyId'=$1", [
+      f.bounty,
+    ])
+  ).rows[0];
+  let hide = true;
+  const chain = scanner({
+    finalReceipt: async (hash) =>
+      hide && [...relay.sent.values()].includes(hash) ? null : reader.finalReceipt(hash),
+  });
+  expect((await processRecovery(pool, chain, relay.relayer, f.bounty)).status).toBe("CONFIRMING");
+  await processRecovery(pool, chain, relay.relayer, f.bounty);
+  expect(relay.relayer.sendRecovery).toHaveBeenCalledTimes(2);
+  const calls = vi.mocked(relay.relayer.sendRecovery).mock.calls;
+  expect(calls[0]).toEqual(calls[1]);
+  expect(
+    (
+      await pool.query(
+        "select count(*) from transaction_intents where request_json->>'bountyId'=$1",
+        [f.bounty],
+      )
+    ).rows[0].count,
+  ).toBe("1");
+  hide = false;
+  await processRecovery(pool, chain, relay.relayer, f.bounty);
+  expect(
+    (await pool.query("select state from transaction_intents where id=$1", [before.id])).rows[0]
+      .state,
+  ).toBe("CONFIRMED");
+}, 15000);
+
+it("Scans a refund sent outside the app and finishes only after its receipt is recorded", async () => {
+  const f = await fixture(),
+    relay = localRelayer();
+  await control("evm_setNextBlockTimestamp", [Number(f.policy.settlementDeadline) + 1]);
+  await send("refundExpired", f.bounty);
+  expect((await processRecovery(pool, reader, relay.relayer, f.bounty)).status).toBe("COMPLETE");
+  expect(relay.relayer.sendRecovery).not.toHaveBeenCalled();
+  expect(
+    (await pool.query("select category from receipts where bounty_id=$1", [f.bounty])).rows,
+  ).toEqual([{ category: "REFUND" }]);
+  expect(
+    (await pool.query("select retention_hold from reports where id=$1", [f.report])).rows[0]
+      .retention_hold,
+  ).toBe(false);
+}, 15000);
+
+it("Does not skip a refund finalized after the scanner's first head read", async () => {
+  const f = await fixture(false),
+    relay = localRelayer();
+  let reads = 0;
+  const chain = scanner({
+    read: async (p) => {
+      reads++;
+      if (reads === 2) {
+        await control("evm_setNextBlockTimestamp", [Number(f.policy.settlementDeadline) + 1]);
+        await send("refundExpired", f.bounty);
+      }
+      return reader.read(p);
+    },
+  });
+  expect((await processRecovery(pool, chain, relay.relayer, f.bounty)).status).toBe("SCANNING");
+  expect(
+    (await pool.query("select category from receipts where bounty_id=$1", [f.bounty])).rows,
+  ).toHaveLength(0);
+  expect((await processRecovery(pool, reader, relay.relayer, f.bounty)).status).toBe("COMPLETE");
+  expect(
+    (await pool.query("select category from receipts where bounty_id=$1", [f.bounty])).rows,
+  ).toHaveLength(1);
+  expect(relay.relayer.sendRecovery).not.toHaveBeenCalled();
+}, 15000);
+
+it("Resumes bounded pages after a restart and rejects a changed final checkpoint", async () => {
+  const f = await fixture(false),
+    relay = localRelayer();
+  await processRecovery(pool, reader, relay.relayer, f.bounty);
+  const previous = (
+    await pool.query("select checkpoint_block from bounty_recovery where bounty_id=$1", [f.bounty])
+  ).rows[0].checkpoint_block;
+  await control("anvil_mine", ["0x64"]);
+  const ranges: bigint[][] = [];
+  const chain = scanner({
+    recoveryRange: async (p, from, to) => {
+      ranges.push([from, to]);
+      return reader.recoveryRange(p, from, to);
+    },
+  });
+  expect(
+    (await processRecovery(pool, chain, relay.relayer, f.bounty, { blocks: 20n, pages: 2 })).status,
+  ).toBe("SCANNING");
+  expect(ranges).toHaveLength(2);
+  expect(ranges[0][0]).toBe(BigInt(previous) + 1n);
+  expect(ranges.every(([from, to]) => to - from < 20n)).toBe(true);
+  const checkpoint = (
+    await pool.query("select checkpoint_block from bounty_recovery where bounty_id=$1", [f.bounty])
+  ).rows[0].checkpoint_block;
+  ranges.length = 0;
+  await processRecovery(pool, chain, relay.relayer, f.bounty, { blocks: 20n, pages: 2 });
+  expect(ranges[0][0]).toBe(BigInt(checkpoint) + 1n);
+  expect(
+    await processRecovery(
+      pool,
+      scanner({ blockHash: async () => h(999) }),
+      relay.relayer,
+      f.bounty,
+    ),
+  ).toEqual({ status: "NEEDS_REVIEW", code: "RECOVERY_CHECKPOINT_CHANGED" });
+}, 15000);
+
+it("Preserves an old unknown request for review instead of assigning another provider key", async () => {
+  const f = await fixture(),
+    relay = localRelayer();
+  await control("evm_increaseTime", [100]);
+  await finalize();
+  relay.fail();
+  await processRecovery(pool, reader, relay.relayer, f.bounty);
+  const current = Date.now(),
+    clock = vi.spyOn(Date, "now").mockReturnValue(current + 24 * 3600000);
+  try {
+    expect(await processRecovery(pool, reader, relay.relayer, f.bounty)).toEqual({
+      status: "NEEDS_REVIEW",
+      code: "RECONCILIATION_REQUIRED",
+    });
+  } finally {
+    clock.mockRestore();
+  }
+  expect(relay.relayer.sendRecovery).toHaveBeenCalledTimes(1);
+  const request = {
+    method: "POST" as const,
+    url: `/api/v1/bounties/${f.bounty}/recovery/retry`,
+    headers: headers(),
+    payload: {},
+  };
+  expect((await api.inject(request)).statusCode).toBe(202);
+  expect((await api.inject(request)).statusCode).toBe(202);
+  expect(
+    (
+      await pool.query(
+        "select count(*) from outbox where aggregate_id=$1 and event_type='RECOVERY_PROCESS'",
+        [f.bounty],
+      )
+    ).rows[0].count,
+  ).toBe("1");
+  expect(
+    (
+      await pool.query("select active_intent_id from bounty_recovery where bounty_id=$1", [
+        f.bounty,
+      ])
+    ).rows[0].active_intent_id,
+  ).not.toBeNull();
+  expect((await api.inject({ ...request, headers: headers(2) })).statusCode).toBe(403);
+  expect(
+    (await api.inject({ url: `/api/v1/organizations/${org}/recovery`, headers: headers(0) }))
+      .statusCode,
+  ).toBe(200);
+  expect(
+    (await api.inject({ url: `/api/v1/organizations/${org}/recovery`, headers: headers(3) }))
+      .statusCode,
+  ).toBe(404);
+}, 15000);
+
+it("Preserves qualified claimant credit after the settlement deadline", async () => {
+  const f = await fixture(),
+    relay = localRelayer(),
+    state = await reader.read(f.policy);
+  const assessment = {
+    bountyId: f.bounty,
+    policyHash: f.bounty,
+    claimId: f.claim,
+    claimant: a(19),
+    evidenceCommitment: h(21),
+    caseNullifier: h(260),
+    reportHash: h(25),
+    adapterCodeHash: f.policy.adapterCodeHash,
+    verifierConfigHash: f.policy.verifierConfigHash,
+    outcome: 1,
+    reward: BigInt(f.policy.reward),
+    assessedAt: state.timestamp,
+    validUntil: state.reservation.expiresAt,
+  };
+  const signature = await account.signTypedData({
+    domain: signingDomain(31337, escrow),
+    types: { AssessmentV1: assessmentFields },
+    primaryType: "AssessmentV1",
+    message: assessment,
+  });
+  await client.waitForTransactionReceipt({
+    hash: await wallet.writeContract({
+      account,
+      chain: wallet.chain,
+      address: escrow,
+      abi: bountyEscrowAbi,
+      functionName: "submitAssessment",
+      args: [assessment, signature],
+    }),
+  });
+  await control("evm_setNextBlockTimestamp", [Number(f.policy.settlementDeadline) + 1]);
+  await finalize();
+  expect((await processRecovery(pool, reader, relay.relayer, f.bounty)).status).toBe("COMPLETE");
+  expect(relay.relayer.sendRecovery).not.toHaveBeenCalled();
+  const after = await reader.read(f.policy);
+  expect(after.state).toBe(3);
+  expect(after.claimantCredit).toBe(BigInt(f.policy.reward));
+  expect(
+    (await pool.query("select retention_hold from reports where id=$1", [f.report])).rows[0]
+      .retention_hold,
+  ).toBe(true);
+}, 15000);
+
+it("Caps failed transaction attempts and keeps each failed receipt binding", async () => {
+  const f = await fixture(),
+    relay = localRelayer();
+  await control("evm_increaseTime", [100]);
+  await finalize();
+  const final = await reader.read(f.policy),
+    hashes = new Set<Hex>();
+  relay.relayer.sendRecovery = vi.fn(async (_key, _escrow, _call, attempt) => {
+    const hash = h(400 + Number(attempt));
+    hashes.add(hash);
+    return { hash, providerId: `reverted-${attempt}` };
+  });
+  const chain = scanner({
+    finalReceipt: async (hash) =>
+      hashes.has(hash)
+        ? {
+            hash,
+            status: "reverted",
+            blockNumber: final.blockNumber,
+            blockHash: final.blockHash,
+            logs: [],
+          }
+        : reader.finalReceipt(hash),
+  });
+  for (let i = 0; i < 5; i++)
+    expect((await processRecovery(pool, chain, relay.relayer, f.bounty)).code).toBe(
+      "RECOVERY_TRANSACTION_REVERTED",
+    );
+  expect(await processRecovery(pool, chain, relay.relayer, f.bounty)).toEqual({
+    status: "NEEDS_REVIEW",
+    code: "RECOVERY_ATTEMPT_LIMIT",
+  });
+  expect(relay.relayer.sendRecovery).toHaveBeenCalledTimes(5);
+  const rows = (
+    await pool.query(
+      "select state,idempotency_key,transaction_hash from transaction_intents where request_json->>'bountyId'=$1",
+      [f.bounty],
+    )
+  ).rows;
+  expect(rows).toHaveLength(5);
+  expect(new Set(rows.map((r) => r.idempotency_key)).size).toBe(5);
+  expect(rows.every((r) => r.state === "FAILED" && r.transaction_hash)).toBe(true);
+}, 15000);
+
+it("Stops assessment retries after reservation expiry and queues canonical recovery", async () => {
+  const f = await fixture();
+  await control("evm_increaseTime", [100]);
+  await finalize();
+  const relay = {
+    walletId: serviceWallet,
+    send: vi.fn(async () => {
+      throw new Error("Must not send");
+    }),
+  };
+  const service = {
+    post: vi.fn(async () => {
+      throw new Error("Must not assess or release");
+    }),
+  };
+  expect(await processClaim(pool, reader, relay, service, service, f.claim)).toEqual({
+    state: "RECOVERY_PENDING",
+  });
+  expect(await processClaim(pool, reader, relay, service, service, f.claim)).toEqual({
+    state: "RECOVERY_PENDING",
+  });
+  expect(relay.send).not.toHaveBeenCalled();
+  expect(service.post).not.toHaveBeenCalled();
+  expect(
+    (
+      await pool.query(
+        "select count(*) from outbox where aggregate_id=$1 and event_type='RECOVERY_PROCESS'",
+        [f.bounty],
+      )
+    ).rows[0].count,
+  ).toBe("1");
+  expect(
+    (await pool.query("select retention_hold from reports where id=$1", [f.report])).rows[0]
+      .retention_hold,
+  ).toBe(true);
+}, 15000);
+
+it("Runs the durable recovery queue from an authorized retry through a final refund receipt", async () => {
+  // Earlier cases share this isolated database. Keep this queue check scoped to its new bounty.
+  await pool.query(
+    "insert into bounty_recovery(bounty_id,status) select bounty_id,'COMPLETE' from bounties on conflict(bounty_id) do update set status='COMPLETE'",
+  );
+  await pool.query("update outbox set processed_at=now() where event_type='RECOVERY_PROCESS'");
+  const f = await fixture(),
+    relay = localRelayer();
+  await control("evm_setNextBlockTimestamp", [Number(f.policy.settlementDeadline) + 1]);
+  await finalize();
+  const request = {
+    method: "POST" as const,
+    url: `/api/v1/bounties/${f.bounty}/recovery/retry`,
+    headers: headers(),
+    payload: {},
+  };
+  expect((await api.inject(request)).statusCode).toBe(202);
+  expect((await api.inject(request)).statusCode).toBe(202);
+  const boss = new PgBoss(url.toString()),
+    errors: unknown[] = [];
+  boss.on("error", (error) => errors.push(error));
+  try {
+    await boss.start();
+    await startRecoveryJobs(boss, pool, reader, relay.relayer);
+    let receipt: Record<string, unknown> | undefined;
+    for (let i = 0; i < 75; i++) {
+      receipt = (
+        await pool.query("select category,amount from receipts where bounty_id=$1", [f.bounty])
+      ).rows[0];
+      if (receipt) break;
+      await new Promise((resolve) => setTimeout(resolve, 200));
+    }
+    expect(receipt).toEqual({ category: "REFUND", amount: f.policy.reward });
+    expect(relay.relayer.sendRecovery).toHaveBeenCalledTimes(1);
+    expect(
+      (
+        await pool.query(
+          "select processed_at from outbox where aggregate_id=$1 and event_type='RECOVERY_PROCESS'",
+          [f.bounty],
+        )
+      ).rows[0].processed_at,
+    ).not.toBeNull();
+    expect(errors).toHaveLength(0);
+  } finally {
+    await boss.stop({ graceful: true, timeout: 20000 });
+  }
+}, 30000);

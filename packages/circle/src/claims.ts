@@ -7,6 +7,11 @@ import { z } from "zod";
 import type { ClaimRelayer } from "../../../services/worker/src/claim-process.ts";
 import { bountyEscrowAbi } from "../../chain/src/abi/BountyEscrow.ts";
 import { type ClaimCall, claimCallSchema } from "../../chain/src/claim-calls.ts";
+import {
+  type RecoveryCall,
+  recoveryCallSchema,
+  recoveryRequestKey,
+} from "../../chain/src/recovery.ts";
 import { address, bytes32, DomainError } from "../../domain/src/index.ts";
 
 const execute = promisify(execFile);
@@ -68,6 +73,18 @@ export class CircleClaimRelayer implements ClaimRelayer {
     bytes32.parse(claimId);
     if ("claimId" in call.payload && call.payload.claimId !== claimId)
       throw new DomainError("RELAYER_SCOPE", "The transaction differs from the saved claim.");
+    return this.execute(key, circleClaimArguments(call));
+  }
+  async sendRecovery(key: string, escrow: Hex, input: RecoveryCall, attempt: string) {
+    const call = recoveryCallSchema.parse(input);
+    if (escrow !== this.escrow || key !== recoveryRequestKey(call, attempt))
+      throw new DomainError(
+        "RELAYER_SCOPE",
+        "The transaction differs from the saved recovery request.",
+      );
+    return this.execute(key, [`${call.method}(bytes32)`, call.bountyId]);
+  }
+  private async execute(key: string, args: string[]) {
     const idempotencyKey = circleRequestId(key);
     const result = z
       .object({
@@ -84,7 +101,7 @@ export class CircleClaimRelayer implements ClaimRelayer {
         await this.run([
           "wallet",
           "execute",
-          ...circleClaimArguments(call),
+          ...args,
           "--contract",
           this.escrow,
           "--address",

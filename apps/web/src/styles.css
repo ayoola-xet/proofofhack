@@ -1127,3 +1127,47 @@ code {
 .assistant-source { display: grid; gap: .5rem; padding: 1rem 0; overflow-wrap: anywhere; }
 .assistant-source p { margin: 0; }
 .assistant-history select { min-width: 0; width: 100%; }
+
+.recovery-item {
+  padding: 1rem 0;
+  border-top: 1px solid var(--line, #dce2df);
+  overflow-wrap: anywhere;
+}
+.recovery-item summary {
+  cursor: pointer;
+  padding: .5rem 0;
+  font-weight: 600;
+}
+.recovery-item summary:focus-visible {
+  outline: 2px solid currentColor;
+  outline-offset: 4px;
+}
+.recovery-item form {
+  display: grid;
+  gap: .75rem;
+  margin-top: 1rem;
+}
+.recovery-item dd {
+  min-width: 0;
+  margin-inline-start: 0;
+}
+.recovery-item label {
+  display: grid;
+  gap: .5rem;
+}
+.recovery-item input {
+  width: 100%;
+  min-width: 0;
+  padding: .75rem;
+  border: 1px solid var(--line, #dce2df);
+  border-radius: 8px;
+  background: white;
+  color: inherit;
+  font: inherit;
+  box-sizing: border-box;
+}
+.recovery-item dt {
+  margin-top: .75rem;
+  color: var(--muted, #64736c);
+  font-size: .8rem;
+}

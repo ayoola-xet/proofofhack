@@ -140,4 +140,45 @@ export class ReadOnlyBountyChain implements BountyReader {
       logs: receipt.logs,
     };
   }
+  async blockHash(block: bigint): Promise<Hex> {
+    return (await this.client.getBlock({ blockNumber: block })).hash;
+  }
+  async recoveryRange(policy: BountyPolicy, from: bigint, to: bigint): Promise<Hex[]> {
+    if (
+      from < 0n ||
+      to < from ||
+      to - from >= 2000n ||
+      policy.escrow !== this.escrow.toLowerCase() ||
+      Number(policy.settlementChainId) !== this.chainId
+    )
+      throw new DomainError("RECOVERY_RANGE", "Use a bounded range on the configured chain.");
+    const [expired, refunded] = await Promise.all([
+      this.client.getContractEvents({
+        address: this.escrow,
+        abi: bountyEscrowAbi,
+        eventName: "ReservationExpired",
+        args: { bountyId: hashPolicy(policy) },
+        fromBlock: from,
+        toBlock: to,
+        strict: true,
+      }),
+      this.client.getContractEvents({
+        address: this.escrow,
+        abi: bountyEscrowAbi,
+        eventName: "BountyRefunded",
+        args: { bountyId: hashPolicy(policy) },
+        fromBlock: from,
+        toBlock: to,
+        strict: true,
+      }),
+    ]);
+    const logs = [...expired, ...refunded].sort((a, b) =>
+      a.blockNumber === b.blockNumber
+        ? a.logIndex - b.logIndex
+        : a.blockNumber < b.blockNumber
+          ? -1
+          : 1,
+    );
+    return [...new Set(logs.map((log) => log.transactionHash))];
+  }
 }

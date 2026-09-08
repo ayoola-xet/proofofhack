@@ -66,6 +66,33 @@ export async function processClaim(
     }
     if (["UPLOADING", "EXPIRED", "INVALID_FIXTURE"].includes(row.job_state))
       return { state: row.job_state };
+    const current = await chain.read(policy);
+    if (
+      current.state === 2 &&
+      current.reservation.claimId === claimId &&
+      current.timestamp > current.reservation.expiresAt
+    ) {
+      await c.query("begin");
+      try {
+        await c.query(
+          "update claims set job_state='RECOVERY_PENDING',updated_at=now() where claim_id=$1 and job_state not in('SETTLED','EXPIRED','RECOVERY_PENDING')",
+          [claimId],
+        );
+        await c.query(
+          "insert into outbox(deduplication_key,event_type,aggregate_id,payload_json) values($1,'RECOVERY_PROCESS',$2,$3) on conflict(deduplication_key) do nothing",
+          [
+            `claim-expiry-recovery:${claimId}`,
+            row.bounty_id,
+            JSON.stringify({ bountyId: row.bounty_id }),
+          ],
+        );
+        await c.query("commit");
+      } catch (error) {
+        await c.query("rollback");
+        throw error;
+      }
+      return { state: "RECOVERY_PENDING" };
+    }
     const step = async (method: ClaimCall["method"]): Promise<FundingReceipt> => {
       const key = `${claimId}:${method}`;
       let intent = (

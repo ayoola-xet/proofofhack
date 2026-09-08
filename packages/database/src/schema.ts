@@ -504,6 +504,23 @@ export const receipts = pgTable(
   },
   (t) => [uniqueIndex("receipt_unique").on(t.eventId, t.category)],
 );
+export const bountyRecovery = pgTable(
+  "bounty_recovery",
+  {
+    bountyId: text("bounty_id")
+      .primaryKey()
+      .references(() => bounties.bountyId),
+    checkpointBlock: amount("checkpoint_block"),
+    checkpointHash: text("checkpoint_hash"),
+    activeIntentId: uuid("active_intent_id").references(() => transactionIntents.id),
+    status: text("status").notNull().default("WAITING"),
+    failureCode: text("failure_code"),
+    observedState: text("observed_state"),
+    nextCheckAt: timestamp("next_check_at", { withTimezone: true }).notNull().defaultNow(),
+    ...dates(),
+  },
+  (t) => [index("recovery_due").on(t.status, t.nextCheckAt)],
+);
 export const outbox = pgTable("outbox", {
   id: uuid("id").primaryKey().defaultRandom(),
   deduplicationKey: text("deduplication_key").notNull().unique(),

@@ -218,6 +218,8 @@ After qualification, `collectPayment` sends the credit to the claimant address f
 
 `refundExpired` is valid only after `settlementDeadline`, when no claimant credit exists and the bounty has not paid. Expire any elapsed reservation first. Transfer only that bounty’s unallocated reward. Caller identity does not change the refund destination.
 
+The reference worker scans final expiry and refund events before a new recovery send. Save each completed scan page with its final block hash. Resume from that checkpoint after a restart. Use at most five pages of 2000 blocks per check. Save the exact Circle request before sending it. Preserve the provider key while a response is uncertain. A final reverted receipt permits a new attempt, with a maximum of five failed transactions per action. Stop an unresolved request with an unknown hash after 23 hours. See [retention and recovery](RETENTION_AND_RECOVERY.md) for status and retry rules.
+
 There is no global pause for credit collection. A service incident can stop new admissions or new budget allocations. If a verdict key is compromised, the immutable existing policies retain that risk. Do not imply that an administrator can safely replace the signer for existing bounties. Use small testnet values in this release.
 
 ## 9. State model

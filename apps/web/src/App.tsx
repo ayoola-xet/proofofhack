@@ -26,6 +26,7 @@ import { BountyWorkspace } from "./pages/BountyWorkspace.tsx";
 import { Budget } from "./pages/Budget.tsx";
 import { ClaimSubmission, MyClaims, ReportDownload } from "./pages/Claims.tsx";
 import { Coverage } from "./pages/Coverage.tsx";
+import { Recovery } from "./pages/Recovery.tsx";
 import {
   ReportRetention,
   type ReportRetentionData,
@@ -462,6 +463,13 @@ function Bounties({ organization, actorId }: { organization: Membership | null; 
         description="Review the reward and deadline before you submit a claim."
       />
       <State loading={result.loading} error={result.error} />
+      {organization && ["OWNER", "TREASURY"].includes(organization.role) && (
+        <Recovery
+          key={`recovery:${organization.organization_id}`}
+          organization={organization}
+          onChanged={result.refresh}
+        />
+      )}
       {organization && ["OWNER", "TREASURY", "REVIEWER"].includes(organization.role) && (
         <BountyWorkspace
           key={organization.organization_id}

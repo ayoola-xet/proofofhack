@@ -16,7 +16,7 @@ Status: Local retention and isolated restore checks pass. Hosted backup scheduli
 | Paid encrypted reports | 30 days after the first successful release | The interface shows the export deadline. A release retry cannot extend it. |
 | Financial receipts, report hashes, and deletion records | Retain | They contain no report body or evidence plaintext. |
 
-An unresolved qualifying assessment keeps its reports on hold. This includes a delayed or uncertain payment. Do not clear that hold from a local status guess. The recovery receipt route can resolve a matching final `ReservationExpired` event. Automatic expiry submission and event discovery remain incomplete. The hold can therefore retain files longer than seven days while resolution is incomplete.
+An unresolved qualifying assessment keeps its reports on hold. This includes a delayed or uncertain payment. Do not clear that hold from a local status guess. The recovery receipt route can resolve a matching final `ReservationExpired` event. The automatic worker scans final expiry and refund events. It submits an eligible recovery after it catches up with the chain. The hold can therefore retain files longer than seven days while resolution is incomplete.
 
 ## Reconcile an executed expiry or refund
 
@@ -32,9 +32,25 @@ An expiry changes only its matching local claim to `EXPIRED`. It clears that rep
 
 A refund creates one `REFUND` receipt and records a zero remaining balance. A refund transaction can also contain the reservation expiry. An older expiry can resolve its claim without replacing a newer refund state. A refund alone cannot release a report hold when the separate expiry receipt is missing.
 
-The route and local chain tests cover receipt recovery. FR-16 still requires automatic expiry and refund execution, event discovery, a recovery screen, and live Arc evidence.
+The API, worker, and recovery screen implement the FR-16 path. Local desktop, mobile, keyboard, and receipt-input checks pass with synthetic API responses. Live Arc recovery evidence and the signed-in account journey remain required before release.
 
 Keep organization report keys while a retained report or active bounty needs them. Deleting one report does not delete a shared organization key. Key rotation and hosted key recovery remain deployment requirements.
+
+## Automatic recovery
+
+Start `pnpm dev:worker` with the configured Circle agent wallet, Arc escrow, and database. The worker checks known bounties each minute. It scans at most five pages of 2000 blocks per check. It starts at the verified funding receipt and saves each completed page with its block hash. A restart resumes the next block.
+
+The worker records expiry and refund events sent by other callers. It checks final receipts before changing claim status, report holds, or financial receipts. It stops if a saved final checkpoint changes. This scanner covers recovery events. It does not replace the payment and funding reconciliation paths.
+
+After the scanner catches up, the worker closes an elapsed reservation. After the settlement deadline, it requests a refund of unallocated reward. The refund destination and amount come from the immutable contract policy. Qualified claimant credit remains payable and has no recovery deadline.
+
+The worker saves the exact request before it calls Circle. It uses one provider key for an unresolved request. It preserves a known transaction hash and waits for finality. A matching final event can resolve a lost response without another send. A request with an unknown hash stops for review after 23 hours. A final reverted transaction can permit a new attempt. Five failed transaction attempts stop automatic sends for that action.
+
+The claim worker stops assessment retries when its final chain read shows an expired reservation. It queues recovery and records `RECOVERY_PENDING`. It preserves the report hold until the matching expiry event is final.
+
+Owners and treasury members can open **Expiry and refunds** on the bounty page. Use **Check recovery now** to queue a check. A retry preserves the active request and scan checkpoint. It cannot bypass an unresolved transaction or a changed final checkpoint. Use **Record final receipt** when a recovery transaction was completed outside the worker.
+
+`COMPLETE` means that the recovery scan has reached a final qualified, paid, or refunded bounty state. It does not mean that a qualified claimant has already collected payment. Check the chain state and financial receipt separately.
 
 ## Run retention
 

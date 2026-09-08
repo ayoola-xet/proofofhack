@@ -396,3 +396,13 @@ The response contains `bountyId`, `transactionHash`, `status: "FINAL"`, and `eve
 Return `503 RECOVERY_NOT_FINAL` while receipt finality or the final chain read is incomplete. Return `503 RECOVERY_BUSY` during active claim processing. Reject mismatched event fields, token transfers, saved event conflicts, and claim conflicts. A retry cannot create a second refund receipt or extend report retention. Check current membership before returning a cached response.
 
 `reports.expiry_event_ref` references the final expiry event for that exact claim, bounty, chain, and escrow. An expiry clears a qualifying report hold and sets a seven-day deletion period from the first reconciliation. It does not set `AVAILABLE`. Once set, the expiry reference and deletion terms are immutable. A refund without the matching expiry event cannot clear that hold.
+
+## Automatic recovery state
+
+`GET /api/v1/organizations/:id/recovery` returns recovery rows to current owners and treasury members. Use `limit` from 1 to 100 and an optional bounty ID as `cursor`. The response contains `items` and `nextCursor`. Rows show the bounty, fixed refund recipient, deadline, chain state, recovery status, failure code, checkpoint, and latest recovery transaction hash.
+
+`POST /api/v1/bounties/:id/recovery/retry` accepts an empty object. Require current owner or treasury membership and `Idempotency-Key`. Return 202 with `status: "QUEUED"`. Save the queue request and retry state in one transaction. Preserve the active transaction and scan checkpoint.
+
+`bounty_recovery` has one row per bounty. It stores `checkpoint_block`, `checkpoint_hash`, `active_intent_id`, `status`, `failure_code`, `observed_state`, and `next_check_at`. Status values are `WAITING`, `SCANNING`, `PREPARED`, `CONFIRMING`, `RETRYING`, `NEEDS_REVIEW`, and `COMPLETE`. A read before the first worker check returns `NOT_STARTED`.
+
+Recovery transaction intents use `RECOVERY_expireReservation` or `RECOVERY_refundExpired`. The saved request binds the chain, escrow, bounty, method, attempt, and reservation claim ID when required. Database triggers preserve these terms, the creation time, the provider request ID, and a known transaction hash. An unresolved request retains its provider key. A reverted transaction permits a new attempt, up to five attempts per action.
