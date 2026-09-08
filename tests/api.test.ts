@@ -44,6 +44,14 @@ afterAll(async () => {
       "delete from memberships where organization_id in (select id from organizations where owner_user_id=any($1::uuid[]))",
       [userIds],
     );
+    await c.query(
+      "delete from outbox where aggregate_id in(select id::text from organizations where owner_user_id=any($1::uuid[]))",
+      [userIds],
+    );
+    await c.query(
+      "delete from registered_vaults where organization_id in(select id from organizations where owner_user_id=any($1::uuid[]))",
+      [userIds],
+    );
     await c.query("delete from organizations where owner_user_id=any($1::uuid[])", [userIds]);
     await c.query("delete from users where id=any($1::uuid[])", [userIds]);
     await c.query("commit");
@@ -189,6 +197,43 @@ describe("Database-backed access and retry rules", () => {
     expect(
       (await app.inject({ url: `/api/v1/organizations/${orgId}`, headers: headers(1) })).statusCode,
     ).toBe(404);
+  });
+  it("Registers only configured sources and queues one refresh on retry", async () => {
+    const source = (
+      await app.inject({ url: "/api/v1/coverage/sources", headers: headers() })
+    ).json().items[0];
+    const request = {
+      method: "POST" as const,
+      url: `/api/v1/organizations/${orgId}/vaults`,
+      headers: headers(),
+      payload: { sourceId: source.id },
+    };
+    const first = await app.inject(request);
+    expect(first.statusCode).toBe(201);
+    expect((await app.inject(request)).json().id).toBe(first.json().id);
+    expect(
+      (
+        await database.pool.query("select count(*)::int n from outbox where deduplication_key=$1", [
+          `vault:${first.json().id}`,
+        ])
+      ).rows[0].n,
+    ).toBe(1);
+    expect(
+      (
+        await app.inject({
+          ...request,
+          headers: headers(),
+          payload: { sourceId: "1:unconfigured" },
+        })
+      ).statusCode,
+    ).toBe(400);
+    expect((await app.inject({ ...request, headers: headers(2) })).statusCode).toBe(404);
+    const coverage = await app.inject({
+      url: `/api/v1/organizations/${orgId}/coverage`,
+      headers: headers(),
+    });
+    expect(coverage.statusCode).toBe(200);
+    expect(coverage.json().items[0].reason).toBe("MISSING_OBSERVATION");
   });
   it("Uses bounded pagination", async () => {
     const page = await app.inject({

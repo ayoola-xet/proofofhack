@@ -12,11 +12,11 @@ The full submission objective remains active. Live Graph indexing and the initia
 | WP-04 Budget controller | IN_PROGRESS | Exact policy approval and cumulative limits implemented and tested locally. Live Circle path pending. |
 | WP-05 Identity and Privy | IN_PROGRESS | VulnProof development app created. Live login UI opens. Server token verification, roles, and transactional retries implemented. Wallet policies and transfers pending. |
 | WP-06 Graph data | IN_PROGRESS | One shared schema indexes three live vaults. The Studio query returns fresh observations without indexing errors. |
-| WP-07 Coverage intelligence | IN_PROGRESS | Deterministic coverage calculations, source checks, and exact approved policy selection pass tests. Database updates and model explanations are pending. |
+| WP-07 Coverage intelligence | IN_PROGRESS | Deterministic coverage calculations, source checks, and exact approved policy selection pass tests. Durable database updates and rule-based explanations work. Model explanations are pending. |
 | WP-08 Confidential service | IN_PROGRESS | Fixed fixture assessment, atomic encrypted file storage, service tokens, and payment-gated report access implemented. Separate service deployment pending. |
 | WP-09 Settlement worker | NOT_STARTED | No evidence yet |
 | WP-10 Circle agent | IN_PROGRESS | Circle CLI 1.0.0 is authenticated. The agent wallet received test USDC and deployed the escrow. Bounded funding remains pending. |
-| WP-11 Application | IN_PROGRESS | Responsive workspace, live Privy login UI, organization creation, program creation, and database views. Financial actions pending. |
+| WP-11 Application | IN_PROGRESS | Responsive workspace, live Privy login UI, organization creation, program creation, and database views. Vault registration, coverage policy approval, and live source decisions work. Financial actions pending. |
 | WP-12 Deployment and evidence | NOT_STARTED | No evidence yet |
 
 ## Environment
@@ -37,7 +37,7 @@ Privy app configuration is stored in the ignored .env file with mode 0600. Graph
 
 ## Current verification
 
-- Pass 32 TypeScript tests. These tests include real PostgreSQL transactions, concurrent retries, current role checks, encrypted storage integrity, and exact payment gating.
+- Pass 36 TypeScript tests. These tests include real PostgreSQL transactions, concurrent retries, current role checks, encrypted storage integrity, and exact payment gating.
 - Pass 17 Solidity tests from the contract stage.
 - Pass TypeScript type checking.
 - Pass the first production frontend build. Rebuild after later changes.
@@ -60,3 +60,9 @@ The frontend runs at http://127.0.0.1:5173. The API uses port 4187. Another exis
 - Graph: `evidence/the-graph/live-query.json` records all three live source vaults.
 - Arc: `evidence/arc/escrow-deployment.json` records the successful transaction, canonical block, deployed code hash, USDC asset, and zero initial liability.
 - Escrow: `0x01742711ee569a0186349e54cffe805209808292` on Arc Testnet.
+
+## Coverage workflow
+
+The signed-in demo workspace registers Sky sDAI, Sky sUSDS, and Ethena sUSDe. The owner approved a minimum reward of one test USDC per vault. The worker stores live observations and coverage decisions. All three decisions correctly stop funding because no exact bounty policy has approval.
+
+The PostgreSQL job queue runs a source update each minute. Vault registration and policy approval also create durable update requests. Provider failures invalidate saved funding actions. Concurrent delivery keeps one observation and one equivalent current decision.

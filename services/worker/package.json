@@ -1,0 +1,8 @@
+{
+  "name": "@vulnproof/worker",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "tsx src/main.ts"
+  }
+}

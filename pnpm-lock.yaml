@@ -115,15 +115,29 @@ importers:
         specifier: ^5.0.0
         version: 5.0.0(@types/node@26.5.0)(vite@8.2.2(@types/node@26.5.0)(esbuild@0.28.2)(tsx@4.23.13)(yaml@2.8.1))
 
+  apps/web: {}
+
+  packages/ciphertext-store: {}
+
   packages/crypto-envelope: {}
 
   packages/database: {}
 
   packages/domain: {}
 
+  packages/erc4626-coverage-data: {}
+
+  packages/service-auth: {}
+
   services/api: {}
 
+  services/coverage: {}
+
+  services/report-release: {}
+
   services/verifier: {}
+
+  services/worker: {}
 
 packages:
 

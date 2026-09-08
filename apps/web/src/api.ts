@@ -70,7 +70,8 @@ export function useResource<T>(path: string | null) {
       });
     return () => controller.abort();
   }, [api, path, revision]);
-  return { data, error, loading, refresh: () => setRevision((v) => v + 1) };
+  const refresh = useCallback(() => setRevision((v) => v + 1), []);
+  return { data, error, loading, refresh };
 }
 export type Membership = { organization_id: string; name: string; role: string; version: number };
 export type Me = {

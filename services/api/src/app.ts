@@ -7,6 +7,7 @@ import { z } from "zod";
 import { DomainError, organizationHash, role, uint } from "../../../packages/domain/src/index.ts";
 import type { AuthProvider } from "./auth.ts";
 import { expectedVersion, first, idParams, member, mutate, pageParams } from "./context.ts";
+import { registerCoverageRoutes } from "./coverage-routes.ts";
 import { registerReadRoutes } from "./read-routes.ts";
 
 export type ApiOptions = {
@@ -223,6 +224,10 @@ export async function createApp(options: ApiOptions) {
             vaultId,
             id,
           ]);
+        await c.query(
+          "insert into outbox(deduplication_key,event_type,aggregate_id,payload_json) values($1,'COVERAGE_REFRESH',$2,$3)",
+          [`policy:${request.id}`, id, JSON.stringify({ organizationId: id })],
+        );
         return {
           status: 201,
           body: await first(
@@ -299,5 +304,6 @@ export async function createApp(options: ApiOptions) {
     };
   });
   registerReadRoutes(app, pool);
+  registerCoverageRoutes(app, pool);
   return app;
 }

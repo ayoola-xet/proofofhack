@@ -37,7 +37,15 @@ export function registerReadRoutes(app: FastifyInstance, pool: Pool) {
     const page = pageParams.parse(request.query);
     const rows = (
       await pool.query(
-        `select v.id,v.label,v.address,v.source_chain_id,c.status,c.reason,c.funded_reward,o.observed_at,o.provider_deployment_id,o.observed_block,o.indexed_head,o.read_status from registered_vaults v left join lateral(select * from coverage_records where vault_id=v.id order by computed_at desc limit 1)c on true left join vault_observations o on o.id=c.source_observation_id where v.organization_id=$1 and ($2::uuid is null or v.id>$2) order by v.id limit $3`,
+        `select v.id,v.label,v.address,v.source_chain_id,
+          case when o.id is null then 'ABSTAIN' when o.observed_at<now()-make_interval(secs=>coalesce(p.max_data_age_seconds,300)) then 'ABSTAIN' else c.status end as status,
+          case when o.id is null then 'MISSING_OBSERVATION' when o.observed_at<now()-make_interval(secs=>coalesce(p.max_data_age_seconds,300)) then 'STALE_OBSERVATION' else c.reason end as reason,
+          c.funded_reward,o.observed_at,o.provider_deployment_id,o.observed_block,o.indexed_head,o.read_status
+          from registered_vaults v
+          left join lateral(select * from coverage_policies where organization_id=v.organization_id order by version_number desc limit 1)p on true
+          left join lateral(select * from vault_observations where vault_id=v.id order by observed_at desc limit 1)o on true
+          left join lateral(select * from coverage_records where vault_id=v.id and policy_id=p.id and source_observation_id=o.id and p.allowed_vault_ids @> to_jsonb(array[v.id::text]) order by computed_at desc limit 1)c on true
+          where v.organization_id=$1 and ($2::uuid is null or v.id>$2) order by v.id limit $3`,
         [id, page.cursor ?? null, page.limit + 1],
       )
     ).rows;

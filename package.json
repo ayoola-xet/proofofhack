@@ -17,7 +17,10 @@
     "contracts:build": "forge build --root contracts",
     "preflight": "tsx scripts/preflight.ts",
     "db:generate": "drizzle-kit generate",
-    "db:migrate": "tsx scripts/migrate.ts"
+    "db:migrate": "tsx scripts/migrate.ts",
+    "dev:api": "tsx services/api/src/main.ts",
+    "dev:worker": "tsx services/worker/src/main.ts",
+    "dev:web": "pnpm --filter @vulnproof/web dev"
   },
   "devDependencies": {
     "@biomejs/biome": "^2.5.12",

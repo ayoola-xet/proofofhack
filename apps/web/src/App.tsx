@@ -22,6 +22,7 @@ import { type FormEvent, type ReactNode, useState } from "react";
 import { Link, NavLink, Route, Routes } from "react-router-dom";
 import { formatMoney } from "../../../packages/domain/src/index.ts";
 import { type Me, type Membership, useApi, useResource } from "./api.ts";
+import { Coverage } from "./pages/Coverage.tsx";
 
 function Brand() {
   return (
@@ -429,88 +430,6 @@ function Overview({
           <strong>Privy</strong>Identity and wallets
         </span>
       </section>
-    </>
-  );
-}
-type CoverageItem = {
-  id: string;
-  label: string;
-  address: string;
-  status: string | null;
-  reason: string | null;
-  funded_reward: string | null;
-  observed_at: string | null;
-  provider_deployment_id: string | null;
-};
-function Coverage({ organization }: { organization: Membership | null }) {
-  const result = useResource<{ items: CoverageItem[] }>(
-    organization ? `/organizations/${organization.organization_id}/coverage` : null,
-  );
-  return (
-    <>
-      <PageTitle
-        eyebrow="PUBLIC SOURCE DATA"
-        title="Vault coverage"
-        description="Use indexed vault data to check coverage needs."
-      />
-      <div className="panel">
-        <div className="section-heading">
-          <h2>Registered vaults</h2>
-          <button type="button" className="text-button" onClick={result.refresh}>
-            <RefreshCw size={15} />
-            Refresh
-          </button>
-        </div>
-        {!organization ? (
-          <State empty="Create an organization to register vaults." />
-        ) : (
-          <>
-            <State loading={result.loading} error={result.error} />
-            {result.data?.items.length ? (
-              <div className="table-wrap">
-                <table>
-                  <thead>
-                    <tr>
-                      <th>Vault</th>
-                      <th>Coverage state</th>
-                      <th>Funded reward</th>
-                      <th>Source time</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {result.data.items.map((v) => (
-                      <tr key={v.id}>
-                        <td>
-                          <strong>{v.label}</strong>
-                          <small className="mono">{short(v.address)}</small>
-                        </td>
-                        <td>
-                          <Pill>{v.status ?? "NO OBSERVATION"}</Pill>
-                          <small>{v.reason}</small>
-                        </td>
-                        <td>
-                          {v.funded_reward ? `${formatMoney(BigInt(v.funded_reward))} USDC` : "—"}
-                        </td>
-                        <td>
-                          {v.observed_at
-                            ? new Date(v.observed_at).toLocaleString()
-                            : "No indexed observation"}
-                        </td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
-            ) : (
-              !result.loading && !result.error && <State empty="No vaults are registered yet." />
-            )}
-          </>
-        )}
-      </div>
-      <div className="notice">
-        <CircleHelp size={18} />
-        <span>A missing or stale source produces no funding recommendation.</span>
-      </div>
     </>
   );
 }

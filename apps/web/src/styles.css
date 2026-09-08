@@ -553,7 +553,8 @@ p {
   font-size: 11px;
   font-weight: 500;
 }
-.form-row input {
+.form-row input,
+.form-row select {
   background: #fbfcf9;
   border: 1px solid #dfe5da;
   border-radius: 6px;
@@ -1104,4 +1105,12 @@ code {
     animation: none;
     transition: none;
   }
+}
+
+.coverage-decision {
+  padding: 20px 0;
+  border-bottom: 1px solid var(--line);
+}
+.coverage-decision p {
+  overflow-wrap: anywhere;
 }
