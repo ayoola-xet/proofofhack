@@ -1,0 +1,66 @@
+{
+  "sourceCommit": "b7cacaa5337f590c8959265e3dcda163a2d9a9dc",
+  "environment": "LOCAL",
+  "scope": "FINAL_EXPIRY_AND_REFUND_RECEIPT_RECOVERY",
+  "startedAt": "2026-09-08T10:18:00.454000+00:00",
+  "recordedAt": "2026-09-08T10:22:17.681389+00:00",
+  "command": "pnpm test --reporter=json --outputFile=/tmp/vulnproof-recovery-tests.json",
+  "success": true,
+  "totalTests": 117,
+  "passedTests": 117,
+  "failedTests": 0,
+  "testFiles": 21,
+  "recoveryChecks": [
+    {
+      "name": "Records final expiry, releases only its report hold, and preserves the deletion date on replay",
+      "status": "PASSED",
+      "durationMs": 386.4881660000001
+    },
+    {
+      "name": "Records a combined expiry and refund once with the fixed token transfer",
+      "status": "PASSED",
+      "durationMs": 173.60362499999974
+    },
+    {
+      "name": "Allows current owners and treasury members, rejects other roles, and checks membership on retry",
+      "status": "PASSED",
+      "durationMs": 164.791917
+    },
+    {
+      "name": "Rejects missing finality, wrong scope, changed transfer details, and saved event conflicts without mutation",
+      "status": "PASSED",
+      "durationMs": 167.8054589999997
+    },
+    {
+      "name": "Does not clear a report hold with another claim's event",
+      "status": "PASSED",
+      "durationMs": 133.59899999999925
+    },
+    {
+      "name": "Does not replace a later refund when an older expiry arrives",
+      "status": "PASSED",
+      "durationMs": 8482.702542
+    },
+    {
+      "name": "Defers recovery during claim processing and waits for an active assessment",
+      "status": "PASSED",
+      "durationMs": 8565.877666999999
+    }
+  ],
+  "checks": {
+    "typecheck": "PASS",
+    "changedFilesLint": "PASS",
+    "frontendAndGraphBuild": "PASS",
+    "appliedMigrations": 14,
+    "apiHealth": "AVAILABLE"
+  },
+  "localEvidence": "Anvil contract transactions and isolated PostgreSQL recovery through the authenticated API and shared receipt processor.",
+  "liveArcRecoveryProof": false,
+  "automaticRecoveryExecution": false,
+  "remaining": [
+    "Automatic expiry and refund execution",
+    "Recovery event discovery",
+    "Recovery screen",
+    "Live Arc recovery evidence"
+  ]
+}
