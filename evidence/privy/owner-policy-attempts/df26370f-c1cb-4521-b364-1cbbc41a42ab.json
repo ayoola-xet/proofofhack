@@ -1,0 +1,30 @@
+{
+  "id": "df26370f-c1cb-4521-b364-1cbbc41a42ab",
+  "expiresAt": "2026-09-08T09:04:16.808Z",
+  "result": "PASS",
+  "restored": true,
+  "stage": "SIGN_BLOCKED",
+  "allowed": "SIGNED_AND_VERIFIED",
+  "blocked": "POLICY_DENIED",
+  "checkedAt": "2026-09-08T08:54:24.078Z",
+  "scope": "ARC_TESTNET_PROVIDER_POLICY_TEST",
+  "broadcast": false,
+  "ownerUserConfirmation": false,
+  "controller": "0x999c73e9bb9f70013f7a20cddd97c9633b094dda",
+  "wallet": "0x6dd9e77782bbb10268abfa04663a062f3ca30768",
+  "policyId": "gampesyejoktdqd4v8cnrmr6",
+  "allowedCommand": {
+    "kind": "APPROVE_POLICY",
+    "draftId": "00000000-0000-4000-8000-000000000001",
+    "policyHash": "0x1111111111111111111111111111111111111111111111111111111111111111",
+    "reward": "1",
+    "expiresAt": "1800000000"
+  },
+  "blockedCommand": {
+    "kind": "APPROVE_POLICY",
+    "draftId": "00000000-0000-4000-8000-000000000001",
+    "policyHash": "0x1111111111111111111111111111111111111111111111111111111111111111",
+    "reward": "2",
+    "expiresAt": "1800000000"
+  }
+}

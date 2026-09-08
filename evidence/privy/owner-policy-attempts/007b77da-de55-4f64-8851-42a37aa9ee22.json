@@ -1,0 +1,24 @@
+{
+  "id": "007b77da-de55-4f64-8851-42a37aa9ee22",
+  "expiresAt": "2026-09-08T09:04:54.285Z",
+  "result": "FAIL",
+  "restored": true,
+  "stage": "SIGN_ALLOWED",
+  "failureCode": "policy_violation",
+  "httpStatus": 400,
+  "checkedAt": "2026-09-08T08:55:01.227Z",
+  "scope": "ARC_TESTNET_PROVIDER_POLICY_TEST",
+  "broadcast": false,
+  "ownerUserConfirmation": false,
+  "controller": "0x999c73e9bb9f70013f7a20cddd97c9633b094dda",
+  "wallet": "0x6dd9e77782bbb10268abfa04663a062f3ca30768",
+  "policyId": "gampesyejoktdqd4v8cnrmr6",
+  "allowedCommand": {
+    "kind": "SET_ENABLED",
+    "enabled": false
+  },
+  "blockedCommand": {
+    "kind": "SET_ENABLED",
+    "enabled": true
+  }
+}

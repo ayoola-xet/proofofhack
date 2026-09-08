@@ -362,3 +362,21 @@ Wallet transfer states are AWAITING_SIGNATURE, SUBMITTED, BROADCAST, CONFIRMED, 
 | `POST /bounty-drafts/:id/approve` | Owner | Immutable approval of the exact hash. Require If-Match. |
 
 All paths have the `/api/v1` prefix. The preparation response contains public synthetic demo fixtures. These records are not user-submitted confidential evidence. Client code must encrypt claim evidence before it sends an upload.
+
+## Controller owner routes
+
+All paths have the `/api/v1` prefix. Mutation routes require current authentication and an idempotency key.
+
+| Route | Caller | Result |
+| --- | --- | --- |
+| `POST /controllers/:id/owner-requests` | Owner | Prepare an exact control request and a ten-minute signing message. Supply `command` and `authorizationWalletId`. |
+| `POST /owner-requests/:id/authorize` | Requesting owner | Verify the linked-wallet signature and queue the action. Require `If-Match`. |
+| `GET /controllers/:id/owner-requests` | Member | Read command, status, cleanup state, transaction hash, and final receipt. Do not return authorization signatures. |
+| `POST /owner-requests/:id/cancel` | Requesting user | Cancel before a transaction intent or temporary permission exists. A queued job observes the cancellation. |
+| `POST /owner-requests/:id/retry` | Owner | Retry the saved request. Preserve its transaction and nonce. |
+
+Commands are `SET_LIMITS`, `SET_ENABLED`, `APPROVE_POLICY`, `DEPOSIT`, and `WITHDRAW`. Amounts use integer strings in USDC base units. The interval uses whole seconds from 60 to 86400. A deposit, per-action limit, or policy reward cannot exceed the organization wallet cap. The daily limit cannot exceed 100 test USDC. Policy approval binds an approved organization draft, its reward, and its controller refund destination.
+
+Request states are `AWAITING_AUTHORIZATION`, `QUEUED`, `SIGNING`, `SIGNED`, `CONFIRMING`, `COMPLETE`, `CANCELLED`, `EXPIRED`, and `FAILED`. One wallet can have one active owner request. `permission_pending` means that the worker must verify removal of a temporary Privy rule. An unresolved transaction after expiry remains pending for reconciliation. It must not permit a new nonce reservation.
+
+The `owner_requests` table preserves the full command, signing message, requesting actor, authorization wallet, expiry, signature, transaction reference, and final receipt. Database triggers prevent changes to authorization terms, transaction terms, saved signatures, and completed receipts.

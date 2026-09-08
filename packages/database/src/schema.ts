@@ -603,6 +603,43 @@ export const fundingRequests = pgTable(
   ],
 );
 
+export const ownerRequests = pgTable(
+  "owner_requests",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    organizationId: uuid("organization_id")
+      .notNull()
+      .references(() => organizations.id),
+    controllerId: uuid("controller_id")
+      .notNull()
+      .references(() => budgetControllers.id),
+    walletId: uuid("wallet_id")
+      .notNull()
+      .references(() => wallets.id),
+    requestedBy: uuid("requested_by")
+      .notNull()
+      .references(() => users.id),
+    authorizationWalletId: uuid("authorization_wallet_id")
+      .notNull()
+      .references(() => wallets.id),
+    command: json("command_json").notNull(),
+    authorizationMessage: text("authorization_message").notNull(),
+    authorizationExpiresAt: timestamp("authorization_expires_at", { withTimezone: true }).notNull(),
+    authorizationSignature: text("authorization_signature"),
+    txIntentId: uuid("tx_intent_id").references(() => transactionIntents.id),
+    permissionPending: boolean("permission_pending").notNull().default(false),
+    state: text("state").notNull().default("AWAITING_AUTHORIZATION"),
+    failureCode: text("failure_code"),
+    receipt: json("receipt_json"),
+    ...dates(),
+  },
+  (t) => [
+    uniqueIndex("one_active_owner_request")
+      .on(t.walletId)
+      .where(sql`${t.state} not in ('COMPLETE','CANCELLED','EXPIRED','FAILED')`),
+  ],
+);
+
 export const signedTransactions = pgTable("signed_transactions", {
   intentId: uuid("intent_id")
     .primaryKey()

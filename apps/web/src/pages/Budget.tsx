@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { formatMoney } from "../../../../packages/domain/src/index.ts";
 import { type Membership, useApi, useResource } from "../api.ts";
+import { type BudgetDraft, BudgetOwnerControls } from "./BudgetOwnerControls.tsx";
 
 export type BudgetController = {
   id: string;
@@ -34,7 +35,7 @@ type Approval = {
   consumed_event_ref: string | null;
 };
 const amount = (value: string) => `${formatMoney(BigInt(value))} test USDC`;
-export function Budget({ organization }: { organization: Membership }) {
+export function Budget({ organization, actorId }: { organization: Membership; actorId?: string }) {
   const controllers = useResource<{ items: BudgetController[] }>(
     `/organizations/${organization.organization_id}/controllers`,
   );
@@ -62,6 +63,7 @@ export function Budget({ organization }: { organization: Membership }) {
           key={controller.id}
           controller={controller}
           organization={organization}
+          actorId={actorId}
           refresh={controllers.refresh}
         />
       ))}
@@ -72,10 +74,12 @@ function Controller({
   controller,
   organization,
   refresh,
+  actorId,
 }: {
   controller: BudgetController;
   organization: Membership;
   refresh: () => void;
+  actorId?: string;
 }) {
   const api = useApi(),
     state = controller.limit_projection_json;
@@ -83,14 +87,9 @@ function Controller({
   const allocations = useResource<{ items: Allocation[] }>(
     `/organizations/${organization.organization_id}/allocations`,
   );
-  const drafts = useResource<{
-    items: {
-      id: string;
-      status: string;
-      policy_hash: string;
-      policy: { refundRecipient: string };
-    }[];
-  }>(`/organizations/${organization.organization_id}/bounty-drafts`);
+  const drafts = useResource<{ items: BudgetDraft[] }>(
+    `/organizations/${organization.organization_id}/bounty-drafts`,
+  );
   const [busy, setBusy] = useState(""),
     [error, setError] = useState(""),
     [notice, setNotice] = useState("");
@@ -173,6 +172,12 @@ function Controller({
           </p>
         )}
         {notice && <p role="status">{notice}</p>}
+        <BudgetOwnerControls
+          controller={controller}
+          organization={organization}
+          actorId={actorId}
+          drafts={drafts.data?.items ?? []}
+        />
         <h3>Policy approvals</h3>
         <p>
           A draft approval in VulnProof does not grant a controller approval. The owner must also

@@ -7,9 +7,9 @@ The full submission objective remains active. Live Graph indexing and the initia
 | Package | Status | Evidence |
 | --- | --- | --- |
 | WP-01 Foundation | IN_PROGRESS | Workspace, local infrastructure, and provider preflight created. Type check passes. |
-| WP-02 Domain and database | IN_PROGRESS | Strict schemas, policy hashing, 32 database tables, and eleven applied migrations. OpenAPI generation pending. |
+| WP-02 Domain and database | IN_PROGRESS | Strict schemas, policy hashing, 33 database tables, and twelve applied migrations. OpenAPI generation pending. |
 | WP-03 Escrow | IN_PROGRESS | Contract implemented. Financial suite: 17 passing tests, including 256-run fuzz cases. Arc Testnet deployment verified. Draft approval and durable funding are connected through the API and worker. Database and failure-path tests pass. The live bounty funding test remains pending. |
-| WP-04 Budget controller | IN_PROGRESS | Controller registration, exact policy approval, durable allocation, and cumulative limits pass local chain tests. Live Circle allocation and owner controls remain pending. |
+| WP-04 Budget controller | IN_PROGRESS | Controller registration, owner controls, exact policy approval, durable allocation, and cumulative limits pass local tests. Five live Privy permission checks pass. Live owner transactions and Circle allocation remain pending. |
 | WP-05 Identity and Privy | IN_PROGRESS | Live login, current role checks, and user wallet transfers work. The organization wallet has a verified Privy owner and policy. Live signing checks accept an allowed approval and reject an unapproved spender. Bounty funding remains pending. |
 | WP-06 Graph data | IN_PROGRESS | One shared schema indexes three live vaults. The Studio query returns fresh observations without indexing errors. |
 | WP-07 Coverage intelligence | IN_PROGRESS | Deterministic coverage calculations, source checks, and exact approved policy selection pass tests. Durable database updates and rule-based explanations work. The model adapter, saved requests, current-source checks, and source validation pass local tests. Live model verification needs credentials. |
@@ -37,11 +37,11 @@ Privy app configuration is stored in the ignored .env file with mode 0600. Graph
 
 ## Current verification
 
-- Pass all 83 TypeScript tests in 17 files. These tests include real PostgreSQL transactions, local chain settlement, concurrent allocation jobs, current role checks, encrypted storage integrity, and exact payment gating.
+- Pass all 103 TypeScript tests in 19 files. These tests include real PostgreSQL transactions, local chain settlement, concurrent allocation jobs, current role checks, encrypted storage integrity, exact payment gating, and owner controls.
 - Pass 17 Solidity tests from the contract stage.
 - Pass TypeScript type checking.
 - Pass the production frontend build after the organization wallet changes. Vite reports one large dependency chunk.
-- Pass lint checks for all 14 files changed in the wallet stage. Repository-wide lint still reports 13 existing errors and 23 warnings in other files. Resolve these before submission.
+- Pass lint checks for all 19 TypeScript files changed in the owner-control stage. The earlier repository-wide check reports 13 existing errors and 23 warnings in other files. Resolve these before submission.
 - Open the live Privy login window through the new app. The user has signed in to the local workspace. Financial user journeys remain pending.
 - Check the desktop landing page and the 390-pixel mobile page. Mobile scroll width equals viewport width. Browser evidence is in the ignored output/playwright folder.
 
@@ -178,3 +178,19 @@ Organization settings now show the registered controller, available budget, spen
 A bounty draft can select the organization wallet or the coverage budget as its funding source and refund destination. A budget draft does not show the direct wallet funding button. It requires the exact controller approval. Owner controls for deposits, policy approval, limits, and enablement remain pending.
 
 Type checking, changed-file lint, and the frontend build pass. The new budget API test passes. The browser check remains pending while the Mac is locked. These screens do not complete the live allocation journey.
+
+## Owner controls
+
+Owners can prepare deposits, withdrawals, limits, policy approvals, and enable/disable requests in the budget workspace. Each request requires a signature from the requesting owner's current Privy wallet. The message binds the complete action and expires after ten minutes. The worker checks the role, linked wallet, command, balance, provider policy, and controller before signing.
+
+The worker grants a temporary Privy permission after saving the transaction intent. It saves signed bytes, restores the base policy, and then broadcasts. Recovery uses the same transaction and nonce. Cleanup still runs after owner removal. A failed cleanup stops broadcast. A queued action can cancel before signing starts. An unresolved transaction after authorization expiry still requires reconciliation.
+
+Privy fixes every argument for deposits, withdrawals, limits, and policy approval. For enable/disable, Privy restricts the chain, zero native value, controller, function, and expiry. The application checks the selected Boolean state against the signed owner message and returned transaction. Privy does not enforce that Boolean state in this integration. The confirmation message discloses this boundary.
+
+Five live permission checks pass. The four numeric actions reject a changed amount. The enable/disable action rejects another destination. Each check restores the original wallet policy. No check broadcasts a transaction or moves funds. Evidence is in `evidence/privy/owner-policy-0e36ddc6-5cfa-46cf-8c2f-6e9ad0d5fdb8-{enabled,limits,deposit,withdraw,approval}.json`. Earlier failed attempts remain in the evidence directory. They are not passing evidence.
+
+Eighteen owner-control tests pass. They check database immutability, current roles, linked wallets, all five actions, lost broadcast responses, policy cleanup, event matching, queued cancellation, and shared nonce locking. The tests reject a signed enabled state that differs from the owner's confirmation. Rule tests compare argument names and values with the decoded contract ABI.
+
+All 103 tests in 19 files pass in a clean full run. The first run exposed a test cleanup race. The assistant test now closes its database connections and drops its isolated database without forced disconnection. All 19 changed TypeScript files pass lint. Type checking and the production build pass.
+
+The local API and worker run the owner controls. The API health check passes. Both owner queues exist. The Mac remains locked. The live browser flow, owner transactions, Circle allocation, and complete payout journey remain pending. Model credentials and hosting also remain open.

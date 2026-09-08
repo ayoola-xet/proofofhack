@@ -1,0 +1,27 @@
+{
+  "id": "133ec20b-c014-4033-9f60-1628b3bdee13",
+  "expiresAt": "2026-09-08T09:10:09.870Z",
+  "result": "PASS",
+  "restored": true,
+  "ruleHash": "21446023f9e06f5a8fc721e86c6419850bf6ed039015ec6954b4b4642a9273ac",
+  "stage": "SIGN_BLOCKED",
+  "allowed": "SIGNED_AND_VERIFIED",
+  "blocked": "POLICY_DENIED",
+  "checkedAt": "2026-09-08T09:00:16.570Z",
+  "scope": "ARC_TESTNET_PROVIDER_POLICY_TEST",
+  "broadcast": false,
+  "ownerUserConfirmation": false,
+  "controller": "0x999c73e9bb9f70013f7a20cddd97c9633b094dda",
+  "wallet": "0x6dd9e77782bbb10268abfa04663a062f3ca30768",
+  "policyId": "gampesyejoktdqd4v8cnrmr6",
+  "allowedCommand": {
+    "kind": "DEPOSIT",
+    "amount": "1"
+  },
+  "blockedCommand": {
+    "kind": "DEPOSIT",
+    "amount": "2"
+  },
+  "blockedDestination": "0x3600000000000000000000000000000000000000",
+  "parameterEnforcement": "PRIVY_EXACT_ARGUMENTS"
+}

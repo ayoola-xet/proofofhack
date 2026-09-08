@@ -1,0 +1,27 @@
+{
+  "id": "99060ac9-c5ab-4f98-b7cd-6adb7631c987",
+  "expiresAt": "2026-09-08T09:10:18.894Z",
+  "result": "PASS",
+  "restored": true,
+  "ruleHash": "7213e6faa1a78d8172d4d310c0df532f8d404293f4999568210f3160d3ec7f64",
+  "stage": "SIGN_BLOCKED",
+  "allowed": "SIGNED_AND_VERIFIED",
+  "blocked": "POLICY_DENIED",
+  "checkedAt": "2026-09-08T09:00:25.293Z",
+  "scope": "ARC_TESTNET_PROVIDER_POLICY_TEST",
+  "broadcast": false,
+  "ownerUserConfirmation": false,
+  "controller": "0x999c73e9bb9f70013f7a20cddd97c9633b094dda",
+  "wallet": "0x6dd9e77782bbb10268abfa04663a062f3ca30768",
+  "policyId": "gampesyejoktdqd4v8cnrmr6",
+  "allowedCommand": {
+    "kind": "WITHDRAW",
+    "amount": "1"
+  },
+  "blockedCommand": {
+    "kind": "WITHDRAW",
+    "amount": "2"
+  },
+  "blockedDestination": "0x999c73e9bb9f70013f7a20cddd97c9633b094dda",
+  "parameterEnforcement": "PRIVY_EXACT_ARGUMENTS"
+}

@@ -14,6 +14,7 @@ import { type ClaimServices, registerClaimRoutes } from "./claim-routes.ts";
 import { expectedVersion, first, idParams, member, mutate, pageParams } from "./context.ts";
 import { registerCoverageRoutes } from "./coverage-routes.ts";
 import { registerFundingRoutes } from "./funding-routes.ts";
+import { registerOwnerRoutes } from "./owner-routes.ts";
 import { registerReadRoutes } from "./read-routes.ts";
 import { registerRpcRoutes } from "./rpc-routes.ts";
 import { registerTreasuryRoutes } from "./treasury-routes.ts";
@@ -329,6 +330,7 @@ export async function createApp(options: ApiOptions) {
   registerClaimRoutes(app, pool, options.claimServices, options.walletIdentity);
   registerCoverageRoutes(app, pool);
   registerBudgetRoutes(app, pool, options.budgetServices);
+  registerOwnerRoutes(app, pool, options.budgetServices, options.walletIdentity);
   registerAssistantRoutes(app, pool, options.assistantModel);
   registerWalletRoutes(app, pool, options.walletIdentity);
   return app;

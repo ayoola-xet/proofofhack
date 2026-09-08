@@ -33,7 +33,7 @@ const intentSchema = z.object({
   result: resultSchema.optional(),
 });
 const orgId = z.uuid().parse(process.argv[2]);
-if (!["local", "testnet"].includes(process.env.APP_ENV ?? "local"))
+if (!["local", "arc-testnet"].includes(process.env.APP_ENV ?? "local"))
   throw new Error("Controller deployment requires a testnet environment.");
 const operator = address.parse(process.env.CIRCLE_AGENT_ADDRESS),
   escrow = address.parse(process.env.ESCROW_ADDRESS),

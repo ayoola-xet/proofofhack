@@ -129,7 +129,7 @@ afterAll(async () => {
   await api.close();
   await disabled.close();
   await pool.end();
-  await admin.query(`drop database ${name} with (force)`);
+  await admin.query(`drop database ${name}`);
   await admin.end();
 });
 describe("Coverage assistant persistence and guards", () => {

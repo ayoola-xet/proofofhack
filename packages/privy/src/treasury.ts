@@ -13,6 +13,7 @@ import { bountyEscrowAbi } from "../../chain/src/abi/BountyEscrow.ts";
 import { ARC_USDC } from "../../chain/src/arc.ts";
 import { canonicalJson } from "../../crypto-envelope/src/index.ts";
 import { address, bytes32, DomainError } from "../../domain/src/index.ts";
+import { type OwnerPermission, ownerPermissionRules } from "./owner-permission.ts";
 
 type PolicyInput = Parameters<ReturnType<PrivyClient["policies"]>["create"]>[0];
 export type TreasuryConfiguration = { organizationId: Hex; escrow: Hex; maxPerAction: string };
@@ -135,7 +136,9 @@ export function canonicalTreasuryRules(rules: PolicyInput["rules"]) {
         const isAddress =
           (condition.field_source === "ethereum_transaction" && condition.field === "to") ||
           (condition.field_source === "ethereum_calldata" &&
-            ["approve.spender", "createAndFund.policy.asset"].includes(condition.field));
+            ["approve.spender", "createAndFund.policy.asset", "transfer.recipient"].includes(
+              condition.field,
+            ));
         return isAddress && typeof condition.value === "string"
           ? { ...condition, value: address.parse(condition.value) }
           : condition;
@@ -195,6 +198,9 @@ export class PrivyTreasury implements TreasuryProvider {
     config: TreasuryConfiguration,
     method: "eth_signTransaction" | "eth_sendTransaction" = "eth_signTransaction",
   ) {
+    return this.verifyRules(wallet, treasuryRules(config, method));
+  }
+  private async verifyRules(wallet: TreasuryWallet, rules: PolicyInput["rules"]) {
     const [current, policy, owner] = await Promise.all([
       this.client.wallets().get(wallet.id),
       this.client.policies().get(wallet.policyIds[0]),
@@ -219,8 +225,7 @@ export class PrivyTreasury implements TreasuryProvider {
       current.policy_ids.length !== 1 ||
       current.policy_ids[0] !== wallet.policyIds[0] ||
       current.additional_signers.length !== 0 ||
-      canonicalTreasuryRules(policy.rules) !==
-        canonicalTreasuryRules(treasuryRules(config, method)) ||
+      canonicalTreasuryRules(policy.rules) !== canonicalTreasuryRules(rules) ||
       !expectedOwner(owner) ||
       !expectedOwner(policyOwner)
     )
@@ -229,6 +234,45 @@ export class PrivyTreasury implements TreasuryProvider {
         "The provider wallet controls do not match the approved configuration.",
         503,
       );
+  }
+  async setOwnerPermission(
+    wallet: TreasuryWallet,
+    config: TreasuryConfiguration,
+    permission: OwnerPermission,
+  ) {
+    const rules = ownerPermissionRules(config, permission);
+    if (Date.parse(permission.expiresAt) <= Date.now())
+      throw new Error("The owner permission has expired.");
+    try {
+      await this.verifyRules(wallet, rules);
+      return;
+    } catch {
+      await this.verify(wallet, config);
+    }
+    if (Date.parse(permission.expiresAt) <= Date.now())
+      throw new Error("The owner permission has expired.");
+    await this.client.policies().update(wallet.policyIds[0], {
+      rules,
+      authorization_context: { authorization_private_keys: [this.authorization.privateKey] },
+    });
+    await this.verifyRules(wallet, rules);
+  }
+  async restoreOwnerPermission(
+    wallet: TreasuryWallet,
+    config: TreasuryConfiguration,
+    permission: OwnerPermission,
+  ) {
+    try {
+      await this.verify(wallet, config);
+      return;
+    } catch {
+      await this.verifyRules(wallet, ownerPermissionRules(config, permission));
+    }
+    await this.client.policies().update(wallet.policyIds[0], {
+      rules: treasuryRules(config),
+      authorization_context: { authorization_private_keys: [this.authorization.privateKey] },
+    });
+    await this.verify(wallet, config);
   }
   async configureArcSigning(wallet: TreasuryWallet, config: TreasuryConfiguration) {
     try {

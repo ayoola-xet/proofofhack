@@ -342,6 +342,20 @@ Use a UTC day bucket `block.timestamp / 86400` for cumulative spending. Record a
 
 The UI must distinguish controller funds from the Circle wallet’s gas balance. Arc uses the same underlying USDC for token transfers and gas. A low gas balance must stop new actions with a clear recovery message.
 
+### 13.2 Owner authorization and temporary wallet permissions
+
+Require the requesting owner to sign each control request with a currently linked Privy wallet. Bind the organization, controller, owner wallet, command, request ID, actor, ten-minute expiry, and 0.05 test-USDC fee cap. Preserve these fields in the database. Recheck the current role and wallet link before a new signature and first broadcast.
+
+Use one wallet lock for owner controls and direct bounty funding. Save the nonce and exact transaction before requesting a provider signature. Save signed bytes before broadcast. Restore the base Privy policy before broadcast. Reconcile a lost response with the saved transaction. Do not select another nonce for a retry.
+
+The temporary Privy rule restricts Arc Testnet, zero native value, the destination, the function, and the expiry. It also fixes every argument for deposits, withdrawals, spending limits, and policy approval. Use argument names from the exact ABI. The token transfer ABI uses `recipient` and `amount`.
+
+For `setEnabled(bool)`, Privy restricts the function but does not enforce the selected Boolean value in this integration. The application verifies that value through the signed owner message, immutable request, exact transaction bytes, and final event. Disclose this boundary in the confirmation message. Do not claim that Privy enforces the enabled state. The live checks reject the Boolean argument conditions tested during setup. They accept the function restriction and reject another destination.
+
+Record temporary-policy cleanup before retrying an action. Cleanup must still run if the owner loses membership. If cleanup fails, keep the request pending and stop broadcast. If a signature or transaction is unresolved after authorization expiry, require reconciliation before another wallet action. Never delete its nonce reservation to clear the queue.
+
+Require a canonical finalized receipt with the exact controller event. Deposits require the exact token transfer. Withdrawals require both the controller event and the transfer to its fixed owner. Only then record a final financial receipt.
+
 ## 14. Privy integration
 
 Use Privy for real authentication and wallet operations. Store organization wallets separately from researcher wallets. Ensure the organization’s approval controls operate before funds become committed to a bounty. They must not provide a sponsor veto over claimant collection.

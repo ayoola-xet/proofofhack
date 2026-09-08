@@ -5,12 +5,14 @@ import { CircleBudgetExecutor } from "../../../packages/circle/src/budget.ts";
 import { configuredCircleRelayer } from "../../../packages/circle/src/claims.ts";
 import { address } from "../../../packages/domain/src/index.ts";
 import { PrivyTreasury } from "../../../packages/privy/src/treasury.ts";
+import { PrivyWalletIdentity } from "../../../packages/privy/src/wallets.ts";
 import { InternalClient } from "../../../packages/service-auth/src/http.ts";
 import { loadTestnetSecret } from "../../../packages/service-config/src/index.ts";
 import { configuredExplanationProvider } from "../../assistant/src/provider.ts";
 import { startAssistantJobs } from "./assistant-jobs.ts";
 import { startBudgetJobs } from "./budget-jobs.ts";
 import { startClaimJobs } from "./claim-jobs.ts";
+import { startOwnerJobs } from "./owner-jobs.ts";
 import { startTreasuryJobs } from "./treasury-jobs.ts";
 import "dotenv/config";
 import { PgBoss } from "pg-boss";
@@ -41,11 +43,20 @@ if (process.env.PRIVY_APP_ID && process.env.PRIVY_APP_SECRET) {
         process.env.PRIVY_AUTHORIZATION_KEY ?? ".local/keys/privy-authorization.json",
       ),
     );
-  await startTreasuryJobs(
-    boss,
-    pool,
-    new PrivyTreasury(process.env.PRIVY_APP_ID, process.env.PRIVY_APP_SECRET, key),
-  );
+  const treasury = new PrivyTreasury(process.env.PRIVY_APP_ID, process.env.PRIVY_APP_SECRET, key);
+  await startTreasuryJobs(boss, pool, treasury);
+  if (process.env.ESCROW_ADDRESS)
+    await startOwnerJobs(
+      boss,
+      pool,
+      treasury,
+      new ReadOnlyBudgetChain(
+        "https://rpc.testnet.arc.io",
+        5042002,
+        address.parse(process.env.ESCROW_ADDRESS),
+      ),
+      new PrivyWalletIdentity(process.env.PRIVY_APP_ID, process.env.PRIVY_APP_SECRET),
+    );
 }
 if (process.env.CIRCLE_AGENT_ADDRESS && process.env.ESCROW_ADDRESS) {
   const escrow = address.parse(process.env.ESCROW_ADDRESS);
@@ -87,7 +98,7 @@ if (process.env.CIRCLE_AGENT_ADDRESS && process.env.ESCROW_ADDRESS) {
 const explanationProvider = configuredExplanationProvider();
 if (explanationProvider) await startAssistantJobs(boss, pool, explanationProvider);
 process.stdout.write(
-  "Configured coverage, treasury, budget, claim, and assistant workers are ready.\n",
+  "Configured coverage, treasury, owner, budget, claim, and assistant workers are ready.\n",
 );
 for (const signal of ["SIGINT", "SIGTERM"] as const)
   process.once(signal, async () => {

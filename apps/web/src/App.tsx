@@ -634,7 +634,11 @@ function Team({
         <Treasury key={organization.organization_id} organization={organization} />
       )}
       {organization && (
-        <Budget key={`budget:${organization.organization_id}`} organization={organization} />
+        <Budget
+          key={`budget:${organization.organization_id}`}
+          organization={organization}
+          actorId={me?.user.id}
+        />
       )}
       {organization && (
         <section className="panel">

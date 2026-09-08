@@ -1,0 +1,33 @@
+{
+  "id": "22cc2dba-a393-4bec-8f43-b52a88cccb90",
+  "expiresAt": "2026-09-08T09:10:27.820Z",
+  "result": "PASS",
+  "restored": true,
+  "ruleHash": "814c169c5843b262bf089b25e269c94fc3dae98875b0447f88f331dea641d320",
+  "stage": "SIGN_BLOCKED",
+  "allowed": "SIGNED_AND_VERIFIED",
+  "blocked": "POLICY_DENIED",
+  "checkedAt": "2026-09-08T09:00:35.599Z",
+  "scope": "ARC_TESTNET_PROVIDER_POLICY_TEST",
+  "broadcast": false,
+  "ownerUserConfirmation": false,
+  "controller": "0x999c73e9bb9f70013f7a20cddd97c9633b094dda",
+  "wallet": "0x6dd9e77782bbb10268abfa04663a062f3ca30768",
+  "policyId": "gampesyejoktdqd4v8cnrmr6",
+  "allowedCommand": {
+    "kind": "APPROVE_POLICY",
+    "draftId": "00000000-0000-4000-8000-000000000001",
+    "policyHash": "0x1111111111111111111111111111111111111111111111111111111111111111",
+    "reward": "1",
+    "expiresAt": "1800000000"
+  },
+  "blockedCommand": {
+    "kind": "APPROVE_POLICY",
+    "draftId": "00000000-0000-4000-8000-000000000001",
+    "policyHash": "0x1111111111111111111111111111111111111111111111111111111111111111",
+    "reward": "2",
+    "expiresAt": "1800000000"
+  },
+  "blockedDestination": "0x999c73e9bb9f70013f7a20cddd97c9633b094dda",
+  "parameterEnforcement": "PRIVY_EXACT_ARGUMENTS"
+}

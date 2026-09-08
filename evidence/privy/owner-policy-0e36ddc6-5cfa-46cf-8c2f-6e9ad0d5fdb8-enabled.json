@@ -1,0 +1,27 @@
+{
+  "id": "19be87c8-5847-4c6a-9fc8-c46f480da7f6",
+  "expiresAt": "2026-09-08T09:09:51.802Z",
+  "result": "PASS",
+  "restored": true,
+  "ruleHash": "90b7da0b311145bddb1bc2bf7cdf91e049dedb7f80000a7a8b86818ebba573ad",
+  "stage": "SIGN_BLOCKED",
+  "allowed": "SIGNED_AND_VERIFIED",
+  "blocked": "POLICY_DENIED",
+  "checkedAt": "2026-09-08T08:59:58.575Z",
+  "scope": "ARC_TESTNET_PROVIDER_POLICY_TEST",
+  "broadcast": false,
+  "ownerUserConfirmation": false,
+  "controller": "0x999c73e9bb9f70013f7a20cddd97c9633b094dda",
+  "wallet": "0x6dd9e77782bbb10268abfa04663a062f3ca30768",
+  "policyId": "gampesyejoktdqd4v8cnrmr6",
+  "allowedCommand": {
+    "kind": "SET_ENABLED",
+    "enabled": false
+  },
+  "blockedCommand": {
+    "kind": "SET_ENABLED",
+    "enabled": false
+  },
+  "blockedDestination": "0x6dd9e77782bbb10268abfa04663a062f3ca30768",
+  "parameterEnforcement": "APPLICATION_SIGNED_CONFIRMATION"
+}

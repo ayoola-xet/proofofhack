@@ -1,0 +1,32 @@
+{
+  "scope": "LOCAL_INTEGRATION_TESTS",
+  "startedAt": "2026-09-08T09:05:00.315Z",
+  "success": true,
+  "totalTests": 103,
+  "passedTests": 103,
+  "failedTests": 0,
+  "testFiles": 19,
+  "liveProviderProof": false,
+  "onchainBroadcastProof": false,
+  "testFilesChecked": [
+    "tests/api.test.ts",
+    "tests/arc-finality.test.ts",
+    "tests/assistant.test.ts",
+    "tests/bounty-drafts.test.ts",
+    "tests/budget.test.ts",
+    "tests/circle-claims.test.ts",
+    "tests/claim-journey.test.ts",
+    "tests/coverage-persistence.test.ts",
+    "tests/coverage.test.ts",
+    "tests/domain.test.ts",
+    "tests/funding.test.ts",
+    "tests/owner-controls.test.ts",
+    "tests/owner-permission.test.ts",
+    "tests/report-access.test.ts",
+    "tests/report-integrity.test.ts",
+    "tests/storage.test.ts",
+    "tests/treasury-signing.test.ts",
+    "tests/treasury.test.ts",
+    "tests/wallets.test.ts"
+  ]
+}
