@@ -13,3 +13,7 @@ contracts/out/
 contracts/broadcast/
 .DS_Store
 *.log
+
+output/
+.playwright/
+.playwright-cli/

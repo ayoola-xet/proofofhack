@@ -1,0 +1,1 @@
+ALTER TABLE "chain_events" ADD COLUMN "contract_address" text NOT NULL;

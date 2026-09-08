@@ -10,8 +10,8 @@
   "scripts": {
     "build": "pnpm -r --if-present build",
     "typecheck": "tsc --noEmit",
-    "lint": "biome check packages services scripts tests",
-    "format": "biome check --write packages services scripts tests",
+    "lint": "biome check apps packages services scripts tests",
+    "format": "biome check --write apps packages services scripts tests",
     "test": "vitest run",
     "test:contracts": "forge test --root contracts",
     "contracts:build": "forge build --root contracts",
@@ -34,12 +34,16 @@
     "vitest": "^5.0.0"
   },
   "dependencies": {
+    "@circle-fin/cli": "1.0.0",
     "@fastify/cors": "^11.3.0",
     "@fastify/multipart": "^10.1.1",
     "@fastify/rate-limit": "^11.2.0",
+    "@graphprotocol/graph-cli": "0.98.1",
+    "@graphprotocol/graph-ts": "0.38.2",
     "@openzeppelin/contracts": "^5.6.1",
     "@openzeppelin/merkle-tree": "^1.0.8",
     "@privy-io/node": "^0.34.0",
+    "@privy-io/react-auth": "3.40.0",
     "dotenv": "^17.4.2",
     "drizzle-orm": "^0.45.2",
     "fastify": "^5.12.3",

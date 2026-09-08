@@ -319,6 +319,7 @@ export const chainEvents = pgTable(
   {
     id: uuid("id").primaryKey().defaultRandom(),
     chainId: text("chain_id").notNull(),
+    contractAddress: text("contract_address").notNull(),
     transactionHash: text("transaction_hash").notNull(),
     logIndex: integer("log_index").notNull(),
     blockNumber: amount("block_number").notNull(),

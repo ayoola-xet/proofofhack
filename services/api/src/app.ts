@@ -7,6 +7,7 @@ import { z } from "zod";
 import { DomainError, organizationHash, role, uint } from "../../../packages/domain/src/index.ts";
 import type { AuthProvider } from "./auth.ts";
 import { expectedVersion, first, idParams, member, mutate, pageParams } from "./context.ts";
+import { registerReadRoutes } from "./read-routes.ts";
 
 export type ApiOptions = {
   pool: Pool;
@@ -297,5 +298,6 @@ export async function createApp(options: ApiOptions) {
       nextCursor: rows.length > page.limit ? rows[page.limit - 1].id : null,
     };
   });
+  registerReadRoutes(app, pool);
   return app;
 }

@@ -1,5 +1,6 @@
 import { createHash, timingSafeEqual } from "node:crypto";
 import { verifyAccessToken } from "@privy-io/node";
+import type { JWTVerifyGetKey } from "jose";
 import { DomainError } from "../../../packages/domain/src/index.ts";
 
 export interface SessionIdentity {
@@ -13,7 +14,7 @@ export interface AuthProvider {
 export class PrivyAuthProvider implements AuthProvider {
   constructor(
     private appId: string,
-    private verificationKey: string,
+    private verificationKey: string | JWTVerifyGetKey,
   ) {}
   async verify(token: string): Promise<SessionIdentity> {
     try {
