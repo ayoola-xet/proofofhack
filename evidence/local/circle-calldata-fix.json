@@ -1,0 +1,42 @@
+{
+  "schemaVersion": "1",
+  "scope": "CIRCLE_CALLDATA_AND_ADMISSION_EXPIRY",
+  "capturedAt": "2026-09-08T12:50:39.265510+00:00",
+  "baseCommit": "3c1621f14726b70c689dd7853be74c9c7dc1a5bd",
+  "sourceSha256": {
+    "patches/@circle-fin__cli@1.0.0.patch": "3b445a104b9b039801de9fd41e6434c478ad869c67b85649702d75c446bfb8cd",
+    "services/worker/src/claim-process.ts": "740d3c2147929206179cb9828635c5e6dc845a45f295df94742796484531aae1",
+    "services/retention/src/process.ts": "17cc9e8ede54995c63c4de0fba694d982238084cc90fdfd5e7d8722d92c0b08e",
+    "tests/circle-claims.test.ts": "be63460083234a26c0a8b049a0b5f699a25edec00160b77af4a41554fd30cee1",
+    "tests/claim-journey.test.ts": "5690552b0d8cede3bf10a23db00ac82b2941a0723fc2ecd65b3c38eda5034d38"
+  },
+  "applicationTests": {
+    "passed": true,
+    "total": 131,
+    "passedTests": 131,
+    "failedTests": 0,
+    "files": 21
+  },
+  "checks": {
+    "productionBuildPassed": true,
+    "typecheckPassed": true,
+    "lintPassed": true,
+    "installedCircleHandlerBodyChecked": true,
+    "expiredAdmissionStopsRetries": true
+  },
+  "providerBodyDiagnostic": {
+    "tupleBodyError": {
+      "code": 136007,
+      "reason": "parse_body_failed"
+    },
+    "encodedBodyAccepted": true,
+    "expiredSignatureProviderTransaction": "dbae0b97-5679-5a0a-848c-120ce42ec4a3",
+    "expiredSignatureTransactionState": "FAILED",
+    "expiredSignatureFailure": "ESTIMATION_ERROR",
+    "expiredSignatureOnchainHash": null
+  },
+  "limits": [
+    "The failed expired request is not evidence of successful settlement.",
+    "These local checks do not prove hosted isolation or separate live actor access."
+  ]
+}

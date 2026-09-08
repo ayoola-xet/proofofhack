@@ -1,5 +1,5 @@
 diff --git a/dist/index.js b/dist/index.js
-index 29f999cc08a0552b06375354d55ada4b99d3a470..aa72e0f17aca2d8a42709959fb553a7726f2ece5 100755
+index 29f999cc08a0552b06375354d55ada4b99d3a470..a889ab8d078b5494f2b9f0de6925de7e977fff95 100755
 --- a/dist/index.js
 +++ b/dist/index.js
 @@ -51717,7 +51717,12 @@ async function walletExecuteCommand(signer, args2) {
@@ -16,3 +16,13 @@ index 29f999cc08a0552b06375354d55ada4b99d3a470..aa72e0f17aca2d8a42709959fb553a77
    const estimate = args2.includes("--estimate");
    const resolved = await resolveOrReport(signer, address, blockchain, args2);
    if (!resolved) return;
+@@ -51784,8 +51789,7 @@ async function handleAgentExecute(wallet, env, blockchain, contractAddress, abiF
+   const { challengeId, idempotencyKey: usedKey } = await submitAgentContractExecutionChallenge(client, env.userToken, wallet, {
+     idempotencyKey,
+     contractAddress,
+-    abiFunctionSignature,
+-    abiParameters: abiParameters.length > 0 ? abiParameters : void 0,
++    callData: "0x" + encodeAbiCall(abiFunctionSignature, abiParameters),
+     amount: value !== "0" ? value : void 0
+   });
+   const result = await runTransactionChallenge(

@@ -69,9 +69,53 @@ export async function processClaim(
       await releaseIfPaid();
       return { state: "SETTLED" };
     }
-    if (["UPLOADING", "EXPIRED", "INVALID_FIXTURE"].includes(row.job_state))
+    if (["UPLOADING", "EXPIRED", "ADMISSION_EXPIRED", "INVALID_FIXTURE"].includes(row.job_state))
       return { state: row.job_state };
     const current = await chain.read(policy);
+    if (current.state === 1 && ["ADMISSION_PENDING", "RESERVING"].includes(row.job_state)) {
+      const saved = (
+        await c.query(
+          "select * from transaction_intents where wallet_id=$1 and idempotency_key=$2",
+          [relayer.walletId, `${claimId}:reserveClaim`],
+        )
+      ).rows[0];
+      if (saved) {
+        const request = saved.request_json;
+        const call = claimCallSchema.parse(request.call);
+        if (
+          hashCanonical(request) !== saved.request_hash ||
+          request.claimId !== claimId ||
+          request.escrow !== policy.escrow ||
+          request.chainId !== policy.settlementChainId ||
+          call.method !== "reserveClaim" ||
+          call.payload.claimId !== claimId ||
+          call.payload.bountyId !== row.bounty_id
+        )
+          throw new DomainError(
+            "CLAIM_INTENT_MISMATCH",
+            "The saved admission does not match this claim.",
+          );
+        if (current.timestamp > BigInt(call.payload.validUntil)) {
+          await c.query("begin");
+          try {
+            await c.query(
+              "update claims set job_state='ADMISSION_EXPIRED',updated_at=now() where claim_id=$1",
+              [claimId],
+            );
+            await c.query(
+              "update transaction_intents set state='EXPIRED',updated_at=now() where id=$1",
+              [saved.id],
+            );
+            await c.query("update admissions set state='EXPIRED' where claim_id=$1", [claimId]);
+            await c.query("commit");
+          } catch (error) {
+            await c.query("rollback");
+            throw error;
+          }
+          return { state: "ADMISSION_EXPIRED" };
+        }
+      }
+    }
     if (
       current.state === 2 &&
       current.reservation.claimId === claimId &&

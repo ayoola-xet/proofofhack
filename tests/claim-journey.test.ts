@@ -111,6 +111,7 @@ let vApp: ReturnType<typeof createVerifierApp>,
   researcher: ReturnType<typeof createReportDownloadApp>,
   organization: ReturnType<typeof createReportDownloadApp>;
 let publicClient: ReturnType<typeof createPublicClient>;
+let advanceTime: (seconds: number) => Promise<void>;
 let fundNext: () => Promise<void>, collectExternally: () => Promise<Hex>;
 const cases = createManifestCases([h(100), h(101), h(102)], [h(200), h(201), h(202)]);
 const headers = (i = 1) => ({
@@ -197,6 +198,21 @@ beforeAll(async () => {
       body: JSON.stringify({ jsonrpc: "2.0", id: 2, method: "anvil_mine", params: ["0x40"] }),
     });
     if ((await response.json()).error) throw new Error("Local finality advancement failed.");
+  };
+  advanceTime = async (seconds) => {
+    const response = await fetch(rpc, {
+      method: "POST",
+      headers: { "content-type": "application/json" },
+      body: JSON.stringify({
+        jsonrpc: "2.0",
+        id: 3,
+        method: "evm_increaseTime",
+        params: [seconds],
+      }),
+    });
+    if ((await response.json()).error) throw new Error("Local time advancement failed.");
+    await finalize();
+    await finalize();
   };
   const wallet = createWalletClient({ account: accounts[0], chain, transport: http(rpc) });
   const tokenArtifact = JSON.parse(
@@ -451,6 +467,34 @@ it("Rejects malformed fixture evidence before reserving a reward", async () => {
   expect(
     (await pool.query("select count(*) from assessments where claim_id=$1", [claimId])).rows[0]
       .count,
+  ).toBe("0");
+});
+it("Stops an expired admission after a lost response without reserving funds", async () => {
+  const claimId = await upload(cases.fixtures[1].fixture);
+  let sends = 0;
+  const unavailable: ClaimRelayer = {
+    walletId: relayer.walletId,
+    send: async () => {
+      sends++;
+      throw new Error("Lost provider response");
+    },
+  };
+  await expect(
+    processClaim(pool, reader, unavailable, verifierClient, releaseClient, claimId),
+  ).rejects.toThrow("Lost provider response");
+  await advanceTime(301);
+  expect(
+    await processClaim(pool, reader, unavailable, verifierClient, releaseClient, claimId),
+  ).toEqual({ state: "ADMISSION_EXPIRED" });
+  await processClaim(pool, reader, unavailable, verifierClient, releaseClient, claimId);
+  expect(sends).toBe(1);
+  expect((await reader.read(policy)).state).toBe(1);
+  expect(
+    (await pool.query("select job_state from claims where claim_id=$1", [claimId])).rows[0]
+      .job_state,
+  ).toBe("ADMISSION_EXPIRED");
+  expect(
+    (await pool.query("select count(*) from reports where claim_id=$1", [claimId])).rows[0].count,
   ).toBe("0");
 });
 it("Settles both nonqualifying controls and keeps organization report access locked", async () => {

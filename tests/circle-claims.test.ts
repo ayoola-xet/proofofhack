@@ -125,6 +125,65 @@ describe("Circle claim bridge", () => {
       expect(data).toBe(encodeClaimCall(call));
     }
   });
+  it("submits encoded call data through the installed agent execution handler", async () => {
+    const source = await readFile("node_modules/@circle-fin/cli/dist/index.js", "utf8");
+    const start = source.indexOf("async function handleAgentExecute(");
+    const end = source.indexOf("async function handleLocalExecuteEstimate(", start);
+    if (start < 0 || end < 0) throw new Error("The installed agent handler is missing.");
+    let submitted: Record<string, unknown> = {};
+    const handler = new Function(
+      "getProxyUrl",
+      "CircleHttpClient",
+      "readFlagValue",
+      "submitAgentContractExecutionChallenge",
+      "runTransactionChallenge",
+      "encodeAbiCall",
+      "output",
+      `return ${source.slice(start, end)}`,
+    )(
+      () => "https://example.invalid",
+      class {},
+      () => "00000000-0000-4000-8000-000000000002",
+      async (
+        _client: unknown,
+        _token: unknown,
+        _wallet: unknown,
+        body: Record<string, unknown>,
+      ) => {
+        submitted = body;
+        return { challengeId: "synthetic", idempotencyKey: body.idempotencyKey };
+      },
+      async () => ({ state: "CONFIRMED", id: "synthetic" }),
+      (signature: string, params: unknown[]) =>
+        encodeFunctionData({
+          abi: [parseAbiItem(`function ${signature}`)],
+          functionName: signature.slice(0, signature.indexOf("(")),
+          args: params,
+        }).slice(2),
+      () => {},
+    );
+    for (const call of calls) {
+      const [signature, ...parameters] = circleClaimArguments(call);
+      const parsed = parameters.map((v) => (v.startsWith("[") ? JSON.parse(v) : v));
+      await handler(
+        {},
+        { userToken: "synthetic" },
+        "ARC-TESTNET",
+        a(9),
+        signature,
+        parsed,
+        "0",
+        false,
+        [],
+      );
+      expect(submitted).toEqual({
+        idempotencyKey: "00000000-0000-4000-8000-000000000002",
+        contractAddress: a(9),
+        callData: encodeClaimCall(call),
+        amount: undefined,
+      });
+    }
+  });
   it("uses one provider request ID after a lost response and checks its bindings", async () => {
     const saved: string[][] = [];
     const relayer = new CircleClaimRelayer(

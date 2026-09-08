@@ -39,7 +39,7 @@ export async function sweepRetention(
       throw new Error("Evidence and report storage must use separate directories.");
     await c.query(`update uploads u set delete_after=c.updated_at+interval '7 days'
       from claims c where c.upload_id=u.id and u.state='UPLOADED' and u.delete_after is null
-      and c.job_state in ('SETTLED','INVALID_FIXTURE','EXPIRED')
+      and c.job_state in ('SETTLED','INVALID_FIXTURE','EXPIRED','ADMISSION_EXPIRED')
       and not exists(select 1 from reports r where r.claim_id=c.claim_id and r.retention_hold)`);
     for (const table of ["uploads", "reports"] as const) {
       const due =

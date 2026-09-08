@@ -262,3 +262,13 @@ This development change applies to the one rejected live reservation request. An
 Source: [Circle contract execution requirements](https://developers.circle.com/api-reference/wallets/user-controlled-wallets/create-user-transaction-contract-execution-challenge).
 
 The UUID v4 request also receives `Invalid request body`. The ID change meets the documented requirement, but it does not resolve the complete live provider failure. The original admission signature expires during diagnosis. The provider body and expired admission path still need verification. All 129 local tests, type checks, lint, and the production build pass with the immutable ID change.
+
+## Circle contract call body and admission expiry
+
+The provider reports `parse_body_failed` for the tuple parameter body. The pinned Circle CLI patch now encodes the same arguments into `callData` for agent contract execution. Circle accepts this body. The installed handler test checks the complete request body for reservation, assessment, and collection calls.
+
+An admission authorizes a reservation for five minutes. If the final chain remains FUNDED after that authorization expires, the worker closes the unreserved claim as ADMISSION_EXPIRED. It preserves the request record. It does not change its signed terms or send another reservation. Retention can delete the expired evidence after its existing deadline. The local chain test covers a lost response and proves that no second provider call occurs after expiry.
+
+The first live zero-control claim expires during diagnosis. Its provider execution fails fee estimation and has no on-chain transaction hash. A fresh zero-control claim completes through Circle on Arc. Its assessment rejects the case. Its report remains SEALED for the organization. The claimant downloads the report through the signed-in interface. The downloaded report has discrepancy zero. The below-threshold and qualifying live cases remain in progress.
+
+All 131 TypeScript tests pass in this stage. Type checks, lint, and the production build pass. Separate live organization and researcher accounts, hosted isolation, and full submission evidence remain incomplete.
