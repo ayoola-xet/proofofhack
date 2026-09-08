@@ -1,7 +1,7 @@
 import "dotenv/config";
 import { type ChildProcess, spawn } from "node:child_process";
 import { existsSync } from "node:fs";
-import { createConnection, createServer } from "node:net";
+import { createServer } from "node:net";
 import { resolve } from "node:path";
 import { setTimeout as delay } from "node:timers/promises";
 
@@ -44,7 +44,7 @@ const services = [
   {
     name: "reports",
     entry: "services/report-release/src/main.ts",
-    ports: [port("REPORT_INTERNAL_PORT", 4190), port("ORGANIZATION_REPORT_PORT", 4193)],
+    ports: [port("REPORT_INTERNAL_PORT", 4194), port("ORGANIZATION_REPORT_PORT", 4193)],
   },
   {
     name: "verifier",
@@ -146,21 +146,19 @@ for (const service of services) {
     }
   });
 }
-const listening = (value: number) =>
-  new Promise<boolean>((done) => {
-    const socket = createConnection({ host: "127.0.0.1", port: value });
-    let finished = false;
-    const finish = (ready: boolean) => {
-      if (!finished) {
-        finished = true;
-        socket.destroy();
-        done(ready);
-      }
-    };
-    socket.setTimeout(500, () => finish(false));
-    socket.once("error", () => finish(false));
-    socket.once("connect", () => finish(true));
-  });
+async function listening(value: number): Promise<boolean> {
+  try {
+    const response = await fetch(`http://127.0.0.1:${value}/`, {
+      signal: AbortSignal.timeout(1000),
+      redirect: "error",
+    });
+    await response.body?.cancel();
+    return response.status < 500;
+  } catch {
+    return false;
+  }
+}
+
 for (let attempt = 0; attempt < 120 && !stopping; attempt++) {
   if ((await Promise.all(ports.map(listening))).every(Boolean)) {
     process.stdout.write(

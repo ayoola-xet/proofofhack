@@ -95,7 +95,7 @@ if (process.env.CIRCLE_AGENT_ADDRESS && process.env.ESCROW_ADDRESS) {
       identity.privateKey,
     ),
     new InternalClient(
-      process.env.REPORT_INTERNAL_URL ?? "http://127.0.0.1:4190",
+      process.env.REPORT_INTERNAL_URL ?? "http://127.0.0.1:4194",
       "worker",
       "report-release",
       identity.privateKey,

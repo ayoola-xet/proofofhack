@@ -6,7 +6,7 @@ import { type Hex, toHex } from "viem";
 import { privateKeyToAccount } from "viem/accounts";
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
 import { connectDatabase } from "../packages/database/src/index.ts";
-import { serviceToken } from "../packages/service-auth/src/index.ts";
+import { InternalClient } from "../packages/service-auth/src/http.ts";
 import type { PublicServiceConfig } from "../packages/service-config/src/index.ts";
 import { createApp } from "../services/api/src/app.ts";
 import { LocalAuthProvider } from "../services/api/src/auth.ts";
@@ -24,6 +24,7 @@ const identity = generateKeyPairSync("ed25519");
 const privateKey = identity.privateKey.export({ type: "pkcs8", format: "pem" }).toString();
 const publicKey = identity.publicKey.export({ type: "spki", format: "pem" }).toString();
 const release = createReleaseApp(pool, { api: publicKey }, directory);
+const releaseOrigin = await release.listen({ host: "127.0.0.1", port: 0 });
 const hash = toHex(1, { size: 32 });
 const config: PublicServiceConfig = {
   schemaVersion: "1",
@@ -56,20 +57,7 @@ const app = await createApp({
   bountyServices: {
     publicConfig: config,
     escrow: toHex(2, { size: 20 }),
-    release: {
-      async post<T>(path: string, body: Record<string, unknown>): Promise<T> {
-        const response = await release.inject({
-          method: "POST",
-          url: path,
-          headers: {
-            authorization: `Bearer ${await serviceToken(privateKey, "api", "report-release")}`,
-          },
-          payload: body,
-        });
-        if (response.statusCode !== 200) throw new Error("Release service error");
-        return response.json() as T;
-      },
-    },
+    release: new InternalClient(releaseOrigin, "api", "report-release", privateKey),
   },
 });
 const headers = (actor = 0, key = randomUUID()) => ({
@@ -215,16 +203,14 @@ describe("Signed fixtures and exact bounty approval", () => {
     manifest = prepared.json().manifest;
     expect((await app.inject(request)).json().id).toBe(manifestId);
     const wrong = await account.signMessage({ message: "Different manifest" });
-    expect(
-      (
-        await app.inject({
-          method: "POST",
-          url: `/api/v1/fixture-manifests/${manifestId}/sign`,
-          headers: { ...headers(), "if-match": "1" },
-          payload: { signature: wrong },
-        })
-      ).statusCode,
-    ).not.toBe(200);
+    const rejected = await app.inject({
+      method: "POST",
+      url: `/api/v1/fixture-manifests/${manifestId}/sign`,
+      headers: { ...headers(), "if-match": "1" },
+      payload: { signature: wrong },
+    });
+    expect(rejected.statusCode).toBe(400);
+    expect(rejected.json().error.code).toBe("MANIFEST_SIGNATURE_MISMATCH");
     const signature = await account.signMessage({ message: prepared.json().message });
     const signed = await app.inject({
       method: "POST",

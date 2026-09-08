@@ -1,0 +1,33 @@
+{
+  "schemaVersion": "1",
+  "scope": "LOCAL_REPORT_HTTP_FIX",
+  "capturedAt": "2026-09-08T12:31:24.607974+00:00",
+  "baseCommit": "9ba3d1775358e2fbdd1aca5dc80db853fc785051",
+  "sourceSha256": {
+    ".env.example": "5ce5f73b5e8ea17413695f6f69c8d837ebf4699e6112046d78512224d452600b",
+    "scripts/dev.ts": "b413068609e6d70bcfc3a9a7e301faddcab85789b38c827e87412adc6aef9f86",
+    "services/api/src/main.ts": "ebce78cb891589db14a59037b39ad7db0a6ae4769014d10b287c7d4292ef7238",
+    "services/worker/src/main.ts": "978a219b6932b83a0f1f368cb8969acf1d87fc7ae906a484e20ac589ef05da86",
+    "services/report-release/src/main.ts": "48fe4677a03061c39d093d08a5df4a77400cd7a6a39c3a58944ff413242a79d9",
+    "packages/fixture-manifest/src/index.ts": "fd04433cef84aa35321010bd58656c5e55168bfe9902aaf9f9c37b9eb3f34490",
+    "tests/bounty-drafts.test.ts": "3a94e31221bcdccdce30616e2c8fb4078877dd8a4eba538e7fcf2f6c6577e495"
+  },
+  "applicationTests": {
+    "passed": true,
+    "total": 129,
+    "passedTests": 129,
+    "failedTests": 0,
+    "files": 21
+  },
+  "checks": {
+    "productionBuildPassed": true,
+    "typecheckPassed": true,
+    "lintPassed": true,
+    "reportClientUsesRealHttpInDraftTests": true
+  },
+  "reportInternalPort": 4194,
+  "limits": [
+    "Local checks do not prove live claim settlement or hosted service isolation.",
+    "Contract source does not change in this stage."
+  ]
+}

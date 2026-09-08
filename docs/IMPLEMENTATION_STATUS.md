@@ -8,15 +8,15 @@ The full submission objective remains active. Live Graph indexing and the initia
 | --- | --- | --- |
 | WP-01 Foundation | IN_PROGRESS | Workspace, local infrastructure, provider preflight, service start command, test groups, and pinned CI workflow created. Root lint, type checks, builds, and unit checks pass. The full integration rerun passes. CI execution remains pending. |
 | WP-02 Domain and database | IN_PROGRESS | Strict schemas, policy hashing, 34 database tables, and fifteen applied migrations. OpenAPI generation pending. |
-| WP-03 Escrow | IN_PROGRESS | Contract implemented. Financial suite: 17 passing tests, including 256-run fuzz cases. Arc Testnet deployment verified. Draft approval and durable funding are connected through the API and worker. Database and failure-path tests pass. The live bounty funding test remains pending. |
+| WP-03 Escrow | IN_PROGRESS | Contract implemented. Financial suite: 17 passing tests, including 256-run fuzz cases. Arc Testnet deployment verified. Draft approval and durable funding are connected through the API and worker. Database and failure-path tests pass. The signed-in browser funds a one-test-USDC bounty on Arc. Live claim settlement remains pending. |
 | WP-04 Budget controller | IN_PROGRESS | Controller registration, owner controls, exact policy approval, durable allocation, and cumulative limits pass local tests. Five live Privy permission checks pass. Live owner transactions and Circle allocation remain pending. |
-| WP-05 Identity and Privy | IN_PROGRESS | Live login, current role checks, and user wallet transfers work. The organization wallet has a verified Privy owner and policy. Live signing checks accept an allowed approval and reject an unapproved spender. Bounty funding remains pending. |
+| WP-05 Identity and Privy | IN_PROGRESS | Live login, current role checks, and user wallet transfers work. The organization wallet has a verified Privy owner and policy. Live signing checks accept an allowed approval and reject an unapproved spender. A signed-in owner authorizes and funds a one-test-USDC bounty on Arc. |
 | WP-06 Graph data | IN_PROGRESS | One shared schema indexes three live vaults. The Studio query returns fresh observations without indexing errors. |
 | WP-07 Coverage intelligence | IN_PROGRESS | Deterministic coverage calculations, source checks, and exact approved policy selection pass tests. Durable database updates and rule-based explanations work. The model adapter, saved requests, current-source checks, and source validation pass local tests. Live model verification needs credentials. |
-| WP-08 Confidential service | IN_PROGRESS | Fixed fixture assessment, atomic encrypted file storage, service tokens, and payment-gated report access implemented. The report service runs separately on port 4190 and creates organization keys. Encrypted fixture admission, signed assessment, and separate report download services pass a full local chain test. Live operation remains pending. |
+| WP-08 Confidential service | IN_PROGRESS | Fixed fixture assessment, atomic encrypted file storage, service tokens, and payment-gated report access implemented. The report service runs separately on port 4194 and creates organization keys. Encrypted fixture admission, signed assessment, and separate report download services pass a full local chain test. Live operation remains pending. |
 | WP-09 Settlement worker | IN_PROGRESS | Funding confirms the canonical Arc receipt and exact approval, funding, and USDC transfer events. It saves signed bytes before broadcast and resumes the same intent after a lost response. The claim settlement core passes a local chain test. The queue and Circle execution connection are configured. Local tests also reconcile a payment collected outside the worker. The recovery receipt route verifies final expiry and refund events. It records refunds once and resolves matching report holds. Automatic recovery now scans final events, saves Circle requests, and resumes after a restart. A real local queue test reaches a final refund. Live claim and recovery evidence remain pending. |
 | WP-10 Circle agent | IN_PROGRESS | Circle CLI 1.0.0 is authenticated. The agent wallet received test USDC and deployed the escrow. Bounded allocation passes local tests with the Circle argument format. Live allocation remains pending. |
-| WP-11 Application | IN_PROGRESS | Responsive workspace, live Privy login, organization and program setup, vault coverage, and wallet transfers work. The new bounty page prepares signed fixtures, downloads cases, approves terms, and requests Privy funding confirmation. Its live browser test waits for the Mac to be unlocked. |
+| WP-11 Application | IN_PROGRESS | Responsive workspace, live Privy login, organization and program setup, vault coverage, and wallet transfers work. The new bounty page prepares signed fixtures, downloads cases, approves terms, and requests Privy funding confirmation. Its live browser test creates signed fixtures, approves the draft, and funds a one-test-USDC bounty on Arc. |
 | WP-12 Deployment and evidence | IN_PROGRESS | Live sponsor evidence is saved. Local retention and an isolated database, ciphertext, and key restore pass checks. Hosted backups, deployment, financial recovery, and submission assets remain pending. |
 
 ## Environment
@@ -108,7 +108,7 @@ The database prevents changes to saved funding authorization terms, transaction 
 
 The Circle wallet sent two test USDC to the organization wallet. The final transfer hash is `0x49067eaf9a721497f810edaaa213851ca4375366009a76f745a9ab1b1c161161`. The canonical finalized receipt and exact transfer event are verified in `evidence/arc/treasury-seed.json`. This is a wallet deposit. It is not bounty funding.
 
-The live browser funding test is incomplete because the Mac is locked. The user has been asked to unlock it. The full submission goal remains active.
+The live browser funding test now completes. The owner signs the fixture manifest, approves the exact terms, and authorizes one test USDC. The funding transaction is `0xdf7bdf668bed86d952f4444722d947138b9055153fc9062b971091d2013beb59`. Claim settlement and report access remain under live verification. The full submission goal remains active.
 
 ## Encrypted claim journey
 
@@ -128,7 +128,7 @@ The browser accepts the downloaded synthetic case bundle. The user selects one c
 
 The reports page shows personal claim status and separate researcher report downloads. Organization report downloads require final payment. The production frontend build passes. Live browser checks remain pending while the Mac is locked.
 
-The local verifier listens on port 4191. Researcher reports use port 4192. The organization report service uses port 4193. The internal report release service remains on port 4190. These local endpoints are not a hosted submission.
+The local verifier listens on port 4191. Researcher reports use port 4192. The organization report service uses port 4193. The internal report release service remains on port 4194. These local endpoints are not a hosted submission.
 
 ## Coverage assistant
 
@@ -244,3 +244,9 @@ The first recovered full run passes 120 tests and fails nine historical state re
 Only test configuration and documentation change in this stage. The earlier 17 contract tests and production builds remain valid for the unchanged source. No new live financial journey is proved. GitHub CI execution, live journeys, hosting, backups, and submission assets remain open.
 
 Evidence is in `evidence/local/development-recovery.json`.
+
+## Report HTTP integration fix
+
+The internal report service now uses port 4194. Fetch blocks the previous port, 4190. A TCP connection test did not detect this failure. The service supervisor now checks HTTP access through Fetch. The bounty draft test also calls the report service through its real HTTP client. It no longer replaces that connection with an in-process request.
+
+Invalid fixture signatures return a specific 400 response. They do not return a generic service failure. All 129 tests pass after these changes. Type checks, lint, and the production build pass. This evidence does not prove live claim settlement or hosted service isolation.

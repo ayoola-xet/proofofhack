@@ -18,7 +18,7 @@ const app = createReleaseApp(
 );
 await app.listen({
   host: process.env.APP_ENV === "local" ? "127.0.0.1" : "0.0.0.0",
-  port: Number(process.env.REPORT_INTERNAL_PORT ?? 4190),
+  port: Number(process.env.REPORT_INTERNAL_PORT ?? 4194),
 });
 const keys = new OrganizationKeyStore(process.env.REPORT_KEY_DIRECTORY ?? ".local/report-keys");
 const downloads = createReportDownloadApp({

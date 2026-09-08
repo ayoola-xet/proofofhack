@@ -45,7 +45,7 @@ const bountyServices =
         publicConfig: await loadPublicConfig(process.env.SERVICE_PUBLIC_CONFIG),
         escrow: address.parse(process.env.ESCROW_ADDRESS),
         release: new InternalClient(
-          process.env.REPORT_INTERNAL_URL ?? "http://127.0.0.1:4190",
+          process.env.REPORT_INTERNAL_URL ?? "http://127.0.0.1:4194",
           "api",
           "report-release",
           z

@@ -3,7 +3,7 @@ import { type Hex, recoverMessageAddress } from "viem";
 import { z } from "zod";
 import { canonicalJson, hashCanonical } from "../../crypto-envelope/src/index.ts";
 import { leafHash } from "../../domain/src/fixture-leaf.ts";
-import { address, bytes32, fixtureSchema, uint } from "../../domain/src/index.ts";
+import { address, bytes32, DomainError, fixtureSchema, uint } from "../../domain/src/index.ts";
 
 export const manifestSchema = z.strictObject({
   schemaVersion: z.literal("1"),
@@ -65,9 +65,22 @@ export async function verifyManifest(input: unknown, signature: Hex) {
     new Set(manifest.cases.map((c) => c.leafHash)).size !== 3 ||
     SimpleMerkleTree.of(manifest.cases.map((c) => c.leafHash)).root !== manifest.root
   )
-    throw new Error("The fixture manifest commitments do not match.");
-  const signer = await recoverMessageAddress({ message: manifestMessage(manifest), signature });
+    throw new DomainError(
+      "INVALID_MANIFEST",
+      "The fixture manifest commitments do not match.",
+      400,
+    );
+  let signer: string;
+  try {
+    signer = await recoverMessageAddress({ message: manifestMessage(manifest), signature });
+  } catch {
+    throw new DomainError("INVALID_MANIFEST_SIGNATURE", "The fixture signature is not valid.", 400);
+  }
   if (signer.toLowerCase() !== manifest.ownerAddress)
-    throw new Error("The manifest owner signature does not match.");
+    throw new DomainError(
+      "MANIFEST_SIGNATURE_MISMATCH",
+      "The manifest owner signature does not match.",
+      400,
+    );
   return { manifest, manifestHash: hashCanonical(manifest) };
 }
