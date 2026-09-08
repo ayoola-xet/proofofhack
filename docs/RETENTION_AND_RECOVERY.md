@@ -101,3 +101,9 @@ A retention failure or `BUSY` result does not complete a restore. Keep restored 
 The test proves that an expired report remains inaccessible before cleanup. It proves that cleanup removes the restored expired objects. It also proves that a current paid report still decrypts and that its hash and receipt remain. A second file restore after deletion is removed on the next scan.
 
 This is local evidence for PRI-06. It checks the storage part of OPS-05. It does not prove hosted key custody, remote backup expiry, or reconciliation against live Arc transactions.
+
+## Live testnet refund evidence
+
+The worker automatically refunds a 0.25-test-USDC bounty after its fixed cutoff. [The evidence record](../evidence/arc/recovery-0xa26a9f3f8c56461e41ed35f85af089ef63617692a1e284abe60ad1953c813b87.json) checks final funding and refund receipts, the exact recipient and amount, the Circle smart-account operation, and the completed queue job. One saved refund intent and one receipt remain.
+
+The test has no claim or reservation. Live reservation-expiry evidence and hosted restore evidence remain incomplete. Earlier retries complete without a duplicate refund. Their original cause is not recorded. Current recovery diagnostics identify the failed stage and omit private provider error text.

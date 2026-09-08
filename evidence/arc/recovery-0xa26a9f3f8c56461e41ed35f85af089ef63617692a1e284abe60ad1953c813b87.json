@@ -1,0 +1,69 @@
+{
+  "schemaVersion": "1",
+  "scope": "LIVE_AUTOMATIC_BOUNTY_REFUND",
+  "capturedAt": "2026-09-08T13:47:42.443Z",
+  "baseCommit": "473f544da58cd532266ec490ec38fe8407c6f983",
+  "bountyId": "0xa26a9f3f8c56461e41ed35f85af089ef63617692a1e284abe60ad1953c813b87",
+  "policy": {
+    "settlementChainId": "5042002",
+    "escrow": "0x01742711ee569a0186349e54cffe805209808292",
+    "organizationId": "0xc02d3cf75cff91c4bd4eb4a15a038b1e2eea6429d4fb0274c378a67c685ee3c6",
+    "refundRecipient": "0x6dd9e77782bbb10268abfa04663a062f3ca30768",
+    "sourceChainId": "1",
+    "sourceVault": "0x9d39a5de30e57443bff2a8307a4256c8797a3497",
+    "sourceBlockHash": "0xddebcee839db8f94c400d57ff119f934b36ebdfb3faef860a9533ca77e85756a",
+    "fixtureManifestRoot": "0x17b66fe0fd7c779d4cc8df9b583a6f3883468a81ddd1cce4c4d6bcded1792844",
+    "adapterId": "0xfff64429eb570e980024843644e6394abcae8257d5e6820f0f074f9fe5183d3a",
+    "adapterCodeHash": "0x860141e967912bf050785954e6732d408c0eb3b36d4794c8bad7facb60f42374",
+    "verifierConfigHash": "0x59b369ae1abaec45f23b828f977fa9b32cdbe2052f380cd9966ca6df9278abce",
+    "admissionSigner": "0xbc20e24e928112aa9462da0acc7ffd82fb7963a0",
+    "verdictSigner": "0x269885087634dc88ec60b556a621b1a8e4873868",
+    "reportRecipientKeyId": "0xe52c3c10f5b31063113240c6067f0ca5bd075c2a0fe3b354ef2083fe02a86630",
+    "asset": "0x3600000000000000000000000000000000000000",
+    "reward": "250000",
+    "minimumDiscrepancy": "1000000",
+    "submissionDeadline": "1788874845",
+    "settlementDeadline": "1788874905",
+    "reservationDurationSeconds": "60",
+    "organizationNonce": "0x4b48982bbb93d11df192add283a584005937ddfcd9405ed49b8786efe5be4a0d"
+  },
+  "fundingTransactionHash": "0x1b22b48794686838b61a226b12cd12f7b204e5e624a0197918fdf3514b5ecfd2",
+  "refund": {
+    "transactionHash": "0x3a3e9da124616ca88f3e13cc70f33ed8ca276282c1253629a5239218171e0c0e",
+    "blockNumber": "61079388",
+    "blockHash": "0xe400ea501bd65b067f2cbacdce7b67c159039d88522609b15ad2e3b75437d306",
+    "timestamp": "1788874958",
+    "amountBaseUnits": "250000",
+    "recipient": "0x6dd9e77782bbb10268abfa04663a062f3ca30768",
+    "canonicalFinalizedReceipt": true,
+    "exactUsdcTransfer": true,
+    "afterSettlementDeadline": true,
+    "intentId": "1cea907d-b55c-4c94-a7a1-6c93124f86e0",
+    "provider": "CIRCLE",
+    "exactCallVerified": true,
+    "entryPoint": "0x5FF137D4b0FDCD49DcA30c7CF57E578a026d2789",
+    "operationHash": "0xc08a024b170355f808f899c59d04420267a93e327f9108300a4422720a23e469",
+    "operationSender": "0xb0ec625a625556d999d271c0addd441dac7b1dcc",
+    "relaySender": "0x6e3bbabc2797ba0d05f7b756251f2277e8195768",
+    "userOperationSucceeded": true,
+    "savedRefundEventCount": 1,
+    "savedRefundReceiptCount": 1
+  },
+  "finalState": {
+    "state": "REFUNDED",
+    "unallocatedReward": "0",
+    "claimantCredit": "0",
+    "blockNumber": "61079968",
+    "blockHash": "0x858a9b3e6e37bc294e6d9e12e79e6fe77615c4b371b3a8405869d80da1e59a95"
+  },
+  "recoveryQueue": {
+    "status": "COMPLETE",
+    "jobId": "58eaeab1-024e-4bb9-bcd8-7d7ffb41a6a4",
+    "completedAt": "2026-09-08T13:43:51.669Z"
+  },
+  "claims": [],
+  "limits": [
+    "This evidence proves automatic recovery of this testnet bounty's unallocated reward.",
+    "This capture does not prove reservation expiry, a worker restart during recovery, or a hosted restore."
+  ]
+}

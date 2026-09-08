@@ -73,6 +73,7 @@ export async function processRecovery(
   const c = await pool.connect(),
     lock = `claim-lifecycle:${bountyId}`;
   let locked = false;
+  let stage = "load-bounty";
   const status = async (state: string, code: string | null = null) => {
     await c.query(
       "update bounty_recovery set status=$2,failure_code=$3,next_check_at=now()+interval '1 minute',version=version+1,updated_at=now() where bounty_id=$1",
@@ -100,12 +101,14 @@ export async function processRecovery(
       policy.reward !== bounty.reward
     )
       throw new DomainError("RECOVERY_POLICY_MISMATCH", "The saved bounty policy needs review.");
+    stage = "read-chain-state";
     let snapshot = await chain.read(policy);
     const scannedState = snapshot.state;
     const initialCheckpoint =
       state.checkpoint_block === null ? null : BigInt(state.checkpoint_block);
     let from: bigint;
     if (initialCheckpoint !== null) {
+      stage = "check-checkpoint";
       if (
         initialCheckpoint > snapshot.blockNumber ||
         (await chain.blockHash(initialCheckpoint)) !== state.checkpoint_hash
@@ -116,6 +119,7 @@ export async function processRecovery(
         );
       from = initialCheckpoint + 1n;
     } else {
+      stage = "read-funding-receipt";
       const funded = await chain.finalReceipt(bytes32.parse(bounty.creation_tx));
       if (funded?.status !== "success")
         throw new DomainError(
@@ -123,6 +127,7 @@ export async function processRecovery(
           "The funding receipt is not final yet.",
           503,
         );
+      stage = "decode-funding-event";
       const events = parseEventLogs({
         abi: bountyEscrowAbi,
         eventName: "BountyFunded",
@@ -147,12 +152,14 @@ export async function processRecovery(
     }
     // Commit one bounded page at a time. A restart resumes the next block.
     for (let page = 0; page < batch.pages && from <= snapshot.blockNumber; page++) {
+      stage = "scan-recovery-events";
       const end =
         from + batch.blocks - 1n < snapshot.blockNumber
           ? from + batch.blocks - 1n
           : snapshot.blockNumber;
       const endHash = await chain.blockHash(end),
         hashes = await chain.recoveryRange(policy, from, end);
+      stage = "save-checkpoint";
       await transaction(c, async () => {
         for (const hash of hashes) await reconcileRecovery(c, chain, bountyId, hash);
         if ((await chain.blockHash(end)) !== endHash)
@@ -168,6 +175,7 @@ export async function processRecovery(
       from = end + 1n;
     }
     if (from <= snapshot.blockNumber) return status("SCANNING");
+    stage = "refresh-chain-state";
     snapshot = await chain.read(policy);
     await c.query("update bounty_recovery set observed_state=$2 where bounty_id=$1", [
       bountyId,
@@ -177,6 +185,7 @@ export async function processRecovery(
     let intent = state.active_intent_id
       ? await first(c, "select * from transaction_intents where id=$1", [state.active_intent_id])
       : null;
+    stage = "select-recovery-action";
     const due = dueRecovery(bountyId, snapshot, policy.settlementDeadline);
     if (!intent && !due) {
       if ([3, 4, 5].includes(snapshot.state))
@@ -184,6 +193,7 @@ export async function processRecovery(
       return status("WAITING");
     }
     if (!intent) {
+      stage = "prepare-recovery-request";
       const call = recoveryCallSchema.parse(due);
       const count = await first(
         c,
@@ -224,6 +234,7 @@ export async function processRecovery(
         return row;
       });
     }
+    stage = "check-saved-recovery-request";
     const request = intent.request_json,
       call = recoveryCallSchema.parse(request.call);
     if (
@@ -287,6 +298,7 @@ export async function processRecovery(
         "update transaction_intents set state='SUBMITTED',updated_at=now() where id=$1",
         [intent.id],
       );
+      stage = "send-saved-recovery";
       const sent = await relayer.sendRecovery(
         intent.idempotency_key,
         policy.escrow,
@@ -301,6 +313,7 @@ export async function processRecovery(
       );
       intent.transaction_hash = sent.hash;
     }
+    stage = "read-recovery-receipt";
     const receipt = await chain.finalReceipt(bytes32.parse(intent.transaction_hash));
     if (!receipt) return status("CONFIRMING");
     if (receipt.hash !== intent.transaction_hash)
@@ -312,6 +325,7 @@ export async function processRecovery(
       await finish("FAILED");
       return status("RETRYING", "RECOVERY_TRANSACTION_REVERTED");
     }
+    stage = "verify-recovery-event";
     const events = recoveryEvents(receipt, policy);
     if (
       !events.some((event) =>
@@ -324,6 +338,7 @@ export async function processRecovery(
         "RECOVERY_EVENT_MISMATCH",
         "The receipt does not match the saved recovery action.",
       );
+    stage = "save-recovery-receipt";
     await transaction(c, async () => {
       await reconcileRecovery(c, chain, bountyId, receipt.hash);
       await c.query(
@@ -336,6 +351,11 @@ export async function processRecovery(
     });
     return status("WAITING");
   } catch (error) {
+    // Log operation names only. Provider errors can contain private request data.
+    if (!(error instanceof DomainError))
+      process.stderr.write(
+        `${JSON.stringify({ event: "recovery_failure", stage, kind: error instanceof TypeError ? "TYPE_ERROR" : "OPERATION_ERROR" })}\n`,
+      );
     const code = error instanceof DomainError ? error.code : "RECOVERY_PROVIDER_UNAVAILABLE";
     const review = error instanceof DomainError && error.status !== 503;
     return await status(review ? "NEEDS_REVIEW" : "RETRYING", code);

@@ -36,3 +36,9 @@ Before submission, complete these live checks:
 6. Save the model ID, request ID, input hash, source references, result, and token usage in sanitized evidence.
 
 Do not publish private questions, credentials, fixture files, or report contents in the evidence package.
+
+## Team contribution record
+
+The user selects the product direction and the three sponsors. The user authorizes account setup and testnet work. Codex creates the implementation, tests, documentation, and provider setup changes recorded in Git. This record does not attribute that code to a human team member.
+
+The named contribution record for other team members remains pending. Record actual design, code review, testing, or presentation work before submission. The event requires AI attribution and meaningful team contributions. It also requires the specification, prompts, and planning artifacts for a specification-driven build. See [the current submission rules](https://ethglobal.com/events/ethonline2026/info/details). Do not claim that AI use alone establishes eligibility.

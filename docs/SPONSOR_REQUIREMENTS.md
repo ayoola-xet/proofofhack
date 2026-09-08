@@ -12,7 +12,7 @@ Confirm award stacking and unspecified distributions before using an aggregate a
 
 ## 2. Seven track mappings
 
-Track names below follow the user-supplied prize text. Evidence must reflect the implementation that actually runs.
+Track names below match the live sponsor pages checked on 8 September 2026. Evidence must reflect the implementation that actually runs.
 
 | ID | Sponsor and track | Required product evidence | Main tests |
 | --- | --- | --- | --- |
@@ -73,3 +73,13 @@ Use real application states. Edit waiting periods only when allowed by the event
 ## 6. Alternative sponsor
 
 Hedera remains the first alternative. Switching requires an explicit decision because it changes the wallet, payment, and evidence plan. Do not build a fourth sponsor into the default release. Preserve the selected product’s core payment and confidentiality behavior if a later switch occurs.
+
+## Current evidence guides
+
+The sponsor guides now link each selected track to its code and live records:
+
+- [The Graph](../evidence/the-graph/README.md).
+- [Arc and Circle](../evidence/arc/README.md).
+- [Privy](../evidence/privy/README.md).
+
+The live pages still list the selected tracks. Arc still requires mainnet deployment or readiness by September 30. The event submission deadline is September 13, 2026 at 12:00 EDT, which is 16:00 UTC. The event requires a two-to-four-minute video, source access, AI attribution, and meaningful team contributions. These checks do not establish the team's eligibility. The named team contribution record and event registration track remain unverified. See [the event details](https://ethglobal.com/events/ethonline2026/info/details) and [AI use record](AI_USAGE.md).

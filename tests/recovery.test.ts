@@ -726,6 +726,31 @@ it("Retries an unresolved request with the same provider key and does not resend
   ).toBe("CONFIRMED");
 }, 15000);
 
+it("Logs a failed recovery step without the provider's private error contents", async () => {
+  const f = await fixture(false),
+    relay = localRelayer(),
+    marker = `private-provider-request-${randomUUID()}`;
+  const chain = scanner({
+    read: async () => {
+      throw new Error(marker);
+    },
+  });
+  const log = vi.spyOn(process.stderr, "write").mockImplementation(() => true);
+  try {
+    expect(await processRecovery(pool, chain, relay.relayer, f.bounty)).toMatchObject({
+      status: "RETRYING",
+      code: "RECOVERY_PROVIDER_UNAVAILABLE",
+    });
+    const output = log.mock.calls.map(([chunk]) => String(chunk)).join("");
+    expect(output).toContain('"stage":"read-chain-state"');
+    expect(output).not.toContain(marker);
+    expect(output).not.toContain("stack");
+    expect(relay.relayer.sendRecovery).not.toHaveBeenCalled();
+  } finally {
+    log.mockRestore();
+  }
+});
+
 it("Scans a refund sent outside the app and finishes only after its receipt is recorded", async () => {
   const f = await fixture(),
     relay = localRelayer();

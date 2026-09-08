@@ -15,7 +15,7 @@ Reviewed: 8 September 2026
 | Fund limits and incidents | Testnet spending limits and disablement exist. Pending transactions retain their original intent. | Define production fund caps, incident owners, alerts, response times, emergency procedures, and reconciliation duties. |
 | Hosting and isolation | Separate local service processes run. API access does not provide private report keys. | Deploy isolated services, private networks, distinct credentials, and restricted storage access. Verify the hosted permissions. Local processes do not prove hosted isolation. |
 | Backups and retention | Local tests restore a database, encrypted objects, and keys. Retention removes restored expired objects. | Verify hosted backup encryption, custody, expiry, recovery access, and a staging restore followed by chain reconciliation. |
-| Monitoring and recovery | Durable jobs and local recovery tests exist. Live automatic expiry and refund evidence remains incomplete. | Verify live recovery, provider failures, restart recovery, monitoring, and operational alerts. |
+| Monitoring and recovery | Durable jobs and local recovery tests exist. A live automatic refund has final receipt evidence. Live reservation-expiry evidence remains incomplete. | Verify live recovery, provider failures, restart recovery, monitoring, and operational alerts. |
 | Public claims | The app states that Graph supplies context and that synthetic cases do not prove a vault vulnerability. | Review the final site, sponsor evidence, and demo for the same limits. Do not imply general vulnerability verification or protection against the verifier operator. |
 
 ## Release rule
