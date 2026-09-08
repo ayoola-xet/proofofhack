@@ -22,6 +22,7 @@ import { type FormEvent, type ReactNode, useState } from "react";
 import { Link, NavLink, Route, Routes } from "react-router-dom";
 import { formatMoney } from "../../../packages/domain/src/index.ts";
 import { type Me, type Membership, useApi, useResource } from "./api.ts";
+import { BountyWorkspace } from "./pages/BountyWorkspace.tsx";
 import { Coverage } from "./pages/Coverage.tsx";
 import { Treasury } from "./pages/Treasury.tsx";
 import { WalletPage } from "./pages/Wallet.tsx";
@@ -244,7 +245,10 @@ export function App() {
               element={<Overview organization={organization} me={me.data} refresh={me.refresh} />}
             />
             <Route path="/coverage" element={<Coverage organization={organization} />} />
-            <Route path="/bounties" element={<Bounties />} />
+            <Route
+              path="/bounties"
+              element={<Bounties organization={organization} actorId={me.data?.user.id ?? ""} />}
+            />
             <Route path="/reports" element={<Reports organization={organization} />} />
             <Route path="/wallet" element={<WalletPage />} />
             <Route path="/receipts" element={<Receipts organization={organization} />} />
@@ -441,7 +445,7 @@ type BountyItem = {
   chain_state: string;
   policy: Record<string, string>;
 };
-function Bounties() {
+function Bounties({ organization, actorId }: { organization: Membership | null; actorId: string }) {
   const result = useResource<{ items: BountyItem[] }>("/bounties");
   return (
     <>
@@ -451,6 +455,14 @@ function Bounties() {
         description="Review the reward and deadline before you submit a claim."
       />
       <State loading={result.loading} error={result.error} />
+      {organization && ["OWNER", "TREASURY", "REVIEWER"].includes(organization.role) && (
+        <BountyWorkspace
+          key={organization.organization_id}
+          organization={organization}
+          actorId={actorId}
+          onFunded={result.refresh}
+        />
+      )}
       {result.data?.items.length ? (
         <div className="bounty-grid">
           {result.data.items.map((b) => (

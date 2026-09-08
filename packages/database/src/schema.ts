@@ -530,3 +530,47 @@ export const walletSetups = pgTable("wallet_setups", {
   attemptStartedAt: timestamp("attempt_started_at", { withTimezone: true }),
   ...dates(),
 });
+
+export const fundingRequests = pgTable(
+  "funding_requests",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    organizationId: uuid("organization_id")
+      .notNull()
+      .references(() => organizations.id),
+    draftId: uuid("draft_id")
+      .notNull()
+      .references(() => bountyDrafts.id),
+    walletId: uuid("wallet_id")
+      .notNull()
+      .references(() => wallets.id),
+    requestedBy: uuid("requested_by")
+      .notNull()
+      .references(() => users.id),
+    authorizationWalletId: uuid("authorization_wallet_id")
+      .notNull()
+      .references(() => wallets.id),
+    authorizationMessage: text("authorization_message").notNull(),
+    authorizationExpiresAt: timestamp("authorization_expires_at", { withTimezone: true }).notNull(),
+    authorizationSignature: text("authorization_signature"),
+    approvalIntentId: uuid("approval_intent_id").references(() => transactionIntents.id),
+    fundingIntentId: uuid("funding_intent_id").references(() => transactionIntents.id),
+    state: text("state").notNull().default("AWAITING_AUTHORIZATION"),
+    failureCode: text("failure_code"),
+    ...dates(),
+  },
+  (t) => [
+    uniqueIndex("one_active_funding_request")
+      .on(t.draftId)
+      .where(sql`${t.state} not in ('CANCELLED','EXPIRED')`),
+  ],
+);
+
+export const signedTransactions = pgTable("signed_transactions", {
+  intentId: uuid("intent_id")
+    .primaryKey()
+    .references(() => transactionIntents.id),
+  serialized: text("serialized").notNull(),
+  transactionHash: text("transaction_hash").notNull().unique(),
+  ...dates(),
+});

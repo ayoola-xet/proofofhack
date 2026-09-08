@@ -1,0 +1,18 @@
+{
+  "scope": "ARC_TESTNET_ONLY",
+  "purpose": "Fund the demo organization wallet for one bounty and network fees",
+  "from": "0xb0ec625a625556d999d271c0addd441dac7b1dcc",
+  "to": "0x6dd9e77782bbb10268abfa04663a062f3ca30768",
+  "asset": "0x3600000000000000000000000000000000000000",
+  "amountBaseUnits": "2000000",
+  "decimals": 6,
+  "idempotencyKey": "8a74e344-a36a-4bf2-a361-2bbd7c8b8810",
+  "state": "CONFIRMED",
+  "transactionHash": "0x49067eaf9a721497f810edaaa213851ca4375366009a76f745a9ab1b1c161161",
+  "blockNumber": "61023801",
+  "blockHash": "0xc422eb9c65fd0f90976df7dfdc02b890bc81780f2fee1f42b38c19554330c925",
+  "exactTransferEvent": true,
+  "canonicalFinalizedReceipt": true,
+  "balance": "2000000",
+  "verifiedAt": "2026-09-08T05:05:23.964Z"
+}

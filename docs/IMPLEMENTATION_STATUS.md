@@ -7,16 +7,16 @@ The full submission objective remains active. Live Graph indexing and the initia
 | Package | Status | Evidence |
 | --- | --- | --- |
 | WP-01 Foundation | IN_PROGRESS | Workspace, local infrastructure, and provider preflight created. Type check passes. |
-| WP-02 Domain and database | IN_PROGRESS | Strict schemas, policy hashing, 29 database tables, and six applied migrations. OpenAPI generation pending. |
-| WP-03 Escrow | IN_PROGRESS | Contract implemented. Financial suite: 17 passing tests, including 256-run fuzz cases. Arc Testnet deployment verified. Signed fixture manifests and owner-approved bounty drafts are available through the API. Funding integration remains pending. |
+| WP-02 Domain and database | IN_PROGRESS | Strict schemas, policy hashing, 31 database tables, and eight applied migrations. OpenAPI generation pending. |
+| WP-03 Escrow | IN_PROGRESS | Contract implemented. Financial suite: 17 passing tests, including 256-run fuzz cases. Arc Testnet deployment verified. Draft approval and durable funding are connected through the API and worker. Database and failure-path tests pass. The live bounty funding test remains pending. |
 | WP-04 Budget controller | IN_PROGRESS | Exact policy approval and cumulative limits implemented and tested locally. Live Circle path pending. |
 | WP-05 Identity and Privy | IN_PROGRESS | Live login, current role checks, and user wallet transfers work. The organization wallet has a verified Privy owner and policy. Live signing checks accept an allowed approval and reject an unapproved spender. Bounty funding remains pending. |
 | WP-06 Graph data | IN_PROGRESS | One shared schema indexes three live vaults. The Studio query returns fresh observations without indexing errors. |
 | WP-07 Coverage intelligence | IN_PROGRESS | Deterministic coverage calculations, source checks, and exact approved policy selection pass tests. Durable database updates and rule-based explanations work. Model explanations are pending. |
 | WP-08 Confidential service | IN_PROGRESS | Fixed fixture assessment, atomic encrypted file storage, service tokens, and payment-gated report access implemented. The report service runs separately on port 4190 and creates organization keys. Evidence verification and plaintext report delivery are not connected yet. |
-| WP-09 Settlement worker | NOT_STARTED | No evidence yet |
+| WP-09 Settlement worker | IN_PROGRESS | Funding confirms the canonical Arc receipt and exact approval, funding, and USDC transfer events. It saves signed bytes before broadcast and resumes the same intent after a lost response. Claim settlement is not connected yet. |
 | WP-10 Circle agent | IN_PROGRESS | Circle CLI 1.0.0 is authenticated. The agent wallet received test USDC and deployed the escrow. Bounded funding remains pending. |
-| WP-11 Application | IN_PROGRESS | Responsive workspace, live Privy login UI, organization creation, program creation, and database views. Vault registration, coverage policy approval, and live source decisions work. Financial actions pending. |
+| WP-11 Application | IN_PROGRESS | Responsive workspace, live Privy login, organization and program setup, vault coverage, and wallet transfers work. The new bounty page prepares signed fixtures, downloads cases, approves terms, and requests Privy funding confirmation. Its live browser test waits for the Mac to be unlocked. |
 | WP-12 Deployment and evidence | NOT_STARTED | No evidence yet |
 
 ## Environment
@@ -37,7 +37,7 @@ Privy app configuration is stored in the ignored .env file with mode 0600. Graph
 
 ## Current verification
 
-- Pass 49 TypeScript tests and three added signing-response tests. These tests include real PostgreSQL transactions, concurrent retries, current role checks, encrypted storage integrity, and exact payment gating.
+- Pass the 56-test TypeScript suite and two added Arc finality tests. These tests include real PostgreSQL transactions, concurrent retries, current role checks, encrypted storage integrity, and exact payment gating.
 - Pass 17 Solidity tests from the contract stage.
 - Pass TypeScript type checking.
 - Pass the production frontend build after the organization wallet changes. Vite reports one large dependency chunk.
@@ -92,6 +92,20 @@ The demo organization has wallet `0x6dd9e77782bbb10268abfa04663a062f3ca30768`. T
 
 Setup saves each provider result before the next step. Retries reuse the saved policy and wallet. An expired provider request requires operator review. Funding must require READY state and a fresh provider-policy check. The provisioning tests use a separate database. The live worker cannot consume these test requests.
 
-Direct Privy broadcast returns an Arc chain authorization error for this app. The integration uses `eth_signTransaction` with the same restrictions. The signer and every transaction field are checked before a signed transaction can enter the broadcast workflow. This approach follows the [Privy transaction signing interface](https://docs.privy.io/wallets/using-wallets/ethereum/sign-a-transaction). The broadcast workflow still needs integration.
+Direct Privy broadcast returns an Arc chain authorization error for this app. The integration uses `eth_signTransaction` with the same restrictions. The signer and every transaction field are checked before a signed transaction enters the broadcast workflow. This approach follows the [Privy transaction signing interface](https://docs.privy.io/wallets/using-wallets/ethereum/sign-a-transaction).
 
 Live evidence is in `evidence/privy/treasury-signing-policy-92a15f31-8003-4cfd-a30a-103eb855fe6d.json` and `evidence/privy/treasury-allowed-signing-92a15f31-8003-4cfd-a30a-103eb855fe6d.json`. Privy rejects a zero-amount approval to an unapproved spender with `policy_violation`. Privy signs a zero-amount approval to the approved escrow. Neither check broadcasts a transaction. These checks do not prove bounty funding or nested funding-field enforcement.
+
+Four additional live checks exercise the funding function. Privy signs the allowed request. It rejects the wrong organization, wrong asset, and an amount above the cap. The files `evidence/privy/treasury-funding-*.json` record these checks. They prove policy evaluation for the nested funding fields. They do not prove an on-chain bounty funding transaction.
+
+## Durable bounty funding
+
+An owner or treasury member prepares a funding request for an approved draft. The requesting member confirms the exact message with a currently linked Privy wallet. The message binds the full policy, request ID, actor, funding wallet, expiry, and fee cap. Cancellation before confirmation creates no funding job.
+
+The worker checks the current role and live provider policy before a new signature. It saves the transaction intent, nonce, signed bytes, and hash before broadcast. A lost response reuses that transaction. It does not select a new nonce. The worker requires the exact approval event before sending the funding transaction. It records a funded bounty and receipt only after the canonical finalized transaction proves both `BountyFunded` and the exact USDC transfer.
+
+The database prevents changes to saved funding authorization terms, transaction terms, and signed bytes. A wallet lock prevents concurrent funding execution. The API exposes a retry for the saved request. An expired authorization cannot sign another transaction. A final revert requires operator review.
+
+The Circle wallet sent two test USDC to the organization wallet. The final transfer hash is `0x49067eaf9a721497f810edaaa213851ca4375366009a76f745a9ab1b1c161161`. The canonical finalized receipt and exact transfer event are verified in `evidence/arc/treasury-seed.json`. This is a wallet deposit. It is not bounty funding.
+
+The live browser funding test is incomplete because the Mac is locked. The user has been asked to unlock it. The full submission goal remains active.

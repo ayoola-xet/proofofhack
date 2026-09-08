@@ -10,6 +10,7 @@ import type { AuthProvider } from "./auth.ts";
 import { type BountyServices, registerBountyRoutes } from "./bounty-routes.ts";
 import { expectedVersion, first, idParams, member, mutate, pageParams } from "./context.ts";
 import { registerCoverageRoutes } from "./coverage-routes.ts";
+import { registerFundingRoutes } from "./funding-routes.ts";
 import { registerReadRoutes } from "./read-routes.ts";
 import { registerRpcRoutes } from "./rpc-routes.ts";
 import { registerTreasuryRoutes } from "./treasury-routes.ts";
@@ -318,6 +319,7 @@ export async function createApp(options: ApiOptions) {
   registerReadRoutes(app, pool);
   registerBountyRoutes(app, pool, options.bountyServices);
   registerTreasuryRoutes(app, pool, options.bountyServices?.escrow);
+  registerFundingRoutes(app, pool, options.bountyServices?.escrow, options.walletIdentity);
   registerCoverageRoutes(app, pool);
   registerWalletRoutes(app, pool, options.walletIdentity);
   return app;
