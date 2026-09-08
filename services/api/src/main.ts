@@ -1,3 +1,4 @@
+import { FileCiphertextStore } from "../../../packages/ciphertext-store/src/index.ts";
 import { address } from "../../../packages/domain/src/index.ts";
 import { InternalClient } from "../../../packages/service-auth/src/http.ts";
 import { loadPublicConfig, loadTestnetSecret } from "../../../packages/service-config/src/index.ts";
@@ -59,6 +60,15 @@ const bountyServices =
     : undefined;
 const app = await createApp({
   bountyServices,
+  claimServices: bountyServices
+    ? {
+        config: bountyServices.publicConfig,
+        evidence: new FileCiphertextStore(
+          process.env.EVIDENCE_DIRECTORY ?? ".local/ciphertext/evidence",
+          262192,
+        ),
+      }
+    : undefined,
   pool,
   auth,
   appEnv,

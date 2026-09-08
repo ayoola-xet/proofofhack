@@ -23,6 +23,7 @@
     "dev:web": "pnpm --filter @vulnproof/web dev",
     "setup:keys": "tsx scripts/setup-service-keys.ts",
     "dev:reports": "tsx services/report-release/src/main.ts",
+    "dev:verifier": "tsx services/verifier/src/main.ts",
     "fixtures:generate": "tsx scripts/generate-demo-fixtures.ts"
   },
   "devDependencies": {

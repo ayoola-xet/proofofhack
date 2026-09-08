@@ -7,6 +7,7 @@ export async function reportAccess(
   c: Pick<PoolClient, "query">,
   actorId: string,
   reportId: string,
+  mode: "either" | "researcher" | "organization" = "either",
 ) {
   z.uuid().parse(actorId);
   z.uuid().parse(reportId);
@@ -17,11 +18,13 @@ export async function reportAccess(
   );
   if (new Date(r.delete_after).getTime() <= Date.now())
     throw new DomainError("REPORT_EXPIRED", "The report retention period has ended.", 410);
-  if (r.researcher_user_id === actorId) {
+  if (mode !== "organization" && r.researcher_user_id === actorId) {
     if (!["SEALED", "AVAILABLE"].includes(r.state))
       throw new DomainError("REPORT_NOT_READY", "The report is not ready.");
     return r;
   }
+  if (mode === "researcher")
+    throw new DomainError("NOT_FOUND", "This report is not available.", 404);
   // Query current membership for every stream request. Do not use a cached role.
   await first(
     c,

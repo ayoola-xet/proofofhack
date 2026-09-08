@@ -8,6 +8,7 @@ import { DomainError, organizationHash, role, uint } from "../../../packages/dom
 import type { WalletIdentityProvider } from "../../../packages/privy/src/wallets.ts";
 import type { AuthProvider } from "./auth.ts";
 import { type BountyServices, registerBountyRoutes } from "./bounty-routes.ts";
+import { type ClaimServices, registerClaimRoutes } from "./claim-routes.ts";
 import { expectedVersion, first, idParams, member, mutate, pageParams } from "./context.ts";
 import { registerCoverageRoutes } from "./coverage-routes.ts";
 import { registerFundingRoutes } from "./funding-routes.ts";
@@ -23,6 +24,7 @@ export type ApiOptions = {
   webOrigin: string;
   walletIdentity?: WalletIdentityProvider;
   bountyServices?: BountyServices;
+  claimServices?: ClaimServices;
 };
 const nameSchema = z.string().trim().min(2).max(80);
 export async function createApp(options: ApiOptions) {
@@ -320,6 +322,7 @@ export async function createApp(options: ApiOptions) {
   registerBountyRoutes(app, pool, options.bountyServices);
   registerTreasuryRoutes(app, pool, options.bountyServices?.escrow);
   registerFundingRoutes(app, pool, options.bountyServices?.escrow, options.walletIdentity);
+  registerClaimRoutes(app, pool, options.claimServices, options.walletIdentity);
   registerCoverageRoutes(app, pool);
   registerWalletRoutes(app, pool, options.walletIdentity);
   return app;

@@ -57,6 +57,13 @@
       "when": 1788843516457,
       "tag": "0007_immutable_funding",
       "breakpoints": true
+    },
+    {
+      "idx": 8,
+      "version": "7",
+      "when": 1788844645465,
+      "tag": "0008_handy_sumo",
+      "breakpoints": true
     }
   ]
 }

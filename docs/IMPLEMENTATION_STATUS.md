@@ -7,14 +7,14 @@ The full submission objective remains active. Live Graph indexing and the initia
 | Package | Status | Evidence |
 | --- | --- | --- |
 | WP-01 Foundation | IN_PROGRESS | Workspace, local infrastructure, and provider preflight created. Type check passes. |
-| WP-02 Domain and database | IN_PROGRESS | Strict schemas, policy hashing, 31 database tables, and eight applied migrations. OpenAPI generation pending. |
+| WP-02 Domain and database | IN_PROGRESS | Strict schemas, policy hashing, 31 database tables, and nine applied migrations. OpenAPI generation pending. |
 | WP-03 Escrow | IN_PROGRESS | Contract implemented. Financial suite: 17 passing tests, including 256-run fuzz cases. Arc Testnet deployment verified. Draft approval and durable funding are connected through the API and worker. Database and failure-path tests pass. The live bounty funding test remains pending. |
 | WP-04 Budget controller | IN_PROGRESS | Exact policy approval and cumulative limits implemented and tested locally. Live Circle path pending. |
 | WP-05 Identity and Privy | IN_PROGRESS | Live login, current role checks, and user wallet transfers work. The organization wallet has a verified Privy owner and policy. Live signing checks accept an allowed approval and reject an unapproved spender. Bounty funding remains pending. |
 | WP-06 Graph data | IN_PROGRESS | One shared schema indexes three live vaults. The Studio query returns fresh observations without indexing errors. |
 | WP-07 Coverage intelligence | IN_PROGRESS | Deterministic coverage calculations, source checks, and exact approved policy selection pass tests. Durable database updates and rule-based explanations work. Model explanations are pending. |
-| WP-08 Confidential service | IN_PROGRESS | Fixed fixture assessment, atomic encrypted file storage, service tokens, and payment-gated report access implemented. The report service runs separately on port 4190 and creates organization keys. Evidence verification and plaintext report delivery are not connected yet. |
-| WP-09 Settlement worker | IN_PROGRESS | Funding confirms the canonical Arc receipt and exact approval, funding, and USDC transfer events. It saves signed bytes before broadcast and resumes the same intent after a lost response. Claim settlement is not connected yet. |
+| WP-08 Confidential service | IN_PROGRESS | Fixed fixture assessment, atomic encrypted file storage, service tokens, and payment-gated report access implemented. The report service runs separately on port 4190 and creates organization keys. Encrypted fixture admission, signed assessment, and separate report download services pass a full local chain test. Live operation remains pending. |
+| WP-09 Settlement worker | IN_PROGRESS | Funding confirms the canonical Arc receipt and exact approval, funding, and USDC transfer events. It saves signed bytes before broadcast and resumes the same intent after a lost response. The claim settlement core passes a local chain test. Queue and Circle execution integration remain pending. |
 | WP-10 Circle agent | IN_PROGRESS | Circle CLI 1.0.0 is authenticated. The agent wallet received test USDC and deployed the escrow. Bounded funding remains pending. |
 | WP-11 Application | IN_PROGRESS | Responsive workspace, live Privy login, organization and program setup, vault coverage, and wallet transfers work. The new bounty page prepares signed fixtures, downloads cases, approves terms, and requests Privy funding confirmation. Its live browser test waits for the Mac to be unlocked. |
 | WP-12 Deployment and evidence | NOT_STARTED | No evidence yet |
@@ -109,3 +109,11 @@ The database prevents changes to saved funding authorization terms, transaction 
 The Circle wallet sent two test USDC to the organization wallet. The final transfer hash is `0x49067eaf9a721497f810edaaa213851ca4375366009a76f745a9ab1b1c161161`. The canonical finalized receipt and exact transfer event are verified in `evidence/arc/treasury-seed.json`. This is a wallet deposit. It is not bounty funding.
 
 The live browser funding test is incomplete because the Mac is locked. The user has been asked to unlock it. The full submission goal remains active.
+
+## Encrypted claim journey
+
+The API accepts only ciphertext for a claim. It binds the file hash, size, verifier key, bounty, and current researcher wallet. The verifier decrypts the file in its own service. It accepts only a case from the signed synthetic manifest. It does not run user code or fetch a supplied target.
+
+The verifier saves two separately encrypted report copies before it signs an assessment. The researcher report service checks claim ownership. The organization report service checks current membership and final payment. An organization role does not grant early access to the organization copy.
+
+Three integration tests use an isolated database and a local chain. They cover malformed evidence, both nonqualifying controls, a qualifying payment, report integrity, role removal, and a report service failure after payment. A retry releases the report without another payment. All 61 TypeScript tests pass. The live Circle claim path and browser claim flow remain pending.
