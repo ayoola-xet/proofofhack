@@ -17,7 +17,7 @@ The full submission objective remains active. Live Graph indexing, Arc claim set
 | WP-09 Settlement worker | IN_PROGRESS | Funding confirms the canonical Arc receipt and exact approval, funding, and USDC transfer events. It saves signed bytes before broadcast and resumes the same intent after a lost response. The claim settlement core passes a local chain test. The queue and Circle execution connection are configured. Local tests also reconcile a payment collected outside the worker. The recovery receipt route verifies final expiry and refund events. It records refunds once and resolves matching report holds. Automatic recovery now scans final events, saves Circle requests, and resumes after a restart. A real local queue test reaches a final refund. Live claim evidence now verifies two rejections, one qualification, and exact payment. The live recovery worker returns an expired bounty reward to its fixed recipient. Live reservation expiry and hosted restore remain pending. |
 | WP-10 Circle agent | IN_PROGRESS | Circle CLI 1.0.0 is authenticated. The agent wallet received test USDC and deployed the escrow. The live operator funds an exact approved policy using fresh Graph context. Final events prove the allocation and token transfer. A second approved policy exceeds the daily limit and creates no provider request. |
 | WP-11 Application | IN_PROGRESS | Responsive workspace, live Privy login, organization and program setup, vault coverage, and wallet transfers work. The new bounty page prepares signed fixtures, downloads cases, approves terms, and requests Privy funding confirmation. Its live browser test creates signed fixtures, approves the draft, and funds a one-test-USDC bounty on Arc. The three-case claim journey and paid report downloads complete. Live budget controls and post-payment wallet transfer also complete. Organization and researcher receipt exports use final chain event checks. |
-| WP-12 Deployment and evidence | IN_PROGRESS | Live sponsor evidence is saved. Local retention and an isolated database, ciphertext, and key restore pass checks. Hosted backups, deployment, financial recovery, and submission assets remain pending. |
+| WP-12 Deployment and evidence | IN_PROGRESS | Live sponsor evidence is saved. Local retention and an isolated database, ciphertext, and key restore pass checks. A separate local container stack now has TLS and file-access checks. Hosted backups, deployment, financial recovery, and submission assets remain pending. |
 
 The records below describe successive build stages. Later records replace earlier pending states. The table above gives the current package summary.
 
@@ -348,3 +348,16 @@ Two additional integration tests cover users without organization membership, du
 All 143 TypeScript tests in 22 files pass. Type checking, repository lint, and the production build pass. The current database has eighteen applied migrations.
 
 The signed-in claimant downloads a personal export containing its one-test-USDC reward payment. The capture compares the downloaded file with the immutable snapshot and rechecks the final `Paid` event on Arc. Evidence: `evidence/arc/receipt-export-427fa358-8cab-424f-9ffb-b94c06d54c0c.json`. The same live account also owns the demo organization. Separate live-user checks remain pending.
+
+
+## Separate deployment containers
+
+The repository now builds service and web images from pinned Node.js and Caddy base images. The runtime image copies only application files. It excludes environment files, local keys, stored data, Git history, and evidence artifacts. Each service receives a separate environment file and only its required key mounts.
+
+The container stack separates the API, worker, verifier, report service, retention process, database, and HTTPS gateway. Application containers use an unprivileged user, a read-only root filesystem, and no Linux capabilities. The gateway publishes the only host ports. The database has a private network. A separate migration command prepares its database before services start.
+
+The live local container check uses a new database and empty storage. It includes no Circle session, Privy signing credential, or model key. The worker runs its configured Graph jobs. This check does not send wallet transactions. The existing demo remains on its original database and services.
+
+The check verifies the local TLS certificate, expected public responses, denied unauthenticated report requests, blocked internal routes, and actual file access. It checks that the API cannot read verifier or report keys. It checks that the verifier cannot write evidence and that the report service cannot write report ciphertext. The retention container removes the temporary permission probes. It also checks rejection of local mode and local identity files before service startup.
+
+Evidence is in `evidence/local/container-check.json`. The artifact records exact image hashes. These checks prove local container boundaries. Public hosting, separate database roles, live Linux Circle authentication, browser login through the deployed origin, backup and restore, and full staging acceptance remain incomplete.

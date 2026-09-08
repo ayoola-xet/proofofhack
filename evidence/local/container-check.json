@@ -1,0 +1,127 @@
+{
+  "schemaVersion": "1",
+  "scope": "LOCAL_DEPLOYMENT_CONTAINER_CHECK",
+  "capturedAt": "2026-09-08T14:33:20.998Z",
+  "baseCommit": "77b458364638e5a0e6a5ec62f6738c9c3aa98614",
+  "checks": [
+    {
+      "id": "CONTAINER_API",
+      "result": "PASS",
+      "detail": "Running with the expected user, ports, root filesystem, and available health checks."
+    },
+    {
+      "id": "CONTAINER_VERIFIER",
+      "result": "PASS",
+      "detail": "Running with the expected user, ports, root filesystem, and available health checks."
+    },
+    {
+      "id": "CONTAINER_REPORTS",
+      "result": "PASS",
+      "detail": "Running with the expected user, ports, root filesystem, and available health checks."
+    },
+    {
+      "id": "CONTAINER_WORKER",
+      "result": "PASS",
+      "detail": "Running with the expected user, ports, root filesystem, and available health checks."
+    },
+    {
+      "id": "CONTAINER_RETENTION",
+      "result": "PASS",
+      "detail": "Running with the expected user, ports, root filesystem, and available health checks."
+    },
+    {
+      "id": "CONTAINER_GATEWAY",
+      "result": "PASS",
+      "detail": "Running with the expected user, ports, root filesystem, and available health checks."
+    },
+    {
+      "id": "CONTAINER_POSTGRES",
+      "result": "PASS",
+      "detail": "Running with the expected user, ports, root filesystem, and available health checks."
+    },
+    {
+      "id": "HTTPS_/",
+      "result": "PASS",
+      "detail": "Verified local TLS certificate and HTTP 200."
+    },
+    {
+      "id": "HTTPS_/receipts",
+      "result": "PASS",
+      "detail": "Verified local TLS certificate and HTTP 200."
+    },
+    {
+      "id": "HTTPS_/api/v1/health",
+      "result": "PASS",
+      "detail": "Verified local TLS certificate and HTTP 200."
+    },
+    {
+      "id": "HTTPS_/api/v1/me",
+      "result": "PASS",
+      "detail": "Verified local TLS certificate and HTTP 401."
+    },
+    {
+      "id": "HTTPS_/private/researcher/reports/00000000-0000-4000-8000-000000000000",
+      "result": "PASS",
+      "detail": "Verified local TLS certificate and HTTP 401."
+    },
+    {
+      "id": "HTTPS_/private/organization/reports/00000000-0000-4000-8000-000000000000",
+      "result": "PASS",
+      "detail": "Verified local TLS certificate and HTTP 401."
+    },
+    {
+      "id": "HTTPS_/internal/assessments",
+      "result": "PASS",
+      "detail": "Verified local TLS certificate and HTTP 404."
+    },
+    {
+      "id": "HTTPS_/internal/organization-keys",
+      "result": "PASS",
+      "detail": "Verified local TLS certificate and HTTP 404."
+    },
+    {
+      "id": "HTTPS_/.env",
+      "result": "PASS",
+      "detail": "Verified local TLS certificate and HTTP 404."
+    },
+    {
+      "id": "HTTPS_/.local/keys/verdict-signing.json",
+      "result": "PASS",
+      "detail": "Verified local TLS certificate and HTTP 404."
+    },
+    {
+      "id": "HTTPS_/api/unknown",
+      "result": "PASS",
+      "detail": "Verified local TLS certificate and HTTP 404."
+    },
+    {
+      "id": "DEPLOYMENT_ENVIRONMENT_GUARDS",
+      "result": "PASS",
+      "detail": "The running image rejects local mode and local identity files before service import."
+    },
+    {
+      "id": "SERVICE_FILE_BOUNDARIES",
+      "result": "PASS",
+      "detail": "Checked absent secret mounts, allowed ciphertext reads, rejected writes, and retention cleanup."
+    },
+    {
+      "id": "SEPARATE_RELEASE_MIGRATIONS",
+      "result": "PASS",
+      "detail": "The separate database has all 18 migrations."
+    }
+  ],
+  "images": {
+    "api": "sha256:265b91ad6b3bcaafca2d9ba40f299b7fbe8425e03a1ac4f240eaa09f29c749d1",
+    "verifier": "sha256:265b91ad6b3bcaafca2d9ba40f299b7fbe8425e03a1ac4f240eaa09f29c749d1",
+    "reports": "sha256:265b91ad6b3bcaafca2d9ba40f299b7fbe8425e03a1ac4f240eaa09f29c749d1",
+    "worker": "sha256:265b91ad6b3bcaafca2d9ba40f299b7fbe8425e03a1ac4f240eaa09f29c749d1",
+    "retention": "sha256:265b91ad6b3bcaafca2d9ba40f299b7fbe8425e03a1ac4f240eaa09f29c749d1",
+    "gateway": "sha256:de049fe82f8d71c05ee6500524ea5ec0731e383299b6293a983da361e39af5b5",
+    "postgres": "sha256:ff80089083d7365046af7f03d949a2defa14e0b09e14bd5b8f08a242291be8b2"
+  },
+  "limits": [
+    "This is a separate local database with no bounty records.",
+    "Circle, Privy signing, and model credentials are absent from this check.",
+    "This check does not prove public hosting, browser login, financial execution, backups, or restore."
+  ]
+}

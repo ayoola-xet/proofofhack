@@ -1,0 +1,184 @@
+x-service: &service
+  image: vulnproof-service:${RELEASE_TAG:-local}
+  build:
+    context: ..
+    dockerfile: infra/Dockerfile
+    target: service
+  user: "${SERVICE_UID:-1000}:${SERVICE_GID:-1000}"
+  init: true
+  read_only: true
+  cap_drop: [ALL]
+  security_opt: [no-new-privileges:true]
+  tmpfs: ["/tmp:mode=1777,size=64m"]
+  restart: unless-stopped
+  stop_grace_period: 35s
+  networks: [services, outgoing]
+  environment: &environment
+    APP_ENV: arc-testnet
+    SERVICE_PUBLIC_CONFIG: /run/secrets/public-services.json
+    EVIDENCE_DIRECTORY: /data/evidence
+    REPORT_DIRECTORY: /data/reports
+    REPORT_KEY_DIRECTORY: /data/report-keys
+    API_IDENTITY_KEY: /run/secrets/api-identity.json
+    WORKER_IDENTITY_KEY: /run/secrets/worker-identity.json
+    PRIVY_AUTHORIZATION_KEY: /run/secrets/privy-authorization.json
+    CIRCLE_CLI_HOME: /data/circle
+    VERIFIER_INTERNAL_URL: http://verifier:4191
+    REPORT_INTERNAL_URL: http://reports:4194
+  depends_on:
+    postgres:
+      condition: service_healthy
+  logging:
+    driver: json-file
+    options: {max-size: 10m, max-file: "3"}
+
+services:
+  postgres:
+    image: postgres:17-alpine@sha256:18cfe3ef5e6815560c98237d6216d1e5119702fb0f3894c8785dd58b8bbe5d73
+    environment:
+      POSTGRES_USER: vulnproof
+      POSTGRES_DB: vulnproof
+      POSTGRES_PASSWORD_FILE: /run/secrets/database-password
+    secrets: [database-password]
+    volumes: [database:/var/lib/postgresql/data]
+    networks: [services]
+    restart: unless-stopped
+    healthcheck:
+      test: [CMD-SHELL, "pg_isready -U vulnproof -d vulnproof"]
+      interval: 5s
+      timeout: 5s
+      retries: 15
+  migrate:
+    <<: *service
+    command: [migrate]
+    restart: "no"
+    profiles: [release]
+    secrets:
+      - {source: database-env, target: runtime.env}
+  api:
+    <<: *service
+    networks: [services, outgoing, ingress]
+    command: [api]
+    secrets:
+      - {source: api-env, target: runtime.env}
+      - {source: public-config, target: public-services.json}
+      - {source: api-key, target: api-identity.json}
+    volumes:
+      - ${DEPLOY_DATA:?Set DEPLOY_DATA}/evidence:/data/evidence
+    healthcheck:
+      test: [CMD, node, --import, tsx, infra/healthcheck.ts, api]
+      interval: 15s
+      timeout: 8s
+      start_period: 20s
+  verifier:
+    <<: *service
+    networks: [services, outgoing, ingress]
+    command: [verifier]
+    secrets:
+      - {source: verifier-env, target: runtime.env}
+      - {source: public-config, target: public-services.json}
+      - {source: evidence-key, target: /app/.local/keys/verifier-encryption.json}
+      - {source: researcher-key, target: /app/.local/keys/researcher-report-encryption.json}
+      - {source: admission-key, target: /app/.local/keys/admission-signing.json}
+      - {source: verdict-key, target: /app/.local/keys/verdict-signing.json}
+    volumes:
+      - ${DEPLOY_DATA:?Set DEPLOY_DATA}/evidence:/data/evidence:ro
+      - ${DEPLOY_DATA:?Set DEPLOY_DATA}/reports:/data/reports
+    healthcheck:
+      test: [CMD, node, --import, tsx, infra/healthcheck.ts, verifier]
+      interval: 15s
+      timeout: 8s
+      start_period: 20s
+  reports:
+    <<: *service
+    networks: [services, outgoing, ingress]
+    command: [reports]
+    secrets:
+      - {source: reports-env, target: runtime.env}
+      - {source: public-config, target: public-services.json}
+    volumes:
+      - ${DEPLOY_DATA:?Set DEPLOY_DATA}/reports:/data/reports:ro
+      - ${DEPLOY_DATA:?Set DEPLOY_DATA}/report-keys:/data/report-keys
+    healthcheck:
+      test: [CMD, node, --import, tsx, infra/healthcheck.ts, reports]
+      interval: 15s
+      timeout: 8s
+      start_period: 20s
+  worker:
+    <<: *service
+    command: [worker]
+    secrets:
+      - {source: worker-env, target: runtime.env}
+      - {source: public-config, target: public-services.json}
+      - {source: worker-key, target: worker-identity.json}
+      - {source: privy-key, target: privy-authorization.json}
+    volumes:
+      - ${DEPLOY_DATA:?Set DEPLOY_DATA}/circle:/data/circle
+    healthcheck:
+      test: [CMD, node, --import, tsx, infra/healthcheck.ts, worker]
+      interval: 15s
+      timeout: 8s
+      start_period: 60s
+  retention:
+    <<: *service
+    command: [retention, --watch]
+    networks: [services]
+    secrets:
+      - {source: database-env, target: runtime.env}
+    volumes:
+      - ${DEPLOY_DATA:?Set DEPLOY_DATA}/evidence:/data/evidence
+      - ${DEPLOY_DATA:?Set DEPLOY_DATA}/reports:/data/reports
+  gateway:
+    image: vulnproof-web:${RELEASE_TAG:-local}
+    build:
+      context: ..
+      dockerfile: infra/Dockerfile
+      target: gateway
+      args:
+        VITE_PRIVY_APP_ID: ${VITE_PRIVY_APP_ID:?Set the public Privy app ID}
+    user: "${SERVICE_UID:-1000}:${SERVICE_GID:-1000}"
+    read_only: true
+    cap_drop: [ALL]
+    security_opt: [no-new-privileges:true]
+    tmpfs: ["/tmp:mode=1777,size=32m"]
+    environment:
+      SITE_ADDRESS: ${SITE_ADDRESS:-localhost}
+    ports:
+      - "${BIND_ADDRESS:-127.0.0.1}:${HTTP_PORT:-8080}:8080"
+      - "${BIND_ADDRESS:-127.0.0.1}:${HTTPS_PORT:-8443}:8443"
+    volumes:
+      - ${DEPLOY_DATA:?Set DEPLOY_DATA}/caddy-data:/data
+      - ${DEPLOY_DATA:?Set DEPLOY_DATA}/caddy-config:/config
+    networks: [ingress, outgoing]
+    restart: unless-stopped
+    healthcheck:
+      test: [CMD, wget, -q, --spider, http://127.0.0.1:9090/health]
+      interval: 10s
+      timeout: 3s
+      start_period: 10s
+    depends_on:
+      api: {condition: service_healthy}
+      verifier: {condition: service_healthy}
+      reports: {condition: service_healthy}
+
+secrets:
+  database-password: {file: "${DEPLOY_SECRETS:?Set DEPLOY_SECRETS}/database-password"}
+  database-env: {file: "${DEPLOY_SECRETS}/database.env"}
+  api-env: {file: "${DEPLOY_SECRETS}/api.env"}
+  verifier-env: {file: "${DEPLOY_SECRETS}/verifier.env"}
+  reports-env: {file: "${DEPLOY_SECRETS}/reports.env"}
+  worker-env: {file: "${DEPLOY_SECRETS}/worker.env"}
+  public-config: {file: "${DEPLOY_SECRETS}/public-services.json"}
+  api-key: {file: "${DEPLOY_SECRETS}/api-identity.json"}
+  worker-key: {file: "${DEPLOY_SECRETS}/worker-identity.json"}
+  privy-key: {file: "${DEPLOY_SECRETS}/privy-authorization.json"}
+  evidence-key: {file: "${DEPLOY_SECRETS}/verifier-encryption.json"}
+  researcher-key: {file: "${DEPLOY_SECRETS}/researcher-report-encryption.json"}
+  admission-key: {file: "${DEPLOY_SECRETS}/admission-signing.json"}
+  verdict-key: {file: "${DEPLOY_SECRETS}/verdict-signing.json"}
+networks:
+  services: {internal: true}
+  ingress: {internal: true}
+  outgoing: {}
+volumes:
+  database: {}

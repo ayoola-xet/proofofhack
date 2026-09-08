@@ -1,0 +1,38 @@
+{
+  admin off
+  http_port 8080
+  https_port 8443
+  skip_install_trust
+}
+
+http://:9090 {
+  respond /health "available" 200
+}
+
+{$SITE_ADDRESS:localhost} {
+  encode zstd gzip
+  header {
+    -Server
+    X-Content-Type-Options nosniff
+    Referrer-Policy no-referrer
+    X-Frame-Options DENY
+  }
+  handle /api/v1/* {
+    reverse_proxy api:4187
+  }
+  handle /private/researcher/reports/* {
+    reverse_proxy verifier:4192
+  }
+  handle /private/organization/reports/* {
+    reverse_proxy reports:4193
+  }
+  @internal path /internal /internal/* /run/* /.local/* /.env /api /api/* /private /private/*
+  handle @internal {
+    respond "Not found" 404
+  }
+  handle {
+    root * /srv
+    try_files {path} /index.html
+    file_server
+  }
+}

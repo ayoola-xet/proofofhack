@@ -71,3 +71,7 @@ Read [retention and recovery](docs/RETENTION_AND_RECOVERY.md) before restoring d
 ## Writing rule
 
 Apply ASD-STE100 Simplified Technical English to user-visible text and documentation. Write short sentences. Use consistent terms. Preserve exact API names, code identifiers, and third-party terminology when required.
+
+## Deployment containers
+
+Use [the container deployment guide](docs/CONTAINER_DEPLOYMENT.md) to build and check separate API, worker, verifier, report, retention, database, and HTTPS gateway containers. The local container check uses a separate database. Public hosting and the complete staging acceptance scenario remain required.

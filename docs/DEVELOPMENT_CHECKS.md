@@ -55,3 +55,8 @@ The shared stylesheet has selectors for separate page components and intentional
 ## Release limits
 
 These commands prove local behavior. They do not prove the live owner, claim, settlement, report, or recovery journeys. The live model check, hosted deployment, backup controls, and submission assets remain required. Dedicated `test:e2e`, `test:live`, `seed:local`, and `evidence:validate` commands remain unimplemented.
+
+
+## Deployment containers
+
+Read [container deployment](CONTAINER_DEPLOYMENT.md) for the separate container stack. `pnpm containers:prepare` creates an ignored local check environment. `pnpm containers:check` checks the running stack and saves its results. The check validates local TLS, public route restrictions, file permissions, and deployment environment guards. It uses a separate database and excludes financial provider credentials. It does not replace the live release scenario.
