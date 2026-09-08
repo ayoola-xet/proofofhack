@@ -1101,9 +1101,15 @@ code {
   }
 }
 @media (prefers-reduced-motion: reduce) {
-  * {
-    animation: none;
-    transition: none;
+  *,
+  *::before,
+  *::after {
+    /* biome-ignore lint/complexity/noImportantStyles: The user motion preference overrides component animation. */
+    animation: none !important;
+    /* biome-ignore lint/complexity/noImportantStyles: The user motion preference overrides component transitions. */
+    transition: none !important;
+    /* biome-ignore lint/complexity/noImportantStyles: The user motion preference overrides smooth scrolling. */
+    scroll-behavior: auto !important;
   }
 }
 

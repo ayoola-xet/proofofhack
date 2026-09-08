@@ -36,6 +36,7 @@ Press Ctrl+C to stop the group. The command sends a termination signal to its ch
 | `pnpm test:integration` | PostgreSQL, local-chain, queue, encryption, and recovery tests | Local PostgreSQL and Docker |
 | `pnpm test` | All unit and integration tests | Local PostgreSQL and Docker |
 | `pnpm test:contracts` | Solidity contract tests | Foundry |
+| `pnpm test:e2e` | Real browser fixture claim, payment, and report access flow with local provider substitutes | Local PostgreSQL, Foundry, and Chromium |
 
 The application and integration test commands compile contract artifacts first. Anvil tests use temporary local chains. They do not use Arc funds. The retention restore test uses `docker exec` with `vulnproof-postgres-1`. Use the documented Compose project name. Apply migrations before running the tests.
 
@@ -55,7 +56,7 @@ The shared stylesheet has selectors for separate page components and intentional
 
 ## Release limits
 
-These commands prove local behavior. They do not prove the live owner, claim, settlement, report, or recovery journeys. The live model check, hosted deployment, backup controls, and submission assets remain required. The dedicated `test:e2e` command remains unimplemented. `seed:local` creates a separate local database and funded synthetic bounties. See [Local seed setup](LOCAL_SEED.md). The read-only live check and evidence validator are described below.
+These commands prove local behavior. They do not prove the live owner, claim, settlement, report, or recovery journeys. The live model check, hosted deployment, backup controls, and submission assets remain required. The `test:e2e` command checks the local fixture claim and report flow at desktop and mobile widths. See [Browser checks](BROWSER_CHECKS.md). It does not yet cover every release journey. `seed:local` creates a separate local database and funded synthetic bounties. See [Local seed setup](LOCAL_SEED.md). The read-only live check and evidence validator are described below.
 
 
 ## Deployment containers
@@ -80,3 +81,5 @@ The command also checks seven financial receipt events, seven claim events, and 
 The result is saved in `evidence/live-read-checks.json`. A provider error or mismatched event gives a failed result. Provider error bodies are omitted. These checks do not repeat browser login, wallet authorization, confidential report access, model generation, policy rejection, or limit simulations. A passing read-only check does not establish submission readiness.
 
 After a selected capture changes, review it and rebuild the index. Then run the live check against that index. Each capture keeps its original scope and time. The index does not turn historical evidence into a current provider check.
+
+The CI workflow installs Chromium, runs both local browser projects, and saves sanitized result files and synthetic UI screenshots. The workflow has not yet run on GitHub.

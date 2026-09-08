@@ -401,3 +401,15 @@ The pinned OpenAPI validator checks the document without external reference reso
 All 157 application tests in 27 files pass. Four contract-generation tests check route coverage, reference resolution, strict financial input, authentication declarations, binary uploads, export polling, RPC limits, and the route-to-schema binding. Type checks and lint pass. Full response field models, separate-service contracts, and original endpoint parity remain open work.
 
 The root build also passes. It validates the API contract before building the frontend and Graph package.
+
+## Browser claim and report checks
+
+The required `test:e2e` command runs Chromium at 1440 and 390 pixels. It uses a separate local database, Anvil chain, API, durable claim queue, verifier, and report services. Only login and transaction relaying use local provider substitutes. The normal frontend has no local identity fallback.
+
+Both browser projects pass. They submit encrypted cases through the real app. They verify one exact qualifying payment, payment-gated organization access, equal report hashes, rejected changed bytes, outsider denial, and immediate reviewer revocation. Both control cases produce no payment or organization release. Captures are in `evidence/local/browser-e2e-desktop.json` and `evidence/local/browser-e2e-mobile-reduced-motion.json`.
+
+The mobile check found that the class-level loading animation overrode the reduced-motion rule. The rule now disables animation, transitions, and smooth scrolling with sufficient priority. The computed animation check passes. Node JSON imports also declare their JSON type so the browser test runner can load the service modules.
+
+The CI workflow now installs Chromium and runs these checks. It saves only the sanitized local results and synthetic UI screenshots. No GitHub run is claimed. The full set of browser journeys, live sponsor flow, hosted recovery, and staging load tests remain open.
+
+The final browser run passes both projects in 30.2 seconds. All 157 application tests in 27 files, type checks, lint, and the root build also pass. The captured desktop and mobile screens have no page-width overflow. This review covers the synthetic claim screen only.

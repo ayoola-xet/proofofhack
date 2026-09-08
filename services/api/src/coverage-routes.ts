@@ -1,7 +1,7 @@
 import type { FastifyInstance } from "fastify";
 import type { Pool } from "pg";
 import { DomainError } from "../../../packages/domain/src/index.ts";
-import sources from "../../../packages/erc4626-coverage-data/sources.json";
+import sources from "../../../packages/erc4626-coverage-data/sources.json" with { type: "json" };
 import { first, idParams, member, mutate } from "./context.ts";
 import { parseApiBody } from "./parse-body.ts";
 

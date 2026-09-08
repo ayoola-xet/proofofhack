@@ -10,7 +10,7 @@
   "scripts": {
     "build": "pnpm openapi:check && pnpm -r --if-present build",
     "typecheck": "tsc --noEmit",
-    "lint": "biome check apps packages services scripts tests infra package.json biome.json tsconfig.json vitest.config.ts",
+    "lint": "biome check apps packages services scripts tests infra package.json biome.json tsconfig.json vitest.config.ts playwright.config.ts",
     "format": "biome check --write apps packages services scripts tests",
     "test": "pnpm contracts:build && vitest run",
     "test:contracts": "forge test --root contracts",
@@ -38,7 +38,8 @@
     "test:live": "tsx scripts/test-live.ts",
     "seed:local": "tsx scripts/seed-local.ts",
     "openapi:generate": "tsx scripts/generate-openapi.ts",
-    "openapi:check": "tsx scripts/generate-openapi.ts --check"
+    "openapi:check": "tsx scripts/generate-openapi.ts --check",
+    "test:e2e": "pnpm contracts:build && playwright test"
   },
   "devDependencies": {
     "@apidevtools/swagger-parser": "13.0.0",

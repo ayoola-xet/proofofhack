@@ -47,6 +47,20 @@ jobs:
         run: pnpm test:contracts
       - name: Run unit and integration tests
         run: pnpm test
+      - name: Install the local test browser
+        run: pnpm exec playwright install --with-deps --no-shell chromium
+      - name: Check the browser claim and report flow
+        run: pnpm test:e2e
+      - name: Save local browser evidence
+        if: always()
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7
+        with:
+          name: local-browser-evidence
+          path: |
+            evidence/local/browser-e2e-*.json
+            output/playwright/local-e2e/**/claim-flow.png
+          if-no-files-found: warn
+          retention-days: 14
       - name: Stop the test database
         if: always()
         run: docker compose --project-name vulnproof -f infra/compose.yaml down --volumes

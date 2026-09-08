@@ -1,6 +1,6 @@
 import { getCreate2Address, type Hex, parseAbi, parseEventLogs } from "viem";
 import { DomainError } from "../../domain/src/index.ts";
-import bytecode from "./bytecode/FundingBudgetController.json";
+import bytecode from "./bytecode/FundingBudgetController.json" with { type: "json" };
 import type { FundingReceipt } from "./funding.ts";
 
 export const circleArcFactory = {

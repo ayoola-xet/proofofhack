@@ -2,7 +2,7 @@ import { createPublicClient, encodeDeployData, erc20Abi, type Hex, http, keccak2
 import { DomainError } from "../../domain/src/index.ts";
 import { fundingBudgetControllerAbi as abi } from "./abi/FundingBudgetController.ts";
 import { ReadOnlyBountyChain } from "./bounty-reader.ts";
-import bytecode from "./bytecode/FundingBudgetController.json";
+import bytecode from "./bytecode/FundingBudgetController.json" with { type: "json" };
 import {
   circleArcFactory,
   type DeploymentFactory,
