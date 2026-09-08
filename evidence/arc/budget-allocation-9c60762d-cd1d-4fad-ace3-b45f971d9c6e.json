@@ -1,0 +1,67 @@
+{
+  "schemaVersion": "1",
+  "scope": "LIVE_GRAPH_CIRCLE_BUDGET_ALLOCATION",
+  "capturedAt": "2026-09-08T13:17:50.455Z",
+  "baseCommit": "fd4a1290cdae0ab3d52140b7cd9274a4903a9c11",
+  "controllerId": "0e36ddc6-5cfa-46cf-8c2f-6e9ad0d5fdb8",
+  "binding": {
+    "chainId": 5042002,
+    "address": "0x999c73e9bb9f70013f7a20cddd97c9633b094dda",
+    "owner": "0x6dd9e77782bbb10268abfa04663a062f3ca30768",
+    "operator": "0xb0ec625a625556d999d271c0addd441dac7b1dcc",
+    "organizationId": "0xc02d3cf75cff91c4bd4eb4a15a038b1e2eea6429d4fb0274c378a67c685ee3c6",
+    "asset": "0x3600000000000000000000000000000000000000",
+    "escrow": "0x01742711ee569a0186349e54cffe805209808292"
+  },
+  "allocation": {
+    "actionId": "9c60762d-cd1d-4fad-ace3-b45f971d9c6e",
+    "intentId": "a00faac2-8d62-4999-aecd-20283361d21f",
+    "bountyId": "0x7424284443b8d7c0065484429d2b6ae1701bd1029104a5003ba4cca463183801",
+    "amountBaseUnits": "1000000",
+    "transactionHash": "0x782193671c9e19d808fd0401997aef5a8e925b7c05ef5217da2441709d249e2f",
+    "blockNumber": "61075747",
+    "blockHash": "0xb270b23ade7eae471df912fe9a64d4120f502128955d80597986bbd82ae2e916",
+    "budgetAllocatedLogIndex": 55,
+    "bountyFundedLogIndex": 53,
+    "canonicalFinalizedReceipt": true,
+    "exactUsdcTransfer": true,
+    "approvalConsumed": true,
+    "savedGraphSources": {
+      "sourceIds": [
+        "QmPiYxxLnHQczzQHcFHxsBdD7cxjdVQ2i4PjPeuMgUg4EC:1:0xa3931d71877c0e7a3148cb7eb4463524fec27fbd:25932850"
+      ],
+      "reasonCode": "MISSING_COVERAGE",
+      "calculation": {
+        "coverageGap": "1000000",
+        "fundedReward": "0",
+        "minimumReward": "1000000",
+        "settlementAsset": "0x3600000000000000000000000000000000000000",
+        "settlementChainId": "5042002"
+      },
+      "sourceTimes": [
+        "2026-09-08T13:09:23.000Z"
+      ]
+    },
+    "graphFreshAtAllocation": true
+  },
+  "limitControl": {
+    "policyHash": "0x0e4d461023b229a4607b89d54b7d969bc236fdfffe51abe467757ec62aa50362",
+    "actionId": "0ab25460-fd45-4e90-841d-124550d37bab",
+    "blockNumber": "61076500",
+    "blockHash": "0x8637bdfb2c8a2a1cd8fc9146bdc8810fc9edff28229bff83a7c0d4543903c370",
+    "approvedReward": "1000000",
+    "spentToday": "1000000",
+    "dailyLimit": "1000000",
+    "perActionLimit": "1000000",
+    "minimumIntervalElapsed": true,
+    "contractSimulationError": "BudgetLimitReached",
+    "workerRejection": "BUDGET_LIMIT",
+    "providerRequestCreated": false,
+    "testMethod": "Read-only eth_call at a finalized block. No rejected transaction is broadcast."
+  },
+  "limits": [
+    "Graph supplies context. This evidence does not prove a vault vulnerability.",
+    "The read-only limit check proves the deployed contract rejects the call. It is not a mined reverted transaction.",
+    "Live hosted operation remains unverified."
+  ]
+}

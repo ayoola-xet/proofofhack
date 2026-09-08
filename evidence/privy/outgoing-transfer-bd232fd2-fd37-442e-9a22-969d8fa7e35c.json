@@ -1,0 +1,30 @@
+{
+  "capturedAt": "2026-09-08T13:03:25.822Z",
+  "intentId": "bd232fd2-fd37-442e-9a22-969d8fa7e35c",
+  "afterReward": {
+    "claimId": "0xc497553a6a9aee8e371f6efb58b63135cb40fc7648d9afa933a09e9b514e52e5",
+    "paymentTransactionHash": "0x4a4855d9db78ac02c3e255009d97b0682a3feda5a1d391f32bbd3793938c31a4",
+    "paymentBlockNumber": "61073578",
+    "paymentBlockHash": "0xf8aacdd7e7e32db2a0b6eb1fb5bc096d35902811ba341d1483d85421b788c54d",
+    "paymentAmountBaseUnits": "1000000",
+    "recipientIsPaidClaimant": true,
+    "outgoingTransferOccursAfterPayment": true
+  },
+  "provider": "Privy React SDK",
+  "network": "Arc Testnet",
+  "chainId": 5042002,
+  "from": "0xcef31a2417a0edce2f4082bda2cb64b5a5b9ba9b",
+  "recipient": "0x6dd9e77782bbb10268abfa04663a062f3ca30768",
+  "asset": "0x3600000000000000000000000000000000000000",
+  "amountBaseUnits": "1000000",
+  "decimals": 6,
+  "transactionHash": "0xfa7444fa2f6785c27d8c9a00623b3662d7b48511051b8eae34f59b1961367e5a",
+  "blockNumber": "61074499",
+  "blockHash": "0x03a0e3bc49e7bdf4df12ebead2fd1d71dfe7614c32a3f2c5a19aefe593c600d5",
+  "finalizedHead": "61074828",
+  "gasUsed": "48950",
+  "effectiveGasPrice": "20103753921",
+  "exactTransferEvent": true,
+  "canonicalBlock": true,
+  "status": "CONFIRMED"
+}

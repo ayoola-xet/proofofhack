@@ -2,22 +2,24 @@
 
 Updated: 8 September 2026
 
-The full submission objective remains active. Live Graph indexing and the initial Arc deployment checks pass. Full user journeys remain incomplete.
+The full submission objective remains active. Live Graph indexing, Arc claim settlement, Privy owner actions, and Circle budget allocation have verified evidence. Hosted operation, live recovery, separate live actors, model access, and submission assets remain incomplete.
 
 | Package | Status | Evidence |
 | --- | --- | --- |
 | WP-01 Foundation | IN_PROGRESS | Workspace, local infrastructure, provider preflight, service start command, test groups, and pinned CI workflow created. Root lint, type checks, builds, and unit checks pass. The full integration rerun passes. CI execution remains pending. |
 | WP-02 Domain and database | IN_PROGRESS | Strict schemas, policy hashing, 34 database tables, and sixteen applied migrations. OpenAPI generation pending. |
 | WP-03 Escrow | IN_PROGRESS | Contract implemented. Financial suite: 17 passing tests, including 256-run fuzz cases. Arc Testnet deployment verified. Draft approval and durable funding are connected through the API and worker. Database and failure-path tests pass. The signed-in browser funds a one-test-USDC bounty on Arc. The live three-case claim journey completes. Automatic recovery still needs live evidence. |
-| WP-04 Budget controller | IN_PROGRESS | Controller registration, owner controls, exact policy approval, durable allocation, and cumulative limits pass local tests. Five live Privy permission checks pass. Live owner transactions and Circle allocation remain pending. |
-| WP-05 Identity and Privy | IN_PROGRESS | Live login, current role checks, and user wallet transfers work. The organization wallet has a verified Privy owner and policy. Live signing checks accept an allowed approval and reject an unapproved spender. A signed-in owner authorizes and funds a one-test-USDC bounty on Arc. |
+| WP-04 Budget controller | IN_PROGRESS | Controller registration, owner controls, exact policy approval, durable allocation, and cumulative limits pass local tests. Live Privy owner transactions configure limits, deposit funds, approve exact policies, enable allocation, and withdraw unused funds. Circle funds one test-USDC bounty. The worker and deployed controller reject the daily-limit control. |
+| WP-05 Identity and Privy | IN_PROGRESS | Live login, current role checks, and user wallet transfers work. The organization wallet has a verified Privy owner and policy. Live signing checks accept an allowed approval and reject an unapproved spender. A signed-in owner authorizes and funds a one-test-USDC bounty on Arc. The paid claimant later sends one test USDC through the embedded wallet. |
 | WP-06 Graph data | IN_PROGRESS | One shared schema indexes three live vaults. The Studio query returns fresh observations without indexing errors. |
 | WP-07 Coverage intelligence | IN_PROGRESS | Deterministic coverage calculations, source checks, and exact approved policy selection pass tests. Durable database updates and rule-based explanations work. The model adapter, saved requests, current-source checks, and source validation pass local tests. Live model verification needs credentials. |
 | WP-08 Confidential service | IN_PROGRESS | Fixed fixture assessment, atomic encrypted file storage, service tokens, and payment-gated report access implemented. The report service runs separately on port 4194 and creates organization keys. Encrypted fixture admission, signed assessment, and separate report download services pass a full local chain test. Live encrypted uploads, three case assessments, and paid report downloads complete. Hosted service isolation remains pending. |
 | WP-09 Settlement worker | IN_PROGRESS | Funding confirms the canonical Arc receipt and exact approval, funding, and USDC transfer events. It saves signed bytes before broadcast and resumes the same intent after a lost response. The claim settlement core passes a local chain test. The queue and Circle execution connection are configured. Local tests also reconcile a payment collected outside the worker. The recovery receipt route verifies final expiry and refund events. It records refunds once and resolves matching report holds. Automatic recovery now scans final events, saves Circle requests, and resumes after a restart. A real local queue test reaches a final refund. Live claim evidence now verifies two rejections, one qualification, and exact payment. Live recovery evidence remains pending. |
-| WP-10 Circle agent | IN_PROGRESS | Circle CLI 1.0.0 is authenticated. The agent wallet received test USDC and deployed the escrow. Bounded allocation passes local tests with the Circle argument format. Live allocation remains pending. |
-| WP-11 Application | IN_PROGRESS | Responsive workspace, live Privy login, organization and program setup, vault coverage, and wallet transfers work. The new bounty page prepares signed fixtures, downloads cases, approves terms, and requests Privy funding confirmation. Its live browser test creates signed fixtures, approves the draft, and funds a one-test-USDC bounty on Arc. |
+| WP-10 Circle agent | IN_PROGRESS | Circle CLI 1.0.0 is authenticated. The agent wallet received test USDC and deployed the escrow. The live operator funds an exact approved policy using fresh Graph context. Final events prove the allocation and token transfer. A second approved policy exceeds the daily limit and creates no provider request. |
+| WP-11 Application | IN_PROGRESS | Responsive workspace, live Privy login, organization and program setup, vault coverage, and wallet transfers work. The new bounty page prepares signed fixtures, downloads cases, approves terms, and requests Privy funding confirmation. Its live browser test creates signed fixtures, approves the draft, and funds a one-test-USDC bounty on Arc. The three-case claim journey and paid report downloads complete. Live budget controls and post-payment wallet transfer also complete. |
 | WP-12 Deployment and evidence | IN_PROGRESS | Live sponsor evidence is saved. Local retention and an isolated database, ciphertext, and key restore pass checks. Hosted backups, deployment, financial recovery, and submission assets remain pending. |
+
+The records below describe successive build stages. Later records replace earlier pending states. The table above gives the current package summary.
 
 ## Environment
 
@@ -37,12 +39,12 @@ Privy app configuration is stored in the ignored .env file with mode 0600. Graph
 
 ## Current verification
 
-- The latest development recovery stage passes all 129 TypeScript tests in 21 files. These tests include real PostgreSQL transactions, local chain settlement, concurrent allocation jobs, current role checks, encrypted storage integrity, exact payment gating, owner controls, retention, isolated restore, expiry/refund receipt recovery, checkpoint replay, and durable automatic recovery.
+- The latest full run passes all 131 TypeScript tests in 21 files. These tests include real PostgreSQL transactions, local chain settlement, concurrent allocation jobs, current role checks, encrypted storage integrity, exact payment gating, owner controls, retention, isolated restore, expiry/refund receipt recovery, checkpoint replay, and durable automatic recovery.
 - Pass 17 Solidity tests with Foundry v1.5.0 in the foundation stage.
 - Pass TypeScript type checking.
 - Pass the production frontend and Graph package builds after the foundation changes. Vite reports one large dependency chunk.
 - Pass repository-wide lint for 167 source and configuration files. Pass all 36 unit tests in nine files. The full suite also passes after Docker recovery and the test-chain history change.
-- Open the live Privy login window through the new app. The user has signed in to the local workspace. Financial user journeys remain pending.
+- Open the live Privy login window through the new app. The user has signed in to the local workspace. Live claim settlement and budget allocation now have separate evidence records.
 - Check the desktop landing page and the 390-pixel mobile page. Mobile scroll width equals viewport width. Browser evidence is in the ignored output/playwright folder.
 
 ## Local services
@@ -282,3 +284,21 @@ Payment transaction: `0x4a4855d9db78ac02c3e255009d97b0682a3feda5a1d391f32bbd3793
 The evidence capture script checks the signed manifest, each downloaded report hash, final block hashes, exact event arguments, exact USDC payment, and report state. Evidence is in `evidence/arc/claim-journey-0xa3147639ed3a03f68dab3f18cbb81d249c23ff6efb452f25b56c12ae8ba34a68.json` and `evidence/arc/paid-report-browser-downloads.json`.
 
 The live owner and claimant use the same Privy account. Separate live actor isolation remains unproven. The local tests use separate actors. Budget allocation, live recovery, live model access, hosting, backups, and submission assets remain incomplete. The full goal remains active.
+
+## Live allocation and post-payment transfer
+
+The owner sets limits of one test USDC per allocation and one test USDC per UTC day. The owner deposits 1.5 test USDC, approves an exact policy, and enables the controller. Circle funds the approved bounty using a saved, fresh Graph observation. The approval becomes consumed.
+
+Allocation transaction: `0x782193671c9e19d808fd0401997aef5a8e925b7c05ef5217da2441709d249e2f`. The capture script checks the canonical finalized block, exact `BudgetAllocated` and `BountyFunded` events, and exact USDC transfer. It also checks the immutable provider intent and source age at allocation.
+
+The owner approves a second exact policy for one test USDC. The worker rejects it with `BUDGET_LIMIT`. It creates no transaction intent. A read-only call to the deployed controller at a finalized block returns `BudgetLimitReached`. The per-action limit permits the amount, and the minimum interval has elapsed. The daily limit rejects the call. No failing transaction is broadcast.
+
+Evidence: `evidence/arc/budget-allocation-9c60762d-cd1d-4fad-ace3-b45f971d9c6e.json`. Graph supplies coverage context. This evidence does not prove a vault vulnerability.
+
+After the qualifying payment, the claimant sends one test USDC to the organization wallet through Privy. Transaction: `0xfa7444fa2f6785c27d8c9a00623b3662d7b48511051b8eae34f59b1961367e5a`. The capture checks both final receipts, the paid claimant address, the transfer amount, and block order. It does not assign an identity to fungible token units. Evidence: `evidence/privy/outgoing-transfer-bd232fd2-fd37-442e-9a22-969d8fa7e35c.json`.
+
+The owner evidence checks exact signed transaction fields, final events, and the restored current Privy base policy. Historical permission cleanup order also depends on the worker implementation and local tests. Evidence: `evidence/privy/owner-actions-0e36ddc6-5cfa-46cf-8c2f-6e9ad0d5fdb8.json`.
+
+The owner returns the remaining 0.5 test USDC to the organization wallet. Withdrawal transaction: `0xe3e1930abfb2b1cc06d63cb3b39b7a402d9facaaec6fca25ca834f82c7df8003`. All six owner transactions have canonical finalized receipts. They cover all five command types. The current controller balance is zero. The controller remains enabled with its one-test-USDC daily limit.
+
+Type checking and repository lint pass for all 170 source and configuration files in this evidence stage. The latest runtime suite remains 131 passing tests. The capture scripts also pass their live receipt checks.

@@ -1,0 +1,185 @@
+{
+  "schemaVersion": "1",
+  "scope": "LIVE_PRIVY_CONTROLLER_OWNER_ACTIONS",
+  "capturedAt": "2026-09-08T13:26:22.960Z",
+  "baseCommit": "fd4a1290cdae0ab3d52140b7cd9274a4903a9c11",
+  "controllerId": "0e36ddc6-5cfa-46cf-8c2f-6e9ad0d5fdb8",
+  "binding": {
+    "chainId": 5042002,
+    "address": "0x999c73e9bb9f70013f7a20cddd97c9633b094dda",
+    "owner": "0x6dd9e77782bbb10268abfa04663a062f3ca30768",
+    "operator": "0xb0ec625a625556d999d271c0addd441dac7b1dcc",
+    "organizationId": "0xc02d3cf75cff91c4bd4eb4a15a038b1e2eea6429d4fb0274c378a67c685ee3c6",
+    "asset": "0x3600000000000000000000000000000000000000",
+    "escrow": "0x01742711ee569a0186349e54cffe805209808292"
+  },
+  "currentBaseProviderPolicyVerified": true,
+  "actions": [
+    {
+      "requestId": "57e77262-25e6-4a65-9994-34d00db4aca8",
+      "command": {
+        "kind": "SET_LIMITS",
+        "perAction": "1000000",
+        "daily": "1000000",
+        "interval": 60
+      },
+      "transactionHash": "0x4f45a8c3531c6c4735984979b4bc10c7ce05d0481cbfc39b50ddb623403c363a",
+      "blockNumber": "61074778",
+      "blockHash": "0x135ea41ef8f38e838dd8975c0aeabbf24e8aa6845c8717ce43542e34330678a8",
+      "canonicalFinalizedReceipt": true,
+      "exactTransactionVerified": true,
+      "exactEvent": {
+        "name": "BudgetSettingsChanged",
+        "contract": "0x999c73e9bb9f70013f7a20cddd97c9633b094dda",
+        "logIndex": 18,
+        "payload": {
+          "controller": "0x999c73e9bb9f70013f7a20cddd97c9633b094dda",
+          "enabled": false,
+          "perActionLimit": "1000000",
+          "dailyLimit": "1000000",
+          "minimumInterval": "60"
+        }
+      },
+      "permissionCleanupRecorded": true
+    },
+    {
+      "requestId": "57829dfe-bbd6-486f-9b08-ce7dbae4ba68",
+      "command": {
+        "kind": "DEPOSIT",
+        "amount": "1500000"
+      },
+      "transactionHash": "0x499182287493d834b2991e89f460324c2800331459dfdf72a2f9e60f61a47362",
+      "blockNumber": "61075005",
+      "blockHash": "0x19dee3ca9f0a231459b169c409804c24d85561da0de46c0cf3ee546fce33f10a",
+      "canonicalFinalizedReceipt": true,
+      "exactTransactionVerified": true,
+      "exactEvent": {
+        "name": "Transfer",
+        "contract": "0x3600000000000000000000000000000000000000",
+        "logIndex": 12,
+        "payload": {
+          "from": "0x6dd9e77782bbb10268abfa04663a062f3ca30768",
+          "to": "0x999c73e9bb9f70013f7a20cddd97c9633b094dda",
+          "value": "1500000"
+        }
+      },
+      "permissionCleanupRecorded": true
+    },
+    {
+      "requestId": "708459d7-4d43-4fcd-82f8-ea38e05d80f9",
+      "command": {
+        "kind": "APPROVE_POLICY",
+        "draftId": "0e606fee-f742-4159-a0db-478c06f42362",
+        "policyHash": "0x7424284443b8d7c0065484429d2b6ae1701bd1029104a5003ba4cca463183801",
+        "reward": "1000000",
+        "expiresAt": "1788959171"
+      },
+      "transactionHash": "0x29d0116e4d7b11fbf689dbdcf562c63c835f466a9ee00f7877f378dbb5360f36",
+      "blockNumber": "61075354",
+      "blockHash": "0x48ced5388955641e53df29c37f97bb0fb5b7a0169714e982aa58e669d4f662a9",
+      "canonicalFinalizedReceipt": true,
+      "exactTransactionVerified": true,
+      "exactEvent": {
+        "name": "PolicyApproved",
+        "contract": "0x999c73e9bb9f70013f7a20cddd97c9633b094dda",
+        "logIndex": 2,
+        "payload": {
+          "controller": "0x999c73e9bb9f70013f7a20cddd97c9633b094dda",
+          "policyHash": "0x7424284443b8d7c0065484429d2b6ae1701bd1029104a5003ba4cca463183801",
+          "reward": "1000000",
+          "expiresAt": "1788959171"
+        }
+      },
+      "permissionCleanupRecorded": true
+    },
+    {
+      "requestId": "55ef590a-e6ff-4059-be5e-eb25d93e220d",
+      "command": {
+        "kind": "SET_ENABLED",
+        "enabled": true
+      },
+      "transactionHash": "0x1383db9806ed77e483b63f07537eb4c853fa6b67d7ebbf9a0afbfe8934c0ca22",
+      "blockNumber": "61075587",
+      "blockHash": "0x6261d76d4a0d514d34688192420ff16ce8dcd8f1cb46624079d55263892fdf9f",
+      "canonicalFinalizedReceipt": true,
+      "exactTransactionVerified": true,
+      "exactEvent": {
+        "name": "BudgetSettingsChanged",
+        "contract": "0x999c73e9bb9f70013f7a20cddd97c9633b094dda",
+        "logIndex": 16,
+        "payload": {
+          "controller": "0x999c73e9bb9f70013f7a20cddd97c9633b094dda",
+          "enabled": true,
+          "perActionLimit": "1000000",
+          "dailyLimit": "1000000",
+          "minimumInterval": "60"
+        }
+      },
+      "permissionCleanupRecorded": true
+    },
+    {
+      "requestId": "6718ee69-cc00-44c2-8874-879a750c54b3",
+      "command": {
+        "kind": "APPROVE_POLICY",
+        "draftId": "a266f526-b28a-4cdf-81bd-94fc7640cfde",
+        "policyHash": "0x0e4d461023b229a4607b89d54b7d969bc236fdfffe51abe467757ec62aa50362",
+        "reward": "1000000",
+        "expiresAt": "1788959635"
+      },
+      "transactionHash": "0xecbca0b39f64e996e822656583e3e795f6ab846877cb998c033f8705ee7b6bbe",
+      "blockNumber": "61076169",
+      "blockHash": "0x13ba4531a380de19c75798f41113221a6ae8c58d674d2374095c8af493664d5b",
+      "canonicalFinalizedReceipt": true,
+      "exactTransactionVerified": true,
+      "exactEvent": {
+        "name": "PolicyApproved",
+        "contract": "0x999c73e9bb9f70013f7a20cddd97c9633b094dda",
+        "logIndex": 26,
+        "payload": {
+          "controller": "0x999c73e9bb9f70013f7a20cddd97c9633b094dda",
+          "policyHash": "0x0e4d461023b229a4607b89d54b7d969bc236fdfffe51abe467757ec62aa50362",
+          "reward": "1000000",
+          "expiresAt": "1788959635"
+        }
+      },
+      "permissionCleanupRecorded": true
+    },
+    {
+      "requestId": "5771ce46-2445-4c25-9b04-ccb36a37cb20",
+      "command": {
+        "kind": "WITHDRAW",
+        "amount": "500000"
+      },
+      "transactionHash": "0xe3e1930abfb2b1cc06d63cb3b39b7a402d9facaaec6fca25ca834f82c7df8003",
+      "blockNumber": "61077333",
+      "blockHash": "0x439133662591b40a9dfa858fd9766dacee8e5ece532dcb3c631c226f2ed8f86d",
+      "canonicalFinalizedReceipt": true,
+      "exactTransactionVerified": true,
+      "exactEvent": {
+        "name": "BudgetWithdrawn",
+        "contract": "0x999c73e9bb9f70013f7a20cddd97c9633b094dda",
+        "logIndex": 16,
+        "payload": {
+          "controller": "0x999c73e9bb9f70013f7a20cddd97c9633b094dda",
+          "recipient": "0x6dd9e77782bbb10268abfa04663a062f3ca30768",
+          "amount": "500000"
+        }
+      },
+      "permissionCleanupRecorded": true
+    }
+  ],
+  "currentState": {
+    "blockNumber": "61077496",
+    "blockHash": "0xdb63a000ca236d530a66f651808b494e24d503090aff4fd8ea3473e5334df54a",
+    "enabled": true,
+    "balance": "0",
+    "perActionLimit": "1000000",
+    "dailyLimit": "1000000",
+    "spentToday": "1000000",
+    "minimumInterval": "60"
+  },
+  "limits": [
+    "The provider check proves its current policy. Historical permission order also depends on the worker and its tests.",
+    "These owner actions do not by themselves prove Circle allocation or hosted operation."
+  ]
+}
