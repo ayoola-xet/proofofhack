@@ -361,7 +361,7 @@ async function saveEvent(
     );
     if (name !== "ClaimReserved")
       await c.query(
-        "update claims set job_state=$2,updated_at=now() where claim_id=$1 and job_state<>'SETTLED'",
+        "update claims set job_state=$2,updated_at=now() where claim_id=$1 and job_state not in('SETTLED','EXPIRED')",
         [context.claimId, state.job],
       );
     else

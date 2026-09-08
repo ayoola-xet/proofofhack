@@ -386,6 +386,7 @@ export const reports = pgTable(
     recipientKeyId: text("recipient_key_id").notNull(),
     state: text("state").notNull(),
     paidEventRef: uuid("paid_event_ref").references(() => chainEvents.id),
+    expiryEventRef: uuid("expiry_event_ref").references(() => chainEvents.id),
     availableAt: timestamp("available_at", { withTimezone: true }),
     deleteAfter: timestamp("delete_after", { withTimezone: true }).notNull(),
     retentionHold: boolean("retention_hold").notNull().default(false),

@@ -386,3 +386,13 @@ The `owner_requests` table preserves the full command, signing message, requesti
 Organization report lists and the researcher's claim list return `delete_after`, `retention_hold`, and `deleted_at`. A true `retention_hold` means that settlement must resolve before the report deletion clock applies. A report in `DELETING` or `DELETED` cannot be downloaded. After authorization, an expired report returns `410 REPORT_EXPIRED`. An unrelated user receives 404, including for an expired report.
 
 The first successful payment-gated release clears the hold and sets `delete_after` to 30 days after `available_at`. A duplicate release preserves both dates. Database triggers prevent changes to paid retention terms, report commitments, object bindings, and completed deletion records.
+
+## Recovery receipts
+
+`POST /api/v1/bounties/:id/recovery-receipts` accepts `{ "transactionHash": "0x…" }`. The bounty ID and transaction hash must each contain 32 bytes. Require current owner or treasury membership and `Idempotency-Key`. This route records an already executed expiry or refund. It does not send a transaction.
+
+The response contains `bountyId`, `transactionHash`, `status: "FINAL"`, and `events`. Each event contains its saved `id` and `name`. A combined refund can return both `ReservationExpired` and `BountyRefunded`. The operation saves all events, projections, receipts, and coverage refresh requests in one database transaction.
+
+Return `503 RECOVERY_NOT_FINAL` while receipt finality or the final chain read is incomplete. Return `503 RECOVERY_BUSY` during active claim processing. Reject mismatched event fields, token transfers, saved event conflicts, and claim conflicts. A retry cannot create a second refund receipt or extend report retention. Check current membership before returning a cached response.
+
+`reports.expiry_event_ref` references the final expiry event for that exact claim, bounty, chain, and escrow. An expiry clears a qualifying report hold and sets a seven-day deletion period from the first reconciliation. It does not set `AVAILABLE`. Once set, the expiry reference and deletion terms are immutable. A refund without the matching expiry event cannot clear that hold.

@@ -1,4 +1,5 @@
 import { ARC_USDC } from "../../../packages/chain/src/arc.ts";
+import { ReadOnlyBountyChain } from "../../../packages/chain/src/bounty-reader.ts";
 import { ReadOnlyBudgetChain } from "../../../packages/chain/src/budget.ts";
 import { FileCiphertextStore } from "../../../packages/ciphertext-store/src/index.ts";
 import { address } from "../../../packages/domain/src/index.ts";
@@ -61,6 +62,9 @@ const bountyServices =
       }
     : undefined;
 const app = await createApp({
+  recoveryChain: bountyServices
+    ? new ReadOnlyBountyChain("https://rpc.testnet.arc.io", 5042002, bountyServices.escrow)
+    : undefined,
   budgetServices:
     bountyServices && process.env.CIRCLE_AGENT_ADDRESS
       ? {

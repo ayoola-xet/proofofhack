@@ -11,11 +11,28 @@ Status: Local retention and isolated restore checks pass. Hosted backup scheduli
 | Rejected, invalid, or expired claim evidence | Seven days after the terminal claim state | The verifier does not reopen a deleted upload. |
 | Evidence for a paid claim | Seven days after settlement, once report release has resolved | Payment and report hashes remain. |
 | Nonqualifying encrypted reports | Seven days after report creation | Only the researcher can read the report during this period. |
-| A qualifying report awaiting settlement | Hold until release resolves | The organization cannot read it before final payment. |
+| A qualifying report awaiting settlement | Hold until release or final reservation expiry resolves | The organization cannot read it before final payment. |
+| A held report after confirmed reservation expiry | Seven days after the first expiry reconciliation | Only the researcher can read it during this period. |
 | Paid encrypted reports | 30 days after the first successful release | The interface shows the export deadline. A release retry cannot extend it. |
 | Financial receipts, report hashes, and deletion records | Retain | They contain no report body or evidence plaintext. |
 
-An unresolved qualifying assessment keeps its reports on hold. This includes a delayed or uncertain payment. Do not clear that hold from a local status guess. The current maintenance service does not reconcile expired on-chain reservations. That recovery path remains separate work. The hold can therefore retain files longer than seven days while resolution is incomplete.
+An unresolved qualifying assessment keeps its reports on hold. This includes a delayed or uncertain payment. Do not clear that hold from a local status guess. The recovery receipt route can resolve a matching final `ReservationExpired` event. Automatic expiry submission and event discovery remain incomplete. The hold can therefore retain files longer than seven days while resolution is incomplete.
+
+## Reconcile an executed expiry or refund
+
+1. Obtain the hash of the executed `expireReservation` or `refundExpired` transaction.
+2. Sign in as a current owner or treasury member of the bounty organization.
+3. Send `POST /api/v1/bounties/:id/recovery-receipts` with `transactionHash` and an `Idempotency-Key` header.
+4. Retry `RECOVERY_NOT_FINAL` or `RECOVERY_BUSY` after the chain or active claim process has progressed. Keep the same request input.
+5. Check the returned final event IDs. For a refund, check the organization receipt list.
+
+The route uses the configured chain and escrow. It verifies the saved policy, canonical final receipt, and final bounty state. A refund must contain the exact token transfer to the immutable refund recipient. The request cannot supply an RPC address, transfer amount, or recipient. The route records an executed transaction. It does not sign or send one.
+
+An expiry changes only its matching local claim to `EXPIRED`. It clears that report's hold after any active assessment finishes. The report remains sealed to the organization. The first reconciliation gives a held report seven days for researcher export. A retry cannot extend that date. The `expiry_event_ref` field preserves the final expiry evidence. A database trigger rejects a different claim's event or a change to established expiry terms.
+
+A refund creates one `REFUND` receipt and records a zero remaining balance. A refund transaction can also contain the reservation expiry. An older expiry can resolve its claim without replacing a newer refund state. A refund alone cannot release a report hold when the separate expiry receipt is missing.
+
+The route and local chain tests cover receipt recovery. FR-16 still requires automatic expiry and refund execution, event discovery, a recovery screen, and live Arc evidence.
 
 Keep organization report keys while a retained report or active bounty needs them. Deleting one report does not delete a shared organization key. Key rotation and hosted key recovery remain deployment requirements.
 

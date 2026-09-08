@@ -4,6 +4,7 @@ import rateLimit from "@fastify/rate-limit";
 import Fastify from "fastify";
 import type { Pool } from "pg";
 import { z } from "zod";
+import type { RecoveryChain } from "../../../packages/chain/src/recovery.ts";
 import { DomainError, organizationHash, role, uint } from "../../../packages/domain/src/index.ts";
 import type { WalletIdentityProvider } from "../../../packages/privy/src/wallets.ts";
 import { registerAssistantRoutes } from "./assistant-routes.ts";
@@ -16,6 +17,7 @@ import { registerCoverageRoutes } from "./coverage-routes.ts";
 import { registerFundingRoutes } from "./funding-routes.ts";
 import { registerOwnerRoutes } from "./owner-routes.ts";
 import { registerReadRoutes } from "./read-routes.ts";
+import { registerRecoveryRoutes } from "./recovery-routes.ts";
 import { registerRpcRoutes } from "./rpc-routes.ts";
 import { registerTreasuryRoutes } from "./treasury-routes.ts";
 import { registerWalletRoutes } from "./wallet-routes.ts";
@@ -30,6 +32,7 @@ export type ApiOptions = {
   claimServices?: ClaimServices;
   assistantModel?: string;
   budgetServices?: BudgetServices;
+  recoveryChain?: RecoveryChain;
 };
 const nameSchema = z.string().trim().min(2).max(80);
 export async function createApp(options: ApiOptions) {
@@ -324,6 +327,7 @@ export async function createApp(options: ApiOptions) {
   });
   registerRpcRoutes(app, pool);
   registerReadRoutes(app, pool);
+  registerRecoveryRoutes(app, pool, options.recoveryChain);
   registerBountyRoutes(app, pool, options.bountyServices);
   registerTreasuryRoutes(app, pool, options.bountyServices?.escrow);
   registerFundingRoutes(app, pool, options.bountyServices?.escrow, options.walletIdentity);
