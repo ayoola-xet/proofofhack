@@ -20,6 +20,8 @@ export const evidenceFiles = {
   organizationExport: "evidence/arc/receipt-export-7e79696a-9135-41a3-818c-e73f0540f4ab.json",
   researcherExport: "evidence/arc/receipt-export-427fa358-8cab-424f-9ffb-b94c06d54c0c.json",
   containers: "evidence/local/container-check.json",
+  browserDesktop: "evidence/local/browser-e2e-desktop.json",
+  browserMobile: "evidence/local/browser-e2e-mobile-reduced-motion.json",
 } as const;
 export const sha256 = (bytes: Uint8Array | string) =>
   createHash("sha256").update(bytes).digest("hex");

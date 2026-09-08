@@ -1,6 +1,5 @@
 import type { FastifyInstance } from "fastify";
 import type { Pool } from "pg";
-import { ARC_USDC } from "../../../packages/chain/src/arc.ts";
 import { hashCanonical } from "../../../packages/crypto-envelope/src/index.ts";
 import { DomainError } from "../../../packages/domain/src/index.ts";
 import {
@@ -9,6 +8,7 @@ import {
   exportSnapshotSchema,
   filtersSchema,
 } from "../../receipts/src/records.ts";
+import { arcReceiptScope, type ReceiptScope } from "../../receipts/src/scope.ts";
 import { first, idParams, member, mutate, pageParams } from "./context.ts";
 import { parseApiBody } from "./parse-body.ts";
 
@@ -24,7 +24,11 @@ type ExportRow = {
   csv: string | null;
   organization_id: string | null;
 };
-export function registerReceiptRoutes(app: FastifyInstance, pool: Pool) {
+export function registerReceiptRoutes(
+  app: FastifyInstance,
+  pool: Pool,
+  scopeConfig: ReceiptScope = arcReceiptScope,
+) {
   for (const scope of ["organization", "researcher"] as const) {
     const base = scope === "organization" ? "/api/v1/organizations/:id" : "/api/v1/me";
     app.get(`${base}/receipts`, async (request) => {
@@ -98,7 +102,8 @@ export function registerReceiptRoutes(app: FastifyInstance, pool: Pool) {
             );
           const records = rows.map((r) => {
             if (
-              r.asset !== ARC_USDC ||
+              r.asset !== scopeConfig.asset ||
+              r.chain_id !== scopeConfig.chainId ||
               (scope === "researcher" && !r.known_claimant) ||
               (!["BUDGET_DEPOSIT", "BUDGET_WITHDRAW"].includes(r.category) && !r.bounty_id) ||
               (r.bounty_id &&

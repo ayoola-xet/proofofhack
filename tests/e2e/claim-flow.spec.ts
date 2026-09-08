@@ -4,6 +4,7 @@ import { mkdir, readFile, writeFile } from "node:fs/promises";
 import { type BrowserContext, expect, type Page, test } from "@playwright/test";
 import { erc20Abi, keccak256 } from "viem";
 import { startBrowserHarness } from "./harness.ts";
+import { checkBrowserReceipts } from "./receipt-checks.ts";
 
 test("Encrypted claim, final payment, report integrity, and current access at the browser", async ({
   browser,
@@ -316,6 +317,8 @@ test("Encrypted claim, final payment, report integrity, and current access at th
           : "VER-03_BELOW_THRESHOLD_NO_PAYMENT",
       );
     }
+    await researcher.page.screenshot({ path: info.outputPath("claim-flow.png"), fullPage: true });
+    checks.push(...(await checkBrowserReceipts(h, owner, researcher, outsider, info)));
     for (const page of [owner.page, researcher.page, reviewer.page]) {
       expect(
         await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth),
@@ -345,7 +348,6 @@ test("Encrypted claim, final payment, report integrity, and current access at th
       "CLAIM_REPORT_LAYOUT_WITHIN_VIEWPORT",
       "NO_EXTERNAL_SERVER_REQUESTS",
     );
-    await researcher.page.screenshot({ path: info.outputPath("claim-flow.png"), fullPage: true });
     result = "PASS";
   } finally {
     await Promise.all(contexts.map((context) => context.close()));

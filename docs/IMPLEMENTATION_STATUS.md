@@ -413,3 +413,11 @@ The mobile check found that the class-level loading animation overrode the reduc
 The CI workflow now installs Chromium and runs these checks. It saves only the sanitized local results and synthetic UI screenshots. No GitHub run is claimed. The full set of browser journeys, live sponsor flow, hosted recovery, and staging load tests remain open.
 
 The final browser run passes both projects in 30.2 seconds. All 157 application tests in 27 files, type checks, lint, and the root build also pass. The captured desktop and mobile screens have no page-width overflow. This review covers the synthetic claim screen only.
+
+## Browser receipt exports
+
+The browser flow now exports the paid receipt through both organization and researcher screens. It checks filters, invalid date ranges, exact base-unit amounts, final transaction references, CSV hashes, access from other accounts, changed download bytes, and account switching. Both Chromium projects pass in 53.7 seconds. Screenshots include the receipt screen at both widths.
+
+The isolated local export uses an explicit token address and chain `31337`. Its CSV states `Local test chain`. The live API rejects this local configuration. The default API and worker require Arc Testnet and its USDC address. Both boundaries reject records from another chain or asset before export. These local changes do not broaden the live settlement scope.
+
+All 159 application tests in 27 files pass. The 11 receipt tests include the new configuration and record-scope checks. Type checks, lint, and the root build pass. The browser test also checks receipt layout at both widths. Full product journey coverage, full accessibility review, and hosted release checks remain open.

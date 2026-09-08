@@ -7,6 +7,7 @@ import { z } from "zod";
 import type { RecoveryChain } from "../../../packages/chain/src/recovery.ts";
 import { DomainError, organizationHash } from "../../../packages/domain/src/index.ts";
 import type { WalletIdentityProvider } from "../../../packages/privy/src/wallets.ts";
+import { configuredReceiptScope } from "../../receipts/src/scope.ts";
 import { registerAssistantRoutes } from "./assistant-routes.ts";
 import type { AuthProvider } from "./auth.ts";
 import { type BountyServices, registerBountyRoutes } from "./bounty-routes.ts";
@@ -37,9 +38,11 @@ export type ApiOptions = {
   assistantModel?: string;
   budgetServices?: BudgetServices;
   recoveryChain?: RecoveryChain;
+  localReceiptAsset?: string;
 };
 export async function createApp(options: ApiOptions) {
   const { pool } = options;
+  const receiptScope = configuredReceiptScope(options.appEnv, options.localReceiptAsset);
   const app = Fastify({
     bodyLimit: 300_000,
     logger: false,
@@ -303,7 +306,7 @@ export async function createApp(options: ApiOptions) {
       nextCursor: rows.length > page.limit ? rows[page.limit - 1].id : null,
     };
   });
-  registerReceiptRoutes(app, pool);
+  registerReceiptRoutes(app, pool, receiptScope);
   registerRpcRoutes(app, pool);
   registerReadRoutes(app, pool);
   registerRecoveryRoutes(app, pool, options.recoveryChain);

@@ -6,6 +6,7 @@ import { afterAll, beforeAll, expect, it, vi } from "vitest";
 import { bountyEscrowAbi } from "../packages/chain/src/abi/BountyEscrow.ts";
 import { ARC_USDC } from "../packages/chain/src/arc.ts";
 import type { FundingReceipt } from "../packages/chain/src/funding.ts";
+import { hashCanonical } from "../packages/crypto-envelope/src/index.ts";
 import { connectDatabase, databaseUrl } from "../packages/database/src/index.ts";
 import { hashPolicy, organizationHash } from "../packages/domain/src/index.ts";
 import { createApp } from "../services/api/src/app.ts";
@@ -37,6 +38,63 @@ const chain = { finalReceipt: vi.fn(async (hash: Hex) => chainReceipts.get(hash)
 const headers = (actor = 0, key = randomUUID()) => ({
   authorization: `Bearer ${identities[actor].token}`,
   "idempotency-key": key,
+});
+
+it("Rejects a local receipt asset in the live API configuration", async () => {
+  await expect(
+    createApp({
+      pool,
+      auth: new LocalAuthProvider(identities, "local"),
+      appEnv: "arc-testnet",
+      webOrigin: "https://example.invalid",
+      localReceiptAsset: a(99),
+    }),
+  ).rejects.toThrow("Local receipt assets require a local environment.");
+});
+
+it("Rejects other receipt chains and assets at the API and worker boundaries", async () => {
+  for (const changed of [
+    { chainId: "31337", asset: ARC_USDC },
+    { chainId: "5042002", asset: a(99) },
+  ]) {
+    const f = await fixture();
+    await f.add();
+    const created = await f.create();
+    expect(created.statusCode).toBe(202);
+    const row = (await pool.query("select * from receipt_exports where id=$1", [created.json().id]))
+      .rows[0];
+    const snapshot = {
+      ...row.snapshot_json,
+      records: row.snapshot_json.records.map((r: Record<string, unknown>) => ({
+        ...r,
+        ...changed,
+      })),
+    };
+    const id = randomUUID();
+    await pool.query(
+      "insert into receipt_exports(id,organization_id,requested_by,snapshot_json,input_hash) values($1,$2,$3,$4,$5)",
+      [id, f.org, users[0], snapshot, hashCanonical(snapshot)],
+    );
+    const calls = chain.finalReceipt.mock.calls.length;
+    await processReceiptExport(pool, chain, id);
+    expect(chain.finalReceipt.mock.calls.length).toBe(calls);
+    expect(
+      (await pool.query("select state,error_code from receipt_exports where id=$1", [id])).rows[0],
+    ).toMatchObject({ state: "FAILED", error_code: "EXPORT_SCOPE_MISMATCH" });
+    if (changed.chainId === "31337")
+      await pool.query(
+        "update chain_events set chain_id='31337' where id in (select event_id from receipts where organization_id=$1)",
+        [f.org],
+      );
+    else
+      await pool.query("update receipts set asset=$2 where organization_id=$1", [
+        f.org,
+        changed.asset,
+      ]);
+    const rejected = await f.create();
+    expect(rejected.statusCode).toBe(409);
+    expect(rejected.json().error.code).toBe("EXPORT_SCOPE_MISMATCH");
+  }
 });
 let seq = 100;
 let boss: PgBoss | undefined;

@@ -2,7 +2,13 @@ import type { Pool } from "pg";
 import type { PgBoss } from "pg-boss";
 import { z } from "zod";
 import { type ExportChain, processReceiptExport } from "../../receipts/src/process.ts";
-export async function startReceiptExportJobs(boss: PgBoss, pool: Pool, chain: ExportChain) {
+import { arcReceiptScope, type ReceiptScope } from "../../receipts/src/scope.ts";
+export async function startReceiptExportJobs(
+  boss: PgBoss,
+  pool: Pool,
+  chain: ExportChain,
+  scope: ReceiptScope = arcReceiptScope,
+) {
   await boss.createQueue("receipt-export", {
     retryLimit: 2,
     retryDelay: 10,
@@ -14,7 +20,7 @@ export async function startReceiptExportJobs(boss: PgBoss, pool: Pool, chain: Ex
     { pollingIntervalSeconds: 1 },
     async (jobs) => {
       for (const job of jobs)
-        await processReceiptExport(pool, chain, z.uuid().parse(job.data.exportId));
+        await processReceiptExport(pool, chain, z.uuid().parse(job.data.exportId), scope);
     },
   );
   await boss.createQueue("receipt-export-dispatch", {

@@ -24,8 +24,8 @@ const manifest = liveManifestSchema.parse({
   artifacts,
   remainingRequirements: [
     "Complete the requirement-by-requirement acceptance mapping and test summary.",
-    "Implement the required test:e2e and seed:local commands.",
-    "Generate the OpenAPI specification.",
+    "Complete browser checks for all main product journeys beyond the local fixture and receipt flows.",
+    "Complete OpenAPI response models, separate-service contracts, and the original endpoint parity review.",
     "Verify live model recommendations and changed-source behavior.",
     "Verify separate live organization and researcher accounts.",
     "Verify live reservation expiry.",
@@ -38,6 +38,7 @@ const manifest = liveManifestSchema.parse({
     "Artifact hashes detect changed files. They do not certify that an artifact's claims are true.",
     "Each source retains its own capture time and scope. Historical evidence is not a current provider check.",
     "The index does not establish sponsor eligibility or award stacking.",
+    "Container and browser artifacts are local checks. They are not live sponsor evidence.",
   ],
 });
 await writeFile("evidence/live-manifest.json", `${JSON.stringify(manifest, null, 2)}\n`);

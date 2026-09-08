@@ -27,6 +27,7 @@ import { publicConfigSchema } from "../../packages/service-config/src/index.ts";
 import { localSeedScope } from "../../scripts/local-seed-scope.ts";
 import { createApp } from "../../services/api/src/app.ts";
 import { LocalAuthProvider } from "../../services/api/src/auth.ts";
+import { configuredReceiptScope } from "../../services/receipts/src/scope.ts";
 import { createReleaseApp } from "../../services/report-release/src/app.ts";
 import { createReportDownloadApp } from "../../services/report-release/src/download.ts";
 import { OrganizationKeyStore } from "../../services/report-release/src/keys.ts";
@@ -34,6 +35,7 @@ import { createVerifierApp } from "../../services/verifier/src/app.ts";
 import { FixtureVerifier } from "../../services/verifier/src/process.ts";
 import { startClaimJobs } from "../../services/worker/src/claim-jobs.ts";
 import type { ClaimRelayer } from "../../services/worker/src/claim-process.ts";
+import { startReceiptExportJobs } from "../../services/worker/src/receipt-jobs.ts";
 
 const seedSchema = z.object({
   organizationId: z.uuid(),
@@ -219,6 +221,7 @@ export async function startBrowserHarness() {
         pool,
         auth,
         appEnv: "local",
+        localReceiptAsset: seed.asset,
         webOrigin: baseUrl,
         claimServices: { config, evidence },
         recoveryChain: reader,
@@ -307,6 +310,7 @@ export async function startBrowserHarness() {
       queueErrors.push("QUEUE_ERROR");
     });
     await boss.start();
+    await startReceiptExportJobs(boss, pool, reader, configuredReceiptScope("local", seed.asset));
     await startClaimJobs(
       boss,
       pool,
@@ -353,6 +357,7 @@ export async function startBrowserHarness() {
         fixtures: { label: string; fixture: Record<string, unknown> }[];
       },
       dispatch: () => boss?.send("claim-dispatch"),
+      dispatchReceipts: () => boss?.send("receipt-export-dispatch"),
       paymentStopped: () => paymentStopped,
       allowPayment: () => unblockPayment(),
       blockedServerRequests,

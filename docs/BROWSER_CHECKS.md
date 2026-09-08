@@ -38,6 +38,12 @@ The verifier and report services listen on separate local ports. Internal reques
 - Remove a reviewer while their browser remains open. Confirm that the next download fails.
 - Settle both control cases. Confirm no payment and no organization report access.
 - Check viewport width and the reduced-motion preference. Confirm that loading animation is disabled in reduced-motion mode.
+- Filter organization receipts and reject an invalid date range.
+- Export the final payment through both organization and researcher screens. Check the exact amount, transaction reference, file hash, and local chain label.
+- Deny downloads from another account. Reject changed CSV bytes in the browser.
+- Switch receipt accounts. Check that organization records do not remain in the personal account view.
+
+Receipt exports use an explicit local token and chain scope in this test. The normal API and worker still require Arc Testnet and its configured USDC address. The API rejects a local receipt token when its environment is `arc-testnet`. The worker checks each saved record against its configured chain and asset before it reads chain receipts. Local CSV files state `Local test chain` and `31337`.
 
 ## Evidence and cleanup
 
@@ -52,4 +58,4 @@ Screenshots stay in `output/playwright/local-e2e/`. Traces, video, account stora
 
 ## Remaining release work
 
-This check covers the fixture claim and report flow. It does not cover every main product journey. Live Privy policy rejection, owner wallet confirmation, Graph context, model explanations, Circle funding, receipt exports, and hosted recovery require their own evidence. The full staging load check and complete keyboard review also remain separate requirements.
+This check covers the fixture claim, report, and receipt export flows. It does not cover every main product journey. Live Privy policy rejection, owner wallet confirmation, Graph context, model explanations, Circle funding, and hosted recovery require their own evidence. Local receipt checks do not replace the live Arc export captures. The full staging load check and complete keyboard review also remain separate requirements.

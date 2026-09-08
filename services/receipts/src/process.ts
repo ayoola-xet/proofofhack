@@ -5,8 +5,15 @@ import { hashCanonical } from "../../../packages/crypto-envelope/src/index.ts";
 import { DomainError } from "../../../packages/domain/src/index.ts";
 import { first } from "../../api/src/context.ts";
 import { contentHash, exportSnapshotSchema, receiptCsv, verifyExportRecord } from "./records.ts";
+import { arcReceiptScope, type ReceiptScope, receiptScopeSchema } from "./scope.ts";
 export type ExportChain = { finalReceipt(hash: Hex): Promise<FundingReceipt | null> };
-export async function processReceiptExport(pool: Pool, chain: ExportChain, exportId: string) {
+export async function processReceiptExport(
+  pool: Pool,
+  chain: ExportChain,
+  exportId: string,
+  configuredScope: ReceiptScope = arcReceiptScope,
+) {
+  const scope = receiptScopeSchema.parse(configuredScope);
   const c = await pool.connect(),
     lock = `receipt-export:${exportId}`;
   let locked = false;
@@ -48,6 +55,11 @@ export async function processReceiptExport(pool: Pool, chain: ExportChain, expor
       for (let i = 0; i < snapshot.records.length; i += 4) {
         await Promise.all(
           snapshot.records.slice(i, i + 4).map(async (record) => {
+            if (record.chainId !== scope.chainId || record.asset !== scope.asset)
+              throw new DomainError(
+                "EXPORT_SCOPE_MISMATCH",
+                "The receipt does not match the configured chain and asset.",
+              );
             let pending = receipts.get(record.transactionHash);
             if (!pending) {
               pending = chain.finalReceipt(record.transactionHash);

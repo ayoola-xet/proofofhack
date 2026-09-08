@@ -59,6 +59,7 @@ jobs:
           path: |
             evidence/local/browser-e2e-*.json
             output/playwright/local-e2e/**/claim-flow.png
+            output/playwright/local-e2e/**/receipts.png
           if-no-files-found: warn
           retention-days: 14
       - name: Stop the test database

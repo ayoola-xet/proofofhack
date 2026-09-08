@@ -16,6 +16,7 @@ export default defineConfig({
       ? { executablePath: process.env.PLAYWRIGHT_CHROMIUM_EXECUTABLE }
       : {},
     headless: true,
+    actionTimeout: 20000,
     trace: "off",
     screenshot: "off",
     video: "off",
