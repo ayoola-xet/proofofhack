@@ -1,0 +1,169 @@
+{
+  "sourceCommit": "63e61401736583d53a5388a57267159a0dc90b37",
+  "environment": "LOCAL",
+  "scope": "AUTOMATIC_EXPIRY_AND_REFUND_RECOVERY",
+  "startedAt": "2026-09-08T10:44:28.792000+00:00",
+  "recordedAt": "2026-09-08T10:56:10.856603+00:00",
+  "success": true,
+  "totalTests": 129,
+  "passedTests": 129,
+  "failedTests": 0,
+  "testFiles": 21,
+  "recoveryAndCircleChecks": [
+    {
+      "name": "Circle claim bridge pins recovery calls to the escrow, saved bounty, reservation, and zero native value",
+      "status": "PASSED",
+      "durationMs": 7.40504199999998
+    },
+    {
+      "name": "Circle claim bridge round-trips all signed tuple fields through the installed CLI parser",
+      "status": "PASSED",
+      "durationMs": 12.101375000000019
+    },
+    {
+      "name": "Circle claim bridge uses one provider request ID after a lost response and checks its bindings",
+      "status": "PASSED",
+      "durationMs": 1.2019579999999905
+    },
+    {
+      "name": "Circle claim bridge rejects a mismatched provider wallet or request",
+      "status": "PASSED",
+      "durationMs": 0.3802500000000464
+    },
+    {
+      "name": "Records final expiry, releases only its report hold, and preserves the deletion date on replay",
+      "status": "PASSED",
+      "durationMs": 363.7660000000001
+    },
+    {
+      "name": "Records a combined expiry and refund once with the fixed token transfer",
+      "status": "PASSED",
+      "durationMs": 571.9949160000001
+    },
+    {
+      "name": "Allows current owners and treasury members, rejects other roles, and checks membership on retry",
+      "status": "PASSED",
+      "durationMs": 468.3892500000002
+    },
+    {
+      "name": "Rejects missing finality, wrong scope, changed transfer details, and saved event conflicts without mutation",
+      "status": "PASSED",
+      "durationMs": 501.3503750000009
+    },
+    {
+      "name": "Does not clear a report hold with another claim's event",
+      "status": "PASSED",
+      "durationMs": 384.0164999999997
+    },
+    {
+      "name": "Does not replace a later refund when an older expiry arrives",
+      "status": "PASSED",
+      "durationMs": 885.6450420000001
+    },
+    {
+      "name": "Defers recovery during claim processing and waits for an active assessment",
+      "status": "PASSED",
+      "durationMs": 650.0985409999994
+    },
+    {
+      "name": "Automatically expires a reservation and refunds its remaining reward once",
+      "status": "PASSED",
+      "durationMs": 1771.846458
+    },
+    {
+      "name": "Discovers an accepted request after a lost response without sending it again",
+      "status": "PASSED",
+      "durationMs": 981.9266250000001
+    },
+    {
+      "name": "Retries an unresolved request with the same provider key and does not resend a known pending hash",
+      "status": "PASSED",
+      "durationMs": 849.2127499999988
+    },
+    {
+      "name": "Scans a refund sent outside the app and finishes only after its receipt is recorded",
+      "status": "PASSED",
+      "durationMs": 661.2235830000009
+    },
+    {
+      "name": "Does not skip a refund finalized after the scanner's first head read",
+      "status": "PASSED",
+      "durationMs": 649.6944999999996
+    },
+    {
+      "name": "Resumes bounded pages after a restart and rejects a changed final checkpoint",
+      "status": "PASSED",
+      "durationMs": 994.0700829999987
+    },
+    {
+      "name": "Preserves an old unknown request for review instead of assigning another provider key",
+      "status": "PASSED",
+      "durationMs": 757.5438329999997
+    },
+    {
+      "name": "Preserves qualified claimant credit after the settlement deadline",
+      "status": "PASSED",
+      "durationMs": 761.0032080000001
+    },
+    {
+      "name": "Caps failed transaction attempts and keeps each failed receipt binding",
+      "status": "PASSED",
+      "durationMs": 821.1038749999989
+    },
+    {
+      "name": "Stops assessment retries after reservation expiry and queues canonical recovery",
+      "status": "PASSED",
+      "durationMs": 790.107958999999
+    },
+    {
+      "name": "Runs the durable recovery queue from an authorized retry through a final refund receipt",
+      "status": "PASSED",
+      "durationMs": 3608.9376250000005
+    }
+  ],
+  "validation": {
+    "typecheck": "PASS",
+    "changedTypeScriptFilesLint": "PASS",
+    "frontendAndGraphBuild": "PASS",
+    "frontendBuildAfterInputStyleFix": "PASS",
+    "appliedMigrations": 15,
+    "apiHealth": "AVAILABLE",
+    "registeredQueues": [
+      "bounty-recovery",
+      "recovery-dispatch"
+    ]
+  },
+  "browser": {
+    "data": "SYNTHETIC_API_RESPONSES",
+    "isolatedSession": true,
+    "mobileViewportWidth": 390,
+    "mobileScrollWidth": 390,
+    "keyboardDetailsToggle": "PASS",
+    "keyboardFocusOrder": "PASS",
+    "invalidHashBlocksRequest": "PASS",
+    "validHashRequestBinding": "PASS",
+    "retryRequestBinding": "PASS",
+    "successNoticeSurvivesRefresh": "PASS",
+    "screenshots": [
+      {
+        "path": "evidence/local/automatic-recovery-mobile.png",
+        "sha256": "73776487b6ccdc9cf75437dfe1651fcf5ef9483b1ead43a2dc5df9d70679bae4",
+        "width": 390,
+        "height": 867
+      },
+      {
+        "path": "evidence/local/automatic-recovery-desktop.png",
+        "sha256": "6010102fccdc953618a0656c9ebc9024cdbb4a1d2b4041e2986315b2bb4e871c",
+        "width": 1280,
+        "height": 900
+      }
+    ]
+  },
+  "liveArcRecoveryProof": false,
+  "signedInAccountJourneyProof": false,
+  "remaining": [
+    "Live Arc expiry and refund evidence",
+    "Signed-in account journey",
+    "Full submission release gates"
+  ]
+}
