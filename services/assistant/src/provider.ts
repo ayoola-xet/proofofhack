@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { configuredAssistantModel } from "./config.ts";
 import { answerSchema, type CoverageSnapshot, SYSTEM_PROMPT } from "./contract.ts";
 export interface ExplanationProvider {
   model: string;
@@ -121,9 +122,12 @@ export class OpenAIExplanationProvider implements ExplanationProvider {
     };
   }
 }
-export function configuredExplanationProvider() {
-  const key = process.env.MODEL_API_KEY || process.env.OPENAI_API_KEY,
-    model = process.env.MODEL_ID;
-  if (!key || !model) return undefined;
+export function configuredExplanationProvider(
+  env: Record<string, string | undefined> = process.env,
+) {
+  const key = env.MODEL_API_KEY || env.OPENAI_API_KEY,
+    model = configuredAssistantModel(env);
+  if (!model) return undefined;
+  if (!key) throw new Error("The enabled assistant worker requires a model API key.");
   return new OpenAIExplanationProvider(key, model);
 }

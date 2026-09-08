@@ -11,6 +11,7 @@ import { createRemoteJWKSet } from "jose";
 import { z } from "zod";
 import { connectDatabase } from "../../../packages/database/src/index.ts";
 import { PrivyWalletIdentity } from "../../../packages/privy/src/wallets.ts";
+import { configuredAssistantModel } from "../../assistant/src/config.ts";
 import { createApp } from "./app.ts";
 import { LocalAuthProvider, PrivyAuthProvider } from "./auth.ts";
 
@@ -81,8 +82,7 @@ const app = await createApp({
           },
         }
       : undefined,
-  assistantModel:
-    process.env.MODEL_API_KEY || process.env.OPENAI_API_KEY ? process.env.MODEL_ID : undefined,
+  assistantModel: configuredAssistantModel(),
   bountyServices,
   claimServices: bountyServices
     ? {

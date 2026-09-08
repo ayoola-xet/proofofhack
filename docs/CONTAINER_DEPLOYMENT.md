@@ -50,12 +50,12 @@ Create the secret files named in `infra/deployment.compose.yaml`. Use these envi
 | --- | --- |
 | `database-password` | Random database password, as plain file bytes |
 | `database.env` | `DATABASE_URL` for the private `postgres:5432` service |
-| `api.env` | Database URL, Privy app ID and app secret, escrow address, Circle agent address, public web origin, and model ID when enabled |
+| `api.env` | Database URL, Privy app ID and app secret, escrow address, Circle agent address, public web origin, `ASSISTANT_ENABLED=true`, and model ID when enabled |
 | `verifier.env` | Database URL, Privy app ID, escrow address |
 | `reports.env` | Database URL and Privy app ID |
-| `worker.env` | Database URL, Graph endpoint and deployment ID, optional Graph query key, Privy app ID and secret, escrow address, Circle agent address, model key and model ID when enabled |
+| `worker.env` | Database URL, Graph endpoint and deployment ID, optional Graph query key, Privy app ID and secret, escrow address, Circle agent address, `ASSISTANT_ENABLED=true`, model key, and model ID when enabled |
 
-`APP_ENV` is fixed to `arc-testnet`. The container entry rejects local test identities. The Compose file sets internal URLs and mounted key paths. Do not point these URLs at public services. The API currently enables the assistant from a model key presence check. Hosted model configuration needs a separate availability setting before the API can omit that key.
+`APP_ENV` is fixed to `arc-testnet`. The container entry rejects local test identities. The Compose file sets internal URLs and mounted key paths. Do not point these URLs at public services. Set `ASSISTANT_ENABLED=true` and `MODEL_ID` in the API environment to enable model requests. The API does not need the model key. Set the same values and `MODEL_API_KEY` in the worker environment. The enabled worker rejects a missing key at startup. Set `ASSISTANT_ENABLED=false` to disable the assistant in that service.
 
 Set `SITE_ADDRESS` to the approved public domain. Set `WEB_ORIGIN` in `api.env` to its exact HTTPS origin. Register that origin in Privy before the browser check. Set `BIND_ADDRESS=0.0.0.0`, `HTTP_PORT=80`, and `HTTPS_PORT=443` on the approved host. Point the domain to the host. Open only the gateway ports. Persist the Caddy data directory so certificate renewal can continue.
 
