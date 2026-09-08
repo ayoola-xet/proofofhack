@@ -1,0 +1,201 @@
+{
+  "schemaVersion": "1",
+  "scope": "LOCAL_CONTRACT_TESTS",
+  "result": "PASS",
+  "environment": "local",
+  "chainId": "31337",
+  "liveSponsorEvidence": false,
+  "generatedAt": "2026-09-08T16:11:38.445314Z",
+  "sourceCommit": "24da81c709d470fee55c75fd82c3c7af8daf7447",
+  "sourceHashes": {
+    "contracts/test/SettlementInvariant.t.sol": "595e4a1c9eabf8c718c6ee07c96f80b4bb8e7cf495b2c0b3be7fff74d3516896",
+    "contracts/foundry.toml": "1e7c040a49b07fe55aa7306e7b5f0ea1f6c821b17856d37d70dcb6215f69fce1",
+    "contracts/src/BountyEscrow.sol": "c0edbcb6cebf7f46e1eb65774edc70edefc6ac1311a569d5c095747b007e7b24",
+    "contracts/src/FundingBudgetController.sol": "ba6b163542363a615fd6db7d50256bc46c64302137d470a6991dd954b5213595",
+    "contracts/src/TestUSDC.sol": "d6cab20a4ab3af57bf5c837218c5e612b70e693dca6f1bd25e72045fadad9870",
+    "contracts/test/Settlement.t.sol": "9ea28e3dfbc7912c14999c0ce3a9c0dd19bfce32723e74a069543df4d62393f1",
+    "contracts/test/helpers/LocalDeploymentFactory.sol": "489785675040472f7491a0c4ce338e5d7fa519a7b059dec304d3c2c517b84497",
+    "pnpm-lock.yaml": "52dbbcba0c75941700fc167af443f758f11efa406ea4162df54192b9e3281c5f"
+  },
+  "command": "forge test --root contracts --json --fuzz-seed 7632026",
+  "exitCode": 0,
+  "forgeVersion": "forge Version: 1.5.0-v1.5.0",
+  "solidityCompiler": "0.8.30+commit.73712a01",
+  "fuzzSeed": "7632026",
+  "testCount": 19,
+  "tests": [
+    {
+      "suite": "test/Settlement.t.sol:SettlementTest",
+      "name": "testFuzz_ESC06_AssessmentBindsClaimant(address)",
+      "result": "PASS",
+      "runs": 256
+    },
+    {
+      "suite": "test/Settlement.t.sol:SettlementTest",
+      "name": "testFuzz_ESC15_16_MixedLifecycleLiability(uint256)",
+      "result": "PASS",
+      "runs": 256
+    },
+    {
+      "suite": "test/Settlement.t.sol:SettlementTest",
+      "name": "test_AGT02_03_06_DuplicateAndCumulativeLimits()",
+      "result": "PASS"
+    },
+    {
+      "suite": "test/Settlement.t.sol:SettlementTest",
+      "name": "test_AGT04_WrongPolicyAndUnapprovedCaller()",
+      "result": "PASS"
+    },
+    {
+      "suite": "test/Settlement.t.sol:SettlementTest",
+      "name": "test_AGT05_DisableDoesNotCancelCredit()",
+      "result": "PASS"
+    },
+    {
+      "suite": "test/Settlement.t.sol:SettlementTest",
+      "name": "test_ControlReopensRewardWithoutPayment()",
+      "result": "PASS"
+    },
+    {
+      "suite": "test/Settlement.t.sol:SettlementTest",
+      "name": "test_ESC01_FundingIsAtomic()",
+      "result": "PASS"
+    },
+    {
+      "suite": "test/Settlement.t.sol:SettlementTest",
+      "name": "test_ESC02_DuplicateFundingFails()",
+      "result": "PASS"
+    },
+    {
+      "suite": "test/Settlement.t.sol:SettlementTest",
+      "name": "test_ESC04_OnlyOneReservation()",
+      "result": "PASS"
+    },
+    {
+      "suite": "test/Settlement.t.sol:SettlementTest",
+      "name": "test_ESC05_AdmissionReplayAndDomainBinding()",
+      "result": "PASS"
+    },
+    {
+      "suite": "test/Settlement.t.sol:SettlementTest",
+      "name": "test_ESC06_WrongSignerAndEvidenceFail()",
+      "result": "PASS"
+    },
+    {
+      "suite": "test/Settlement.t.sol:SettlementTest",
+      "name": "test_ESC07_ExpiryRejectsAssessment()",
+      "result": "PASS"
+    },
+    {
+      "suite": "test/Settlement.t.sol:SettlementTest",
+      "name": "test_ESC08_09_10_14_PermissionlessPaymentPersists()",
+      "result": "PASS"
+    },
+    {
+      "suite": "test/Settlement.t.sol:SettlementTest",
+      "name": "test_ESC11_TransferFailurePreservesCredit()",
+      "result": "PASS"
+    },
+    {
+      "suite": "test/Settlement.t.sol:SettlementTest",
+      "name": "test_ESC12_13_RefundCannotTakeCredit()",
+      "result": "PASS"
+    },
+    {
+      "suite": "test/Settlement.t.sol:SettlementTest",
+      "name": "test_ESC13_RefundAfterReservationExpiry()",
+      "result": "PASS"
+    },
+    {
+      "suite": "test/Settlement.t.sol:SettlementTest",
+      "name": "test_PolicyEncodingMatchesStaticTuple()",
+      "result": "PASS"
+    },
+    {
+      "suite": "test/SettlementInvariant.t.sol:SettlementInvariantTest",
+      "name": "invariant_ESC03_06_15_16_ConservationAndBoundBeneficiaries()",
+      "result": "PASS",
+      "campaign": {
+        "runs": 128,
+        "calls": 8192,
+        "reverts": 0,
+        "metrics": {
+          "test/SettlementInvariant.t.sol:SettlementHandler.replay": {
+            "calls": 830,
+            "reverts": 0,
+            "discards": 0
+          },
+          "test/SettlementInvariant.t.sol:SettlementHandler.refund": {
+            "calls": 769,
+            "reverts": 0,
+            "discards": 0
+          },
+          "test/SettlementInvariant.t.sol:SettlementHandler.badAssessment": {
+            "calls": 824,
+            "reverts": 0,
+            "discards": 0
+          },
+          "test/SettlementInvariant.t.sol:SettlementHandler.donate": {
+            "calls": 820,
+            "reverts": 0,
+            "discards": 0
+          },
+          "test/SettlementInvariant.t.sol:SettlementHandler.reserve": {
+            "calls": 796,
+            "reverts": 0,
+            "discards": 0
+          },
+          "test/SettlementInvariant.t.sol:SettlementHandler.expire": {
+            "calls": 824,
+            "reverts": 0,
+            "discards": 0
+          },
+          "test/SettlementInvariant.t.sol:SettlementHandler.collect": {
+            "calls": 845,
+            "reverts": 0,
+            "discards": 0
+          },
+          "test/SettlementInvariant.t.sol:SettlementHandler.assess": {
+            "calls": 820,
+            "reverts": 0,
+            "discards": 0
+          },
+          "test/SettlementInvariant.t.sol:SettlementHandler.advanceTime": {
+            "calls": 848,
+            "reverts": 0,
+            "discards": 0
+          },
+          "test/SettlementInvariant.t.sol:SettlementHandler.create": {
+            "calls": 816,
+            "reverts": 0,
+            "discards": 0
+          }
+        },
+        "failed_corpus_replays": 0
+      }
+    },
+    {
+      "suite": "test/SettlementInvariant.t.sol:SettlementInvariantTest",
+      "name": "test_ESC15_StatefulHandlerExercisesRecoveryAndRejection()",
+      "result": "PASS"
+    }
+  ],
+  "invariantAssertions": [
+    "Independent transfer and liability totals agree after every action.",
+    "Each bounty has its exact reward in one allowed accounting state.",
+    "Only bound claimants and refund recipients receive funds.",
+    "Funded policies and report commitments do not change.",
+    "Consumed admission nonces and claim IDs remain consumed.",
+    "Unsolicited token transfers create no reward or liability.",
+    "Failed payment and refund transfers preserve the prior state.",
+    "Each completed sequence releases all legitimate claims after deadlines."
+  ],
+  "limits": [
+    "This finite campaign uses a local ERC-20 token with transfer-failure injection.",
+    "The campaign does not model fee-on-transfer, rebasing, blacklist removal, or callback tokens.",
+    "Admission and assessment signatures come from trusted local test keys.",
+    "Action call counts include no-ops when no suitable bounty exists.",
+    "The budget controller has existing contract tests but is not part of this random-action handler.",
+    "This result does not establish a complete security audit, live provider correctness, or mainnet readiness."
+  ]
+}

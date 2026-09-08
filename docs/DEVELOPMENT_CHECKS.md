@@ -35,7 +35,7 @@ Press Ctrl+C to stop the group. The command sends a termination signal to its ch
 | `pnpm test:unit` | Tests without PostgreSQL | None |
 | `pnpm test:integration` | PostgreSQL, local-chain, queue, encryption, and recovery tests | Local PostgreSQL and Docker |
 | `pnpm test` | All unit and integration tests | Local PostgreSQL and Docker |
-| `pnpm test:contracts` | Solidity contract tests | Foundry |
+| `pnpm test:contracts` | Solidity contract tests and random-action financial invariants | Foundry |
 | `pnpm test:e2e` | Real browser fixture claim, payment, and report access flow with local provider substitutes | Local PostgreSQL, Foundry, and Chromium |
 
 The application and integration test commands compile contract artifacts first. Anvil tests use temporary local chains. They do not use Arc funds. The retention restore test uses `docker exec` with `vulnproof-postgres-1`. Use the documented Compose project name. Apply migrations before running the tests.
@@ -83,3 +83,5 @@ The result is saved in `evidence/live-read-checks.json`. A provider error or mis
 After a selected capture changes, review it and rebuild the index. Then run the live check against that index. Each capture keeps its original scope and time. The index does not turn historical evidence into a current provider check.
 
 The CI workflow installs Chromium, runs both local browser projects, and saves sanitized result files and synthetic UI screenshots. The workflow has not yet run on GitHub.
+
+The [financial invariant test guide](FINANCIAL_INVARIANTS.md) describes the escrow model, random actions, exact seed, and recovery assertions. The contract command runs the invariant test in CI.

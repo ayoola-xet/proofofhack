@@ -8,7 +8,7 @@ Reviewed: 8 September 2026
 
 | Area | Current evidence | Required next work |
 | --- | --- | --- |
-| Contract and financial review | Local contract tests cover settlement, limits, refunds, and accounting. Live receipts prove testnet funding and payment. | Obtain an independent review of contracts, signatures, accounting, and deployment bindings. Record findings and their resolution. |
+| Contract and financial review | Local contract tests cover settlement, limits, refunds, and accounting. The escrow also passes a 128-sequence random-action campaign with recovery after each sequence. Live receipts prove testnet funding and payment. | Obtain an independent review of contracts, signatures, accounting, and deployment bindings. Record findings and their resolution. |
 | Verifier trust | `TRUSTED_SERVICE` and `FIXTURE_ONLY` are explicit. The verifier signs the result. Separate services encrypt and release report copies. | Review signer compromise, privileged service access, data handling, and the intended production verification method. |
 | Network and asset | Arc Testnet chain ID 5042002 and USDC address `0x3600000000000000000000000000000000000000` are checked. | Verify actual mainnet support, network identity, asset decimals, finality, provider support, and contract addresses. Do not reuse testnet configuration. |
 | Wallet control | Privy checks allowed and prohibited calls. Owner actions restore the base signing policy. Circle allocation requires an exact on-chain approval and spending limits. | Review production ownership, independent operator access, signing policy coverage, recovery, and key rotation. Test those controls with separate actors. |

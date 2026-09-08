@@ -425,3 +425,11 @@ All 159 application tests in 27 files pass. The 11 receipt tests include the new
 The release index now contains 15 artifact references, including both local browser captures. All indexed hashes pass validation. Both browser records match all 254 captured source file hashes. The live read check passes 17 checks after the index update and sends no transactions. The local app restarts with the new source. Its web and health endpoints respond, and all three anonymous private requests return 401.
 
 The release validator still returns exit code 2. It lists the remaining acceptance mapping, browser journeys, API contracts, live model and account checks, reservation expiry, hosting and recovery, staging performance, source and team records, and demo assets. No submission-ready result is claimed.
+
+## Stateful escrow invariant campaign
+
+The contract suite now runs random action sequences across multiple active bounties. An independent model tracks funded rewards, payments, refunds, unsolicited tokens, fixed beneficiaries, consumed admissions, and report commitments. The runner checks that model after each action. It also closes all remaining credits and refunds after every sequence. Unexpected handler reverts fail the campaign.
+
+The full Solidity suite passes 19 tests. The fixed-seed campaign runs 128 sequences and 8,192 handler actions with no reverts or discarded inputs. Actions can return when no eligible bounty exists. A separate deterministic test exercises rejection, expired reservations, replay, failed outgoing transfers, and final recovery. The sanitized capture is `evidence/local/contract-tests.json`.
+
+This change adds contract tests and test configuration. It does not change deployed contract source or application behavior. The campaign uses local test tokens and trusted test signers. Callback tokens, rebasing, blacklist recovery, the controller state machine, and a complete independent review remain outside its scope. See `docs/FINANCIAL_INVARIANTS.md`.
