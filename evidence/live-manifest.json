@@ -1,8 +1,8 @@
 {
   "schemaVersion": "1",
   "scope": "TESTNET_SUBMISSION_EVIDENCE_INDEX",
-  "generatedAt": "2026-09-08T14:42:13.440Z",
-  "sourceCommit": "d3c959a2691d30b5b167d38ec96aa387d051a83c",
+  "generatedAt": "2026-09-08T16:00:04.229Z",
+  "sourceCommit": "0709980837d175714cedb507e46890770fc4da9f",
   "sponsors": [
     "The Graph",
     "Arc",
@@ -65,12 +65,20 @@
     "containers": {
       "path": "evidence/local/container-check.json",
       "sha256": "f641cc96cb57467bb5ccdb69c3b25dadf833826a8c5130891be5495ae9087775"
+    },
+    "browserDesktop": {
+      "path": "evidence/local/browser-e2e-desktop.json",
+      "sha256": "a2992b805868475c7c95bf1f8d58e0541c08910048ad051ef2ffb254484898dd"
+    },
+    "browserMobile": {
+      "path": "evidence/local/browser-e2e-mobile-reduced-motion.json",
+      "sha256": "9c07e1083235a17f82ee395ddee2855623d356fdbc84bc3836ee20411ef257a9"
     }
   },
   "remainingRequirements": [
     "Complete the requirement-by-requirement acceptance mapping and test summary.",
-    "Implement the required test:e2e and seed:local commands.",
-    "Generate the OpenAPI specification.",
+    "Complete browser checks for all main product journeys beyond the local fixture and receipt flows.",
+    "Complete OpenAPI response models, separate-service contracts, and the original endpoint parity review.",
     "Verify live model recommendations and changed-source behavior.",
     "Verify separate live organization and researcher accounts.",
     "Verify live reservation expiry.",
@@ -82,6 +90,7 @@
   "limits": [
     "Artifact hashes detect changed files. They do not certify that an artifact's claims are true.",
     "Each source retains its own capture time and scope. Historical evidence is not a current provider check.",
-    "The index does not establish sponsor eligibility or award stacking."
+    "The index does not establish sponsor eligibility or award stacking.",
+    "Container and browser artifacts are local checks. They are not live sponsor evidence."
   ]
 }

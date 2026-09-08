@@ -421,3 +421,7 @@ The browser flow now exports the paid receipt through both organization and rese
 The isolated local export uses an explicit token address and chain `31337`. Its CSV states `Local test chain`. The live API rejects this local configuration. The default API and worker require Arc Testnet and its USDC address. Both boundaries reject records from another chain or asset before export. These local changes do not broaden the live settlement scope.
 
 All 159 application tests in 27 files pass. The 11 receipt tests include the new configuration and record-scope checks. Type checks, lint, and the root build pass. The browser test also checks receipt layout at both widths. Full product journey coverage, full accessibility review, and hosted release checks remain open.
+
+The release index now contains 15 artifact references, including both local browser captures. All indexed hashes pass validation. Both browser records match all 254 captured source file hashes. The live read check passes 17 checks after the index update and sends no transactions. The local app restarts with the new source. Its web and health endpoints respond, and all three anonymous private requests return 401.
+
+The release validator still returns exit code 2. It lists the remaining acceptance mapping, browser journeys, API contracts, live model and account checks, reservation expiry, hosting and recovery, staging performance, source and team records, and demo assets. No submission-ready result is claimed.
