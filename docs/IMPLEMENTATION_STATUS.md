@@ -302,3 +302,13 @@ The owner evidence checks exact signed transaction fields, final events, and the
 The owner returns the remaining 0.5 test USDC to the organization wallet. Withdrawal transaction: `0xe3e1930abfb2b1cc06d63cb3b39b7a402d9facaaec6fca25ca834f82c7df8003`. All six owner transactions have canonical finalized receipts. They cover all five command types. The current controller balance is zero. The controller remains enabled with its one-test-USDC daily limit.
 
 Type checking and repository lint pass for all 170 source and configuration files in this evidence stage. The latest runtime suite remains 131 passing tests. The capture scripts also pass their live receipt checks.
+
+## Bounty status and deadline controls
+
+The draft list reads the confirmed bounty projection for both funding paths. It shows the current chain state and final funding receipt. A budget-funded draft no longer says that it has no funding request. An unfunded budget draft remains marked as awaiting allocation.
+
+Owners can select a submission window, reservation length, and extra time before refund. Defaults remain three days, 30 minutes, and one hour. The API accepts a bounded grace period from zero to 86,400 seconds. The refund cutoff always includes at least one reservation length after submissions close. The exact approved policy preserves both deadlines.
+
+The full suite passes 133 tests in 21 files. This includes draft status reads, current membership checks, default deadlines, a short cutoff, and invalid grace periods. Type checks, lint, and production builds pass. The live browser shows the budget-funded bounty as FUNDED and the settled bounty as PAID. It also creates and approves a short recovery draft. The refund itself remains under live verification.
+
+`docs/MAINNET_READINESS.md` records the production gaps. Mainnet readiness remains NOT READY.

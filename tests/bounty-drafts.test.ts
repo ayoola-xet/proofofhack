@@ -136,6 +136,7 @@ afterAll(async () => {
   await release.close();
   await pool.query("delete from idempotency_records where actor_id=any($1::text[])", [userIds]);
   await pool.query("delete from audit_events where actor_id=any($1::text[])", [userIds]);
+  await pool.query("delete from bounties where program_id=$1", [programId]);
   await pool.query("delete from bounty_drafts where program_id=$1", [programId]);
   await pool.query("delete from fixture_manifests where organization_id=$1", [orgId]);
   await pool.query("delete from outbox where aggregate_id=$1", [orgId]);
@@ -258,6 +259,43 @@ describe("Signed fixtures and exact bounty approval", () => {
     expect(response.json().policy.fixtureManifestRoot).toBe(manifest.root);
     expect(response.json().policy.refundRecipient).toBe(account.address.toLowerCase());
     expect(response.json().policy.reportRecipientKeyId).not.toBe(hash);
+    expect(
+      BigInt(response.json().policy.settlementDeadline) - BigInt(input.submissionDeadline),
+    ).toBe(3900n);
+  });
+  it("Binds a short refund cutoff and rejects an invalid grace period", async () => {
+    const payload = {
+      manifestId,
+      refundWalletId: refundId,
+      reward: "1000000",
+      minimumDiscrepancy: "1000000",
+      submissionDeadline: String(Math.floor(Date.now() / 1000) + 600),
+      reservationDurationSeconds: 60,
+      settlementGraceSeconds: 0,
+    };
+    for (const settlementGraceSeconds of [-1, 86401, 0.5]) {
+      expect(
+        (
+          await app.inject({
+            method: "POST",
+            url: `/api/v1/programs/${programId}/bounty-drafts`,
+            headers: headers(),
+            payload: { ...payload, settlementGraceSeconds },
+          })
+        ).statusCode,
+      ).toBe(400);
+    }
+    const response = await app.inject({
+      method: "POST",
+      url: `/api/v1/programs/${programId}/bounty-drafts`,
+      headers: headers(),
+      payload,
+    });
+    expect(response.statusCode).toBe(201);
+    expect(response.json().policy.settlementDeadline).toBe(
+      String(BigInt(payload.submissionDeadline) + 60n),
+    );
+    expect(response.json().policy.reservationDurationSeconds).toBe("60");
   });
   it("Allows only owner approval and rejects later database policy changes", async () => {
     const req = {
@@ -275,6 +313,37 @@ describe("Signed fixtures and exact bounty approval", () => {
     await expect(
       pool.query("update bounty_drafts set policy_hash=$2 where id=$1", [draftId, hash]),
     ).rejects.toMatchObject({ code: "23514" });
+    expect(
+      (
+        await app.inject({
+          url: `/api/v1/organizations/${orgId}/bounty-drafts`,
+          headers: headers(2),
+        })
+      ).statusCode,
+    ).toBe(404);
+  });
+  it("Shows final bounty state without a direct wallet funding request", async () => {
+    const read = () =>
+      app.inject({ url: `/api/v1/organizations/${orgId}/bounty-drafts`, headers: headers() });
+    const draft = (await read()).json().items.find((item: { id: string }) => item.id === draftId);
+    expect(draft).toMatchObject({ status: "APPROVED", chain_state: null, creation_tx: null });
+    const transactionHash = toHex(18, { size: 32 });
+    // The final funding projection is shared by direct funding and controller allocation.
+    await pool.query(
+      `insert into bounties(bounty_id,program_id,policy_hash,policy_json,chain_id,escrow,
+      reward,unallocated_reward,chain_state,creation_tx) values($1,$2,$1,$3,'5042002',$4,'1000000','1000000','FUNDED',$5)`,
+      [policyHash, programId, draft.policy, draft.policy.escrow, transactionHash],
+    );
+    expect(
+      (await read()).json().items.find((item: { id: string }) => item.id === draftId),
+    ).toMatchObject({ chain_state: "FUNDED", creation_tx: transactionHash });
+    await pool.query(
+      "update bounties set chain_state='PAID',unallocated_reward='0' where bounty_id=$1",
+      [policyHash],
+    );
+    expect(
+      (await read()).json().items.find((item: { id: string }) => item.id === draftId),
+    ).toMatchObject({ chain_state: "PAID", creation_tx: transactionHash });
     expect(
       (
         await app.inject({

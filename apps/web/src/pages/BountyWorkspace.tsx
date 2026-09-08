@@ -14,6 +14,8 @@ type Draft = {
   policy_hash: string;
   status: string;
   version: number;
+  chain_state: string | null;
+  creation_tx: string | null;
 };
 type Funding = {
   id: string;
@@ -71,6 +73,9 @@ export function BountyWorkspace({
   const [prepared, setPrepared] = useState<Prepared | null>(null);
   const [key, setKey] = useState(() => crypto.randomUUID());
   const [deadline, setDeadline] = useState(() => String(Math.floor(Date.now() / 1000) + 259200));
+  const [submissionWindow, setSubmissionWindow] = useState("259200");
+  const [reservationDuration, setReservationDuration] = useState("1800");
+  const [settlementGrace, setSettlementGrace] = useState("3600");
   const [draftCreated, setDraftCreated] = useState(false);
   const [confirm, setConfirm] = useState<{ funding: Funding; wallet: Wallet } | null>(null);
   const wallet = wallets.data?.items.find(
@@ -100,6 +105,10 @@ export function BountyWorkspace({
         vaultId = vault || vaults.data?.items[0]?.id;
       if (!programId || !vaultId)
         throw new Error("Create a program and register a source vault first.");
+      const draftDeadline = prepared
+        ? deadline
+        : String(Math.floor(Date.now() / 1000) + Number(submissionWindow));
+      setDeadline(draftDeadline);
       await api(`${base}/report-key`, { method: "POST", key: `${key}:report`, body: {} });
       const item =
         prepared ??
@@ -127,8 +136,9 @@ export function BountyWorkspace({
           ...(controllerId ? { controllerId } : { refundWalletId: bank.id }),
           reward: parseMoney(reward).toString(),
           minimumDiscrepancy: "1000000",
-          submissionDeadline: deadline,
-          reservationDurationSeconds: 1800,
+          submissionDeadline: draftDeadline,
+          reservationDurationSeconds: Number(reservationDuration),
+          settlementGraceSeconds: Number(settlementGrace),
         },
       });
       setDraftCreated(true);
@@ -292,6 +302,41 @@ export function BountyWorkspace({
               ))}
             </select>
           </label>
+          <label>
+            Submission window
+            <select
+              value={submissionWindow}
+              onChange={(e) => setSubmissionWindow(e.target.value)}
+              disabled={!!prepared || !!busy}
+            >
+              <option value="600">10 minutes</option>
+              <option value="3600">One hour</option>
+              <option value="259200">Three days</option>
+            </select>
+          </label>
+          <label>
+            Reservation length
+            <select
+              value={reservationDuration}
+              onChange={(e) => setReservationDuration(e.target.value)}
+              disabled={!!prepared || !!busy}
+            >
+              <option value="60">One minute</option>
+              <option value="300">Five minutes</option>
+              <option value="1800">30 minutes</option>
+            </select>
+          </label>
+          <label>
+            Extra time before refund
+            <select
+              value={settlementGrace}
+              onChange={(e) => setSettlementGrace(e.target.value)}
+              disabled={!!prepared || !!busy}
+            >
+              <option value="0">None</option>
+              <option value="3600">One hour</option>
+            </select>
+          </label>
           <button
             className="primary"
             type="submit"
@@ -313,8 +358,9 @@ export function BountyWorkspace({
         </button>
       )}
       <p>
-        Submissions stay open for three days. The discrepancy threshold is 1,000,000 fixture units.
-        Each reservation lasts 30 minutes.
+        The submission window starts when you prepare the draft. The refund cutoff adds one
+        reservation length and the selected extra time. A short reservation leaves less time for
+        network delays. The discrepancy threshold is 1,000,000 fixture units.
       </p>
       {draftCreated && (
         <button
@@ -331,6 +377,9 @@ export function BountyWorkspace({
         </button>
       )}
       {drafts.data?.items.map((draft) => {
+        const usesBudget = controllers.data?.items.some(
+          (c) => c.address === draft.policy.refundRecipient,
+        );
         const request = funding.data?.items.find(
           (f) => f.draft_id === draft.id && !["CANCELLED", "EXPIRED"].includes(f.state),
         );
@@ -339,14 +388,35 @@ export function BountyWorkspace({
             <div>
               <h3>{formatMoney(BigInt(draft.policy.reward))} test USDC</h3>
               <p>
-                {draft.status} · {request?.state ?? "No funding request"}
+                {draft.status} ·{" "}
+                {draft.chain_state ??
+                  request?.state ??
+                  (usesBudget ? "Awaiting budget allocation" : "No funding request")}
               </p>
+              {draft.creation_tx && (
+                <p>
+                  <a
+                    href={`https://testnet.arcscan.app/tx/${draft.creation_tx}`}
+                    target="_blank"
+                    rel="noreferrer"
+                  >
+                    View final funding transaction
+                  </a>
+                </p>
+              )}
               <p className="mono break">{draft.policy_hash}</p>
               <dl>
                 <dt>Refund destination</dt>
                 <dd className="mono break">{draft.policy.refundRecipient}</dd>
                 <dt>Submission deadline</dt>
                 <dd>{new Date(Number(draft.policy.submissionDeadline) * 1000).toLocaleString()}</dd>
+                <dt>Refund cutoff</dt>
+                <dd>{new Date(Number(draft.policy.settlementDeadline) * 1000).toLocaleString()}</dd>
+                <dt>Reservation length</dt>
+                <dd>
+                  {Number(draft.policy.reservationDurationSeconds) / 60}{" "}
+                  {draft.policy.reservationDurationSeconds === "60" ? "minute" : "minutes"}
+                </dd>
                 <dt>Network</dt>
                 <dd>Arc Testnet</dd>
               </dl>
@@ -377,6 +447,7 @@ export function BountyWorkspace({
               )}
               {draft.status === "APPROVED" &&
                 draft.policy.refundRecipient === bank?.address &&
+                !draft.creation_tx &&
                 !request &&
                 ["OWNER", "TREASURY"].includes(organization.role) && (
                   <button
@@ -388,7 +459,7 @@ export function BountyWorkspace({
                     Review funding confirmation
                   </button>
                 )}
-              {controllers.data?.items.some((c) => c.address === draft.policy.refundRecipient) && (
+              {usesBudget && !draft.creation_tx && (
                 <p>
                   This draft uses the coverage budget. Check its owner approval and limits in
                   organization settings.

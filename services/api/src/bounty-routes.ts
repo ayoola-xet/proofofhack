@@ -198,6 +198,7 @@ export function registerBountyRoutes(app: FastifyInstance, pool: Pool, services?
         minimumDiscrepancy: uint().refine((v) => BigInt(v) > 0n),
         submissionDeadline: uint(64),
         reservationDurationSeconds: z.number().int().min(60).max(1800),
+        settlementGraceSeconds: z.number().int().min(0).max(86400).default(3600),
       })
       .refine((v) => Boolean(v.refundWalletId) !== Boolean(v.controllerId), {
         message: "Select one refund wallet or budget controller.",
@@ -280,7 +281,7 @@ export function registerBountyRoutes(app: FastifyInstance, pool: Pool, services?
           settlementDeadline: (
             deadline +
             BigInt(input.reservationDurationSeconds) +
-            3600n
+            BigInt(input.settlementGraceSeconds)
           ).toString(),
           reservationDurationSeconds: String(input.reservationDurationSeconds),
           organizationNonce: randomHash(),
@@ -303,7 +304,10 @@ export function registerBountyRoutes(app: FastifyInstance, pool: Pool, services?
     return {
       items: (
         await pool.query(
-          "select d.id,d.program_id,d.policy_json as policy,d.policy_hash,d.status,d.version from bounty_drafts d join programs p on p.id=d.program_id where p.organization_id=$1 order by d.created_at desc limit 100",
+          `select d.id,d.program_id,d.policy_json as policy,d.policy_hash,d.status,d.version,
+          b.chain_state,b.creation_tx from bounty_drafts d join programs p on p.id=d.program_id
+          left join bounties b on b.policy_hash=d.policy_hash and b.program_id=d.program_id
+          where p.organization_id=$1 order by d.created_at desc limit 100`,
           [id],
         )
       ).rows,

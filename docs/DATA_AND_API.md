@@ -406,3 +406,9 @@ Return `503 RECOVERY_NOT_FINAL` while receipt finality or the final chain read i
 `bounty_recovery` has one row per bounty. It stores `checkpoint_block`, `checkpoint_hash`, `active_intent_id`, `status`, `failure_code`, `observed_state`, and `next_check_at`. Status values are `WAITING`, `SCANNING`, `PREPARED`, `CONFIRMING`, `RETRYING`, `NEEDS_REVIEW`, and `COMPLETE`. A read before the first worker check returns `NOT_STARTED`.
 
 Recovery transaction intents use `RECOVERY_expireReservation` or `RECOVERY_refundExpired`. The saved request binds the chain, escrow, bounty, method, attempt, and reservation claim ID when required. Database triggers preserve these terms, the creation time, the provider request ID, and a known transaction hash. An unresolved request retains its provider key. A reverted transaction permits a new attempt, up to five attempts per action.
+
+## Bounty deadline options
+
+The bounty draft request accepts `settlementGraceSeconds`. It is an integer from 0 to 86,400. Its default is 3,600. The API sets `settlementDeadline` to `submissionDeadline + reservationDurationSeconds + settlementGraceSeconds`. The approved policy fixes that result.
+
+The organization draft read also returns `chain_state` and `creation_tx` from the confirmed bounty projection. Both values are null before funding is recorded. Both direct wallet funding and controller allocation use this projection. A draft approval alone is not funding evidence.
