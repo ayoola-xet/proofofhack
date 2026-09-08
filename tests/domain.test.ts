@@ -104,6 +104,11 @@ describe("Fixed fixture assessment", () => {
       assessFixture({ ...fixtureWithProof(0), observedAssets: "0" }, policy, context),
     ).toThrow(/manifest/);
   });
+  it("Rejects a report context for a different policy", () => {
+    expect(() =>
+      assessFixture(fixtureWithProof(0), policy, { ...context, bountyId: h(900) }),
+    ).toThrow(/commitment/);
+  });
   it("VER-05 accepts no transaction instructions or external URLs", () => {
     for (const extra of [{ url: "https://example.com" }, { calldata: "0x00" }, { script: "1+1" }])
       expect(() => fixtureSchema.parse({ ...fixtureWithProof(0), ...extra })).toThrow();

@@ -7,6 +7,7 @@ import {
   EVIDENCE_SCOPE,
   type Fixture,
   fixtureSchema,
+  hashPolicy,
   policySchema,
   VERIFIER_MODE,
 } from "../../../packages/domain/src/index.ts";
@@ -32,6 +33,7 @@ export function assessFixture(
 ) {
   const fixture = fixtureSchema.parse(input);
   const policy = policySchema.parse(policyInput);
+  if (hashPolicy(policy) !== context.bountyId) throw new Error("Policy commitment mismatch.");
   if (policy.adapterId !== ADAPTER_ID) throw new Error("Unsupported fixture adapter.");
   const leaf = leafHash(fixture);
   if (!SimpleMerkleTree.verify(policy.fixtureManifestRoot, leaf, fixture.merkleProof))
