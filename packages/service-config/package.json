@@ -1,0 +1,5 @@
+{
+  "name": "@vulnproof/service-config",
+  "private": true,
+  "type": "module"
+}

@@ -20,7 +20,10 @@
     "db:migrate": "tsx scripts/migrate.ts",
     "dev:api": "tsx services/api/src/main.ts",
     "dev:worker": "tsx services/worker/src/main.ts",
-    "dev:web": "pnpm --filter @vulnproof/web dev"
+    "dev:web": "pnpm --filter @vulnproof/web dev",
+    "setup:keys": "tsx scripts/setup-service-keys.ts",
+    "dev:reports": "tsx services/report-release/src/main.ts",
+    "fixtures:generate": "tsx scripts/generate-demo-fixtures.ts"
   },
   "devDependencies": {
     "@biomejs/biome": "^2.5.12",

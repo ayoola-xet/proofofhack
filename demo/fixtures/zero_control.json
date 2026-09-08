@@ -1,0 +1,12 @@
+{
+  "schemaVersion": "1",
+  "manifestVersion": "1",
+  "caseId": "0x09767413ef476217a9d2a1918c8805b2056af47361138220d0982e61883cb4d7",
+  "expectedAssets": "100000000",
+  "observedAssets": "100000000",
+  "salt": "0xdc54562fe0a4a79bee3b4c7cb86927554d425c4b819137ac98da305a36b5a125",
+  "merkleProof": [
+    "0x21bdb0b50769af75285966b5240c61e4b4215d1e53609d17e9e2e96ec890b5de",
+    "0xd6fcee354c9a5b796098ae244e553850899ca1ec6596129f2a469bbfafeeaf68"
+  ]
+}

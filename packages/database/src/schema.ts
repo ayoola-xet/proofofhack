@@ -185,6 +185,13 @@ export const fixtureManifests = pgTable(
   "fixture_manifests",
   {
     id: uuid("id").primaryKey().defaultRandom(),
+    organizationId: uuid("organization_id")
+      .notNull()
+      .references(() => organizations.id),
+    signingWalletId: uuid("signing_wallet_id")
+      .notNull()
+      .references(() => wallets.id),
+    status: text("status").notNull().default("PREPARED"),
     root: text("root").notNull().unique(),
     versionNumber: text("version_number").notNull(),
     ownerSignature: text("owner_signature").notNull(),
@@ -484,4 +491,22 @@ export const idempotencyRecords = pgTable(
     ...dates(),
   },
   (t) => [primaryKey({ columns: [t.actorId, t.route, t.key] })],
+);
+
+export const organizationKeys = pgTable(
+  "organization_keys",
+  {
+    keyId: text("key_id").primaryKey(),
+    organizationId: uuid("organization_id")
+      .notNull()
+      .references(() => organizations.id),
+    publicKey: text("public_key").notNull(),
+    status: text("status").notNull().default("ACTIVE"),
+    ...dates(),
+  },
+  (t) => [
+    uniqueIndex("one_active_organization_key")
+      .on(t.organizationId)
+      .where(sql`${t.status}='ACTIVE'`),
+  ],
 );

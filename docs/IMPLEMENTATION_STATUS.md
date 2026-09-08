@@ -7,13 +7,13 @@ The full submission objective remains active. Live Graph indexing and the initia
 | Package | Status | Evidence |
 | --- | --- | --- |
 | WP-01 Foundation | IN_PROGRESS | Workspace, local infrastructure, and provider preflight created. Type check passes. |
-| WP-02 Domain and database | IN_PROGRESS | Strict schemas, policy hashing, 27 database tables, and two applied migrations. OpenAPI generation pending. |
-| WP-03 Escrow | IN_PROGRESS | Contract implemented. Financial suite: 17 passing tests, including 256-run fuzz cases. Arc Testnet deployment verified. API integration pending. |
+| WP-02 Domain and database | IN_PROGRESS | Strict schemas, policy hashing, 28 database tables, and five applied migrations. OpenAPI generation pending. |
+| WP-03 Escrow | IN_PROGRESS | Contract implemented. Financial suite: 17 passing tests, including 256-run fuzz cases. Arc Testnet deployment verified. Signed fixture manifests and owner-approved bounty drafts are available through the API. Funding integration remains pending. |
 | WP-04 Budget controller | IN_PROGRESS | Exact policy approval and cumulative limits implemented and tested locally. Live Circle path pending. |
 | WP-05 Identity and Privy | IN_PROGRESS | VulnProof development app created. Live login UI opens. Server token verification, roles, and transactional retries implemented. The user reward wallet is verified. A live outgoing transfer passes finality and exact-event checks. Organization wallet policies remain pending. |
 | WP-06 Graph data | IN_PROGRESS | One shared schema indexes three live vaults. The Studio query returns fresh observations without indexing errors. |
 | WP-07 Coverage intelligence | IN_PROGRESS | Deterministic coverage calculations, source checks, and exact approved policy selection pass tests. Durable database updates and rule-based explanations work. Model explanations are pending. |
-| WP-08 Confidential service | IN_PROGRESS | Fixed fixture assessment, atomic encrypted file storage, service tokens, and payment-gated report access implemented. Separate service deployment pending. |
+| WP-08 Confidential service | IN_PROGRESS | Fixed fixture assessment, atomic encrypted file storage, service tokens, and payment-gated report access implemented. The report service runs separately on port 4190 and creates organization keys. Evidence verification and plaintext report delivery are not connected yet. |
 | WP-09 Settlement worker | NOT_STARTED | No evidence yet |
 | WP-10 Circle agent | IN_PROGRESS | Circle CLI 1.0.0 is authenticated. The agent wallet received test USDC and deployed the escrow. Bounded funding remains pending. |
 | WP-11 Application | IN_PROGRESS | Responsive workspace, live Privy login UI, organization creation, program creation, and database views. Vault registration, coverage policy approval, and live source decisions work. Financial actions pending. |
@@ -37,7 +37,7 @@ Privy app configuration is stored in the ignored .env file with mode 0600. Graph
 
 ## Current verification
 
-- Pass 41 TypeScript tests. These tests include real PostgreSQL transactions, concurrent retries, current role checks, encrypted storage integrity, and exact payment gating.
+- Pass 45 TypeScript tests. These tests include real PostgreSQL transactions, concurrent retries, current role checks, encrypted storage integrity, and exact payment gating.
 - Pass 17 Solidity tests from the contract stage.
 - Pass TypeScript type checking.
 - Pass the first production frontend build. Rebuild after later changes.
@@ -76,3 +76,12 @@ The final transfer hash is `0x40db171697dbaa32160e5816531b1ff302d6baabd268f89dfe
 Direct Arc RPC calls fail in the user's browser. The app uses a bounded Arc RPC relay. Read calls use an allowlist. A signed transfer must match a saved sender, nonce, chain, token, and calldata. The relay saves its hash before broadcast. A lost provider response leaves the intent in SUBMITTED state. The app can check the saved hash again. It does not create a new transfer to recover from that failure.
 
 A final transaction requires a canonical block, the finalized head, and the exact USDC Transfer event. Organization wallets, provider spending policies, bounty funding, and confidential settlement still need implementation.
+
+## Signed bounty preparation
+
+The API prepares three synthetic cases for each manifest. The owner signs the exact manifest message with a verified Privy wallet. A draft binds the signed root, source context, verifier code hash, verifier configuration, signers, organization report key, refund wallet, reward, and deadlines. The refund wallet must belong to the organization. A personal wallet cannot satisfy that requirement.
+
+The database rejects changes to signed manifests, approved bounty terms, and approved coverage policy versions. Four integration tests cover the signed-manifest and draft-approval flow. They use isolated test identities and a test organization wallet. A live organization wallet and live bounty funding remain pending.
+
+The report service has its own identity and key directory. It authenticates API requests before creating an organization key. Concurrent requests return one public key. The API does not receive the private report key. Start this service with `pnpm dev:reports` after `pnpm setup:keys`.
+

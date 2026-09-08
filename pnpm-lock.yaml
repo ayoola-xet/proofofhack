@@ -132,9 +132,13 @@ importers:
 
   packages/erc4626-coverage-data: {}
 
+  packages/fixture-manifest: {}
+
   packages/privy: {}
 
   packages/service-auth: {}
+
+  packages/service-config: {}
 
   services/api: {}
 

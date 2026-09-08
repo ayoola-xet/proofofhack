@@ -1,0 +1,20 @@
+{
+  "schemaVersion": "1",
+  "synthetic": true,
+  "root": "0xcdbff54ef82c440b87f7a5f3bda551e646a854763452dce507066257d8a2c6ac",
+  "cases": [
+    {
+      "label": "QUALIFYING",
+      "leafHash": "0x21bdb0b50769af75285966b5240c61e4b4215d1e53609d17e9e2e96ec890b5de"
+    },
+    {
+      "label": "ZERO_CONTROL",
+      "leafHash": "0x4b0abafc259a6bb0369840d3a709f2ee674574fa05bc07958a0c1127618fc707"
+    },
+    {
+      "label": "BELOW_THRESHOLD",
+      "leafHash": "0xd6fcee354c9a5b796098ae244e553850899ca1ec6596129f2a469bbfafeeaf68"
+    }
+  ],
+  "minimumDiscrepancy": "1000000"
+}

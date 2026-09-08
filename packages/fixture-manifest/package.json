@@ -1,0 +1,5 @@
+{
+  "name": "@vulnproof/fixture-manifest",
+  "private": true,
+  "type": "module"
+}

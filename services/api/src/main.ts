@@ -1,3 +1,6 @@
+import { address } from "../../../packages/domain/src/index.ts";
+import { InternalClient } from "../../../packages/service-auth/src/http.ts";
+import { loadPublicConfig, loadTestnetSecret } from "../../../packages/service-config/src/index.ts";
 import "dotenv/config";
 import { readFile } from "node:fs/promises";
 import { createRemoteJWKSet } from "jose";
@@ -32,7 +35,30 @@ const auth =
             ),
           ),
       );
+const bountyServices =
+  process.env.SERVICE_PUBLIC_CONFIG && process.env.ESCROW_ADDRESS
+    ? {
+        publicConfig: await loadPublicConfig(process.env.SERVICE_PUBLIC_CONFIG),
+        escrow: address.parse(process.env.ESCROW_ADDRESS),
+        release: new InternalClient(
+          process.env.REPORT_INTERNAL_URL ?? "http://127.0.0.1:4190",
+          "api",
+          "report-release",
+          z
+            .string()
+            .startsWith("-----BEGIN PRIVATE KEY-----")
+            .parse(
+              (
+                await loadTestnetSecret(
+                  process.env.API_IDENTITY_KEY ?? ".local/keys/api-identity.json",
+                )
+              ).privateKey,
+            ),
+        ),
+      }
+    : undefined;
 const app = await createApp({
+  bountyServices,
   pool,
   auth,
   appEnv,

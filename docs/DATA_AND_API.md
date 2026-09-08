@@ -347,3 +347,18 @@ The following routes extend the version 1 API. All paths have the `/api/v1` pref
 The RPC relay does not receive user private keys. A raw signed transaction supplies its own sender authorization. The relay checks that sender against a saved intent before it broadcasts. Other mutation routes require the user's current access token and an idempotency key.
 
 Wallet transfer states are AWAITING_SIGNATURE, SUBMITTED, BROADCAST, CONFIRMED, and FAILED. SUBMITTED means that the signed transaction hash is saved. It does not establish that Arc accepted the broadcast.
+
+## Signed fixture and bounty preparation routes
+
+| Route | Caller | Result |
+| --- | --- | --- |
+| `GET /verifier-config` | Signed-in user | Public verifier keys, code hash, and scope. |
+| `POST /organizations/:id/report-key` | Owner | One organization public report key. |
+| `POST /organizations/:id/fixture-manifests/prepare` | Owner | Three synthetic fixture records, commitments, and the exact message to sign. |
+| `POST /fixture-manifests/:id/sign` | Preparing owner | Verify the signature and freeze the manifest. Require If-Match. |
+| `GET /organizations/:id/fixture-manifests` | Member | Prepared and signed manifest metadata. |
+| `POST /programs/:id/bounty-drafts` | Owner or reviewer | Draft with canonical policy hash. Require an organization refund wallet. |
+| `GET /organizations/:id/bounty-drafts` | Member | Organization draft records. |
+| `POST /bounty-drafts/:id/approve` | Owner | Immutable approval of the exact hash. Require If-Match. |
+
+All paths have the `/api/v1` prefix. The preparation response contains public synthetic demo fixtures. These records are not user-submitted confidential evidence. Client code must encrypt claim evidence before it sends an upload.

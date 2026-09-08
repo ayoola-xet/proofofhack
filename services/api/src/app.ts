@@ -7,6 +7,7 @@ import { z } from "zod";
 import { DomainError, organizationHash, role, uint } from "../../../packages/domain/src/index.ts";
 import type { WalletIdentityProvider } from "../../../packages/privy/src/wallets.ts";
 import type { AuthProvider } from "./auth.ts";
+import { type BountyServices, registerBountyRoutes } from "./bounty-routes.ts";
 import { expectedVersion, first, idParams, member, mutate, pageParams } from "./context.ts";
 import { registerCoverageRoutes } from "./coverage-routes.ts";
 import { registerReadRoutes } from "./read-routes.ts";
@@ -19,6 +20,7 @@ export type ApiOptions = {
   appEnv: "local" | "arc-testnet";
   webOrigin: string;
   walletIdentity?: WalletIdentityProvider;
+  bountyServices?: BountyServices;
 };
 const nameSchema = z.string().trim().min(2).max(80);
 export async function createApp(options: ApiOptions) {
@@ -313,6 +315,7 @@ export async function createApp(options: ApiOptions) {
   });
   registerRpcRoutes(app, pool);
   registerReadRoutes(app, pool);
+  registerBountyRoutes(app, pool, options.bountyServices);
   registerCoverageRoutes(app, pool);
   registerWalletRoutes(app, pool, options.walletIdentity);
   return app;

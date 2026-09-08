@@ -15,6 +15,27 @@
       "when": 1788836552963,
       "tag": "0001_busy_loki",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1788840165145,
+      "tag": "0002_greedy_mongu",
+      "breakpoints": true
+    },
+    {
+      "idx": 3,
+      "version": "7",
+      "when": 1788840447745,
+      "tag": "0003_sturdy_morg",
+      "breakpoints": true
+    },
+    {
+      "idx": 4,
+      "version": "7",
+      "when": 1788840496188,
+      "tag": "0004_immutable_approvals",
+      "breakpoints": true
     }
   ]
 }
