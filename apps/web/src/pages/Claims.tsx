@@ -4,6 +4,7 @@ import { Link } from "react-router-dom";
 import { keccak256 } from "viem";
 import { canonicalJson, seal } from "../../../../packages/crypto-envelope/src/index.ts";
 import { fixtureSchema, MAX_EVIDENCE_BYTES } from "../../../../packages/domain/src/index.ts";
+import { verifyReportBytes } from "../../../../packages/report-integrity/src/index.ts";
 import { useApi, useResource, type Wallet } from "../api.ts";
 
 type Fixture = ReturnType<typeof fixtureSchema.parse>;
@@ -207,7 +208,15 @@ export function ClaimSubmission({
     </div>
   );
 }
-export function ReportDownload({ id, mode }: { id: string; mode: "researcher" | "organization" }) {
+export function ReportDownload({
+  id,
+  mode,
+  expectedHash,
+}: {
+  id: string;
+  mode: "researcher" | "organization";
+  expectedHash: string;
+}) {
   const { getAccessToken } = usePrivy();
   const [busy, setBusy] = useState(false),
     [error, setError] = useState("");
@@ -226,7 +235,9 @@ export function ReportDownload({ id, mode }: { id: string; mode: "researcher" | 
         const body = await response.json();
         throw new Error(body.error?.message ?? "The report is not available.");
       }
-      const url = URL.createObjectURL(await response.blob()),
+      const bytes = new Uint8Array(await response.arrayBuffer());
+      verifyReportBytes(bytes, expectedHash);
+      const url = URL.createObjectURL(new Blob([bytes], { type: "application/json" })),
         link = document.createElement("a");
       link.href = url;
       link.download = `vulnproof-report-${id}.json`;
@@ -254,6 +265,7 @@ export function MyClaims() {
       job_state: string;
       outcome: string | null;
       report_id: string | null;
+      report_hash: string | null;
       chain_state: string;
     }[];
   }>("/claims/me");
@@ -284,7 +296,13 @@ export function MyClaims() {
             <small className="mono">{claim.claim_id.slice(0, 14)}…</small>
             <small>{claim.job_state.replaceAll("_", " ")}</small>
           </div>
-          {claim.report_id && <ReportDownload id={claim.report_id} mode="researcher" />}
+          {claim.report_id && claim.report_hash && (
+            <ReportDownload
+              id={claim.report_id}
+              mode="researcher"
+              expectedHash={claim.report_hash}
+            />
+          )}
         </div>
       ))}
     </section>

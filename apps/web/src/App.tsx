@@ -532,7 +532,9 @@ function Reports({ organization }: { organization: Membership | null }) {
               <small className="mono">{short(r.report_hash)}</small>
             </div>
             <Pill>{r.state}</Pill>
-            {r.state === "AVAILABLE" && <ReportDownload id={r.id} mode="organization" />}
+            {r.state === "AVAILABLE" && (
+              <ReportDownload id={r.id} mode="organization" expectedHash={r.report_hash} />
+            )}
           </div>
         ))}
       </section>

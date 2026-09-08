@@ -141,3 +141,7 @@ The worker checks current source and funding records before and after generation
 Seven new tests use a simulated model provider and an isolated database. They cover immutable requests, malicious metadata removal, exact large numbers, access control, rejected model output, provider failure, changed source records, removed members, and the Responses API request shape. These are local integration checks. They do not prove live model behavior or sponsor qualification.
 
 The live model gate remains incomplete. `MODEL_API_KEY` and `MODEL_ID` are empty in the local configuration. The interface states that the model is not configured. The browser remains unavailable while the Mac is locked.
+
+## Report download integrity
+
+The browser now compares downloaded report bytes with the report hash from authenticated metadata. It creates a download only after the hash matches. A unit test changes a byte and verifies rejection. The claim journey tests still pass. This completes the byte-check implementation for PRI-05. The live browser check remains pending.

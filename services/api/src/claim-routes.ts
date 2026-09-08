@@ -179,7 +179,7 @@ export function registerClaimRoutes(
   app.get("/api/v1/claims/me", async (request) => ({
     items: (
       await pool.query(
-        "select c.claim_id,c.bounty_id,c.job_state,c.claimant_address,c.reservation_expiry,r.id as report_id,r.state as report_state,a.outcome,b.chain_state from claims c join bounties b on b.bounty_id=c.bounty_id left join reports r on r.claim_id=c.claim_id left join assessments a on a.claim_id=c.claim_id where c.researcher_user_id=$1 order by c.created_at desc limit 100",
+        "select c.claim_id,c.bounty_id,c.job_state,c.claimant_address,c.reservation_expiry,r.id as report_id,r.state as report_state,r.report_hash,a.outcome,b.chain_state from claims c join bounties b on b.bounty_id=c.bounty_id left join reports r on r.claim_id=c.claim_id left join assessments a on a.claim_id=c.claim_id where c.researcher_user_id=$1 order by c.created_at desc limit 100",
         [request.actor.id],
       )
     ).rows,
