@@ -10,7 +10,7 @@ export function fundingAuthorizationMessage(input: {
   expiresAt: string;
 }) {
   return [
-    "VulnProof bounty funding authorization v1",
+    "ProofOfHack bounty funding authorization v1",
     `Network: Arc Testnet (5042002)`,
     `Reward: ${formatMoney(BigInt(input.policy.reward))} test USDC`,
     `Funding wallet: ${input.walletAddress}`,

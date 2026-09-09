@@ -1,5 +1,5 @@
 specVersion: 1.3.0
-description: Standardized public ERC-4626 observations for VulnProof coverage.
+description: Standardized public ERC-4626 observations for ProofOfHack coverage.
 schema:
   file: ./schema.graphql
 indexerHints:

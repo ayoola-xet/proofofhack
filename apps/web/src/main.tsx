@@ -40,7 +40,7 @@ createRoot(root).render(
       </PrivyProvider>
     ) : (
       <main className="setup">
-        <h1>VulnProof setup</h1>
+        <h1>ProofOfHack setup</h1>
         <p>Set the Privy app ID to enable sign-in.</p>
         <p>No account data is loaded.</p>
       </main>

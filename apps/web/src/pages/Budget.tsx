@@ -180,7 +180,7 @@ function Controller({
         />
         <h3>Policy approvals</h3>
         <p>
-          A draft approval in VulnProof does not grant a controller approval. The owner must also
+          A draft approval in ProofOfHack does not grant a controller approval. The owner must also
           approve the exact policy on chain.
         </p>
         {canManage &&

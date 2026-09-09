@@ -120,7 +120,7 @@ export function ownerAuthorizationMessage(input: {
   expiresAt: string;
 }) {
   return [
-    "VulnProof controller owner authorization v1",
+    "ProofOfHack controller owner authorization v1",
     "Network: Arc Testnet (5042002)",
     ownerCommandDescription(input.command),
     `Controller: ${input.controller}`,

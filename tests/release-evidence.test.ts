@@ -64,7 +64,7 @@ it("Rejects changed event fields, block references, missing logs, and ambiguous 
   expect(expectedEventSchema.safeParse({ ...expected, fields: {} }).success).toBe(false);
 });
 it("Checks exact artifact bytes and rejects paths outside evidence, including symlinks", async () => {
-  const root = await mkdtemp(join(tmpdir(), "vulnproof-evidence-"));
+  const root = await mkdtemp(join(tmpdir(), "proofofhack-evidence-"));
   try {
     await mkdir(join(root, "evidence"));
     await writeFile(join(root, "evidence", "valid.json"), '{"result":"PASS"}\n');

@@ -74,7 +74,7 @@ test("Encrypted claim, final payment, report integrity, and current access at th
       contexts.push(context);
       await context.addInitScript(
         (identity) => {
-          window.__VULNPROOF_E2E_IDENTITY__ = identity;
+          window.__PROOFOFHACK_E2E_IDENTITY__ = identity;
         },
         {
           token: actor.token,

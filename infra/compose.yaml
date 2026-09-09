@@ -2,15 +2,15 @@ services:
   postgres:
     image: postgres:17-alpine
     environment:
-      POSTGRES_USER: vulnproof
-      POSTGRES_PASSWORD: vulnproof_local
-      POSTGRES_DB: vulnproof
+      POSTGRES_USER: proofofhack
+      POSTGRES_PASSWORD: proofofhack_local
+      POSTGRES_DB: proofofhack
     ports:
       - "127.0.0.1:5433:5432"
     volumes:
       - postgres-data:/var/lib/postgresql/data
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U vulnproof -d vulnproof"]
+      test: ["CMD-SHELL", "pg_isready -U proofofhack -d proofofhack"]
       interval: 5s
       timeout: 5s
       retries: 10

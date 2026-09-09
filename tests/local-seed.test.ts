@@ -13,7 +13,7 @@ import { localSeedScope } from "../scripts/local-seed-scope.ts";
 import { createApp } from "../services/api/src/app.ts";
 import { LocalAuthProvider } from "../services/api/src/auth.ts";
 
-const name = `vulnproof_seed_test_${randomUUID().replaceAll("-", "").slice(0, 24)}`;
+const name = `proofofhack_seed_test_${randomUUID().replaceAll("-", "").slice(0, 24)}`;
 const url = new URL(databaseUrl());
 url.pathname = `/${name}`;
 let rpc: string, anvil: ChildProcess | undefined;

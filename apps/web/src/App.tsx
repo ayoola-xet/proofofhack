@@ -41,7 +41,7 @@ function Brand() {
       <span className="brand-mark">
         <ShieldCheck size={23} />
       </span>
-      VulnProof<span className="beta">BETA</span>
+      ProofOfHack<span className="beta">BETA</span>
     </Link>
   );
 }
@@ -269,7 +269,7 @@ export function App() {
           </Routes>
         </main>
         <footer className="workspace-footer">
-          <span>VulnProof · Synthetic fixture evidence</span>
+          <span>ProofOfHack · Synthetic fixture evidence</span>
           <Link to="/trust">
             Trust and data use <ArrowUpRight size={12} />
           </Link>
@@ -662,7 +662,7 @@ function Trust() {
     <>
       <PageTitle
         eyebrow="TRUST AND DATA USE"
-        title="What VulnProof verifies"
+        title="What ProofOfHack verifies"
         description="Know the evidence scope and the service limits."
       />
       <article className="panel prose">

@@ -18,7 +18,7 @@ jobs:
     timeout-minutes: 25
     env:
       APP_ENV: local
-      DATABASE_URL: postgres://vulnproof:vulnproof_local@127.0.0.1:5433/vulnproof
+      DATABASE_URL: postgres://proofofhack:proofofhack_local@127.0.0.1:5433/proofofhack
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
         with:
@@ -34,7 +34,7 @@ jobs:
       - name: Install locked dependencies
         run: pnpm install --frozen-lockfile
       - name: Start the local test database
-        run: docker compose --project-name vulnproof -f infra/compose.yaml up -d --wait
+        run: docker compose --project-name proofofhack -f infra/compose.yaml up -d --wait
       - name: Apply database migrations
         run: pnpm db:migrate
       - name: Check source style
@@ -64,4 +64,4 @@ jobs:
           retention-days: 14
       - name: Stop the test database
         if: always()
-        run: docker compose --project-name vulnproof -f infra/compose.yaml down --volumes
+        run: docker compose --project-name proofofhack -f infra/compose.yaml down --volumes

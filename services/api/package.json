@@ -1,5 +1,5 @@
 {
-  "name": "@vulnproof/api",
+  "name": "@proofofhack/api",
   "private": true,
   "type": "module",
   "scripts": {

@@ -131,7 +131,7 @@ contract BountyEscrow is EIP712, ReentrancyGuard {
     event Paid(bytes32 indexed bountyId, bytes32 indexed claimId, address claimant, address asset, uint256 amount);
     event BountyRefunded(bytes32 indexed bountyId, address refundRecipient, address asset, uint256 amount);
 
-    constructor(IERC20 asset_) EIP712("VulnProof", "1") {
+    constructor(IERC20 asset_) EIP712("ProofOfHack", "1") {
         if (address(asset_) == address(0)) revert InvalidPolicy();
         asset = asset_;
     }

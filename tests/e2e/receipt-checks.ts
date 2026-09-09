@@ -53,7 +53,7 @@ export async function checkBrowserReceipts(
     const downloadEvent = session.page.waitForEvent("download");
     await button.click();
     const download = await downloadEvent;
-    expect(download.suggestedFilename()).toBe(`vulnproof-receipts-${record.id}.csv`);
+    expect(download.suggestedFilename()).toBe(`proofofhack-receipts-${record.id}.csv`);
     const stream = await download.createReadStream(),
       chunks: Buffer[] = [];
     for await (const chunk of stream) chunks.push(Buffer.from(chunk));

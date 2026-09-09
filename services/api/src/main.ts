@@ -112,4 +112,4 @@ await app.listen({
   port: Number(process.env.API_PORT ?? 4187),
   host: appEnv === "local" ? "127.0.0.1" : "0.0.0.0",
 });
-process.stdout.write(`VulnProof API is ready (${appEnv}).\n`);
+process.stdout.write(`ProofOfHack API is ready (${appEnv}).\n`);

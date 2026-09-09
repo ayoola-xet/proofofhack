@@ -47,7 +47,7 @@ const admin = connectDatabase().pool,
   url = new URL(databaseUrl());
 url.pathname = `/${name}`;
 const { pool, db } = connectDatabase(url.toString()),
-  directory = await mkdtemp(join(tmpdir(), "vulnproof-claims-"));
+  directory = await mkdtemp(join(tmpdir(), "proofofhack-claims-"));
 const accounts = [
   privateKeyToAccount(generatePrivateKey()),
   privateKeyToAccount(generatePrivateKey()),

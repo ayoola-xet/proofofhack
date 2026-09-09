@@ -166,7 +166,7 @@ export const assessmentFields = [
   { name: "validUntil", type: "uint64" },
 ] as const;
 export const signingDomain = (chainId: number, verifyingContract: Address) =>
-  ({ name: "VulnProof", version: "1", chainId, verifyingContract }) as const;
+  ({ name: "ProofOfHack", version: "1", chainId, verifyingContract }) as const;
 
 export const fixtureSchema = z.strictObject({
   schemaVersion: z.literal("1"),
@@ -199,7 +199,7 @@ export function formatMoney(value: bigint, decimals = 6): string {
   return `${value / scale}${remainder ? `.${remainder}` : ""}`;
 }
 export const organizationHash = (uuid: string): Hex =>
-  keccak256(toHex(`VulnProof:organization:v1:${z.uuid().parse(uuid).toLowerCase()}`));
+  keccak256(toHex(`ProofOfHack:organization:v1:${z.uuid().parse(uuid).toLowerCase()}`));
 
 export class DomainError extends Error {
   constructor(

@@ -8,7 +8,7 @@ import { setTimeout as delay } from "node:timers/promises";
 const args = process.argv.slice(2);
 if (args.includes("--help")) {
   process.stdout.write(
-    "Start the configured VulnProof services with pnpm dev. Use --check to check settings and ports without starting services.\n",
+    "Start the configured ProofOfHack services with pnpm dev. Use --check to check settings and ports without starting services.\n",
   );
   process.exit(0);
 }
@@ -120,7 +120,7 @@ for (const signal of ["SIGINT", "SIGTERM"] as const)
     void stop(0);
   });
 process.stdout.write(
-  "Starting the configured VulnProof services. Press Ctrl+C to stop this group.\n",
+  "Starting the configured ProofOfHack services. Press Ctrl+C to stop this group.\n",
 );
 for (const service of services) {
   const argv =

@@ -1,4 +1,4 @@
-import { readFile, writeFile } from "node:fs/promises";
+import { mkdir, readFile, writeFile } from "node:fs/promises";
 import SwaggerParser from "@apidevtools/swagger-parser";
 import { apiOperations } from "../services/api/src/api-contract.ts";
 import { buildOpenApi } from "./openapi.ts";
@@ -42,6 +42,7 @@ if (args.includes("--check")) {
   } else
     process.stdout.write("The generated API contract matches the current schemas and routes.\n");
 } else {
+  await mkdir("docs", { recursive: true });
   await writeFile(path, output);
   await writeFile(routesPath, routes);
   process.stdout.write(`Generated ${path}. No database or provider access was used.\n`);

@@ -157,7 +157,7 @@ export function BountyWorkspace({
     const url = URL.createObjectURL(blob),
       link = document.createElement("a");
     link.href = url;
-    link.download = `vulnproof-synthetic-cases-${prepared.id}.json`;
+    link.download = `proofofhack-synthetic-cases-${prepared.id}.json`;
     link.click();
     setTimeout(() => URL.revokeObjectURL(url), 1000);
   }

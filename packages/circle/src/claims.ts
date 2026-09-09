@@ -34,7 +34,7 @@ export const runCircle: CircleRunner = async (args) => {
   }
 };
 export function circleRequestId(key: string) {
-  const h = createHash("sha256").update(`vulnproof:circle:v1:${key}`).digest("hex");
+  const h = createHash("sha256").update(`proofofhack:circle:v1:${key}`).digest("hex");
   return `${h.slice(0, 8)}-${h.slice(8, 12)}-5${h.slice(13, 16)}-a${h.slice(17, 20)}-${h.slice(20, 32)}`;
 }
 export function circleClaimArguments(input: ClaimCall) {

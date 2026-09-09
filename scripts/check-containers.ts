@@ -10,7 +10,7 @@ const root = resolve(".local/container-check");
 const composeArgs = [
   "compose",
   "--project-name",
-  "vulnproof-container-check",
+  "proofofhack-container-check",
   "--env-file",
   `${root}/compose.env`,
   "-f",
@@ -200,9 +200,9 @@ const migrations = compose([
   "postgres",
   "psql",
   "-U",
-  "vulnproof",
+  "proofofhack",
   "-d",
-  "vulnproof",
+  "proofofhack",
   "-Atc",
   "select count(*) from drizzle.__drizzle_migrations",
 ]).trim();

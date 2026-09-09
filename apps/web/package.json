@@ -1,5 +1,5 @@
 {
-  "name": "@vulnproof/web",
+  "name": "@proofofhack/web",
   "private": true,
   "type": "module",
   "scripts": {

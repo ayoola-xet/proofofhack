@@ -18,7 +18,7 @@ This is a new shared schema for ERC-4626 coverage context. It does not claim com
 
 The deterministic coverage service identifies a funding gap. The Circle allocation evidence saves the actual Graph source reference and source time used for an approved allocation. See [the live allocation](../arc/budget-allocation-9c60762d-cd1d-4fad-ace3-b45f971d9c6e.json).
 
-The coverage assistant can explain a saved calculation and cite its source records. Its model has no transaction tools or report access. Local tests check malicious metadata, stale records, invalid citations, and changed calculations. **The live model check remains incomplete.** A deterministic allocation does not prove a live model response. See [AI use and model checks](../../docs/AI_USAGE.md).
+The coverage assistant can explain a saved calculation and cite its source records. Its model has no transaction tools or report access. Local tests check malicious metadata, stale records, invalid citations, and changed calculations. **The live model check remains incomplete.** A deterministic allocation does not prove a live model response.
 
 ## Run and inspect
 

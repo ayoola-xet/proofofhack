@@ -4,7 +4,7 @@
   "scope": "FINAL_EXPIRY_AND_REFUND_RECEIPT_RECOVERY",
   "startedAt": "2026-09-08T10:18:00.454000+00:00",
   "recordedAt": "2026-09-08T10:22:17.681389+00:00",
-  "command": "pnpm test --reporter=json --outputFile=/tmp/vulnproof-recovery-tests.json",
+  "command": "pnpm test --reporter=json --outputFile=/tmp/proofofhack-recovery-tests.json",
   "success": true,
   "totalTests": 117,
   "passedTests": 117,

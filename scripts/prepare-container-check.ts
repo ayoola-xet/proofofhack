@@ -32,7 +32,7 @@ async function save(name: string, value: string) {
 }
 await save("database-password", randomBytes(32).toString("hex"));
 const password = (await readFile(`${secrets}/database-password`, "utf8")).trim();
-const database = `DATABASE_URL=postgres://vulnproof:${password}@postgres:5432/vulnproof\n`;
+const database = `DATABASE_URL=postgres://proofofhack:${password}@postgres:5432/proofofhack\n`;
 await save("database.env", database);
 await save(
   "api.env",

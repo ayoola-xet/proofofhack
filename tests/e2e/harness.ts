@@ -68,7 +68,7 @@ async function port() {
   });
 }
 export async function startBrowserHarness() {
-  const name = `vulnproof_seed_e2e_${randomUUID().replaceAll("-", "").slice(0, 24)}`;
+  const name = `proofofhack_seed_e2e_${randomUUID().replaceAll("-", "").slice(0, 24)}`;
   const database = new URL(databaseUrl());
   database.pathname = `/${name}`;
   const rpc = `http://127.0.0.1:${await port()}`;

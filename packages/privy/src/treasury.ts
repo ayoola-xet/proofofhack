@@ -168,7 +168,7 @@ export class PrivyTreasury implements TreasuryProvider {
   async createPolicy(key: string, config: TreasuryConfiguration) {
     const policy = await this.client.policies().create({
       idempotency_key: key,
-      name: `VulnProof Arc Treasury ${key.slice(0, 8)}`,
+      name: `ProofOfHack Arc Treasury ${key.slice(0, 8)}`,
       version: "1.0",
       chain_type: "ethereum",
       owner: { public_key: this.authorization.publicKey },
@@ -180,7 +180,7 @@ export class PrivyTreasury implements TreasuryProvider {
     const wallet = await this.client.wallets().create({
       idempotency_key: key,
       external_id: key,
-      display_name: `VulnProof treasury ${key.slice(0, 8)}`,
+      display_name: `ProofOfHack treasury ${key.slice(0, 8)}`,
       chain_type: "ethereum",
       owner: { public_key: this.authorization.publicKey },
       policy_ids: [policyId],

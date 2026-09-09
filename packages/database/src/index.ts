@@ -5,7 +5,7 @@ import * as schema from "./schema.ts";
 export function databaseUrl(): string {
   if (process.env.DATABASE_URL) return process.env.DATABASE_URL;
   if (!process.env.APP_ENV || process.env.APP_ENV === "local")
-    return "postgres://vulnproof:vulnproof_local@127.0.0.1:5433/vulnproof";
+    return "postgres://proofofhack:proofofhack_local@127.0.0.1:5433/proofofhack";
   throw new Error("DATABASE_URL is required outside the local environment.");
 }
 export function connectDatabase(url = databaseUrl()) {

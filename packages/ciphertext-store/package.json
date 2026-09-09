@@ -1,5 +1,5 @@
 {
-  "name": "@vulnproof/ciphertext-store",
+  "name": "@proofofhack/ciphertext-store",
   "private": true,
   "type": "module",
   "exports": "./src/index.ts"

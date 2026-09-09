@@ -24,7 +24,7 @@ export class PrivyAuthProvider implements AuthProvider {
         verification_key: this.verificationKey,
       });
       if (!session.user_id.startsWith("did:privy:")) throw new Error("Invalid subject.");
-      return { subject: session.user_id, displayName: "VulnProof member" };
+      return { subject: session.user_id, displayName: "ProofOfHack member" };
     } catch {
       throw new DomainError("UNAUTHENTICATED", "Sign in again.", 401);
     }

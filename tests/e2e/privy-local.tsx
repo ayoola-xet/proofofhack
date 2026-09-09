@@ -3,7 +3,7 @@ import { createContext, type ReactNode, useCallback, useContext, useMemo, useSta
 type Identity = { token: string; subject: string; address: string; displayName: string };
 declare global {
   interface Window {
-    __VULNPROOF_E2E_IDENTITY__?: Identity;
+    __PROOFOFHACK_E2E_IDENTITY__?: Identity;
   }
 }
 type Session = {
@@ -17,18 +17,18 @@ const SessionContext = createContext<Session | null>(null);
 export function PrivyProvider({ children }: { children: ReactNode; [key: string]: unknown }) {
   if (!import.meta.env.DEV || !["127.0.0.1", "localhost"].includes(window.location.hostname))
     throw new Error("The local browser identity adapter cannot run here.");
-  const identity = window.__VULNPROOF_E2E_IDENTITY__;
+  const identity = window.__PROOFOFHACK_E2E_IDENTITY__;
   if (!identity?.subject.startsWith("local:seed:"))
     throw new Error("A local seed identity is required.");
   const [authenticated, setAuthenticated] = useState(
-    () => sessionStorage.getItem("vulnproof-local-e2e-session") === "active",
+    () => sessionStorage.getItem("proofofhack-local-e2e-session") === "active",
   );
   const login = useCallback(() => {
-    sessionStorage.setItem("vulnproof-local-e2e-session", "active");
+    sessionStorage.setItem("proofofhack-local-e2e-session", "active");
     setAuthenticated(true);
   }, []);
   const logout = useCallback(async () => {
-    sessionStorage.removeItem("vulnproof-local-e2e-session");
+    sessionStorage.removeItem("proofofhack-local-e2e-session");
     setAuthenticated(false);
   }, []);
   const getAccessToken = useCallback(

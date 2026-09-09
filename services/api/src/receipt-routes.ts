@@ -188,7 +188,7 @@ export function registerReceiptRoutes(
       throw new DomainError("EXPORT_INTEGRITY", "The export failed its integrity check.", 503);
     return reply
       .header("content-type", "text/csv; charset=utf-8")
-      .header("content-disposition", `attachment; filename="vulnproof-receipts-${row.id}.csv"`)
+      .header("content-disposition", `attachment; filename="proofofhack-receipts-${row.id}.csv"`)
       .header("x-content-sha256", row.content_hash)
       .send(row.csv);
   });

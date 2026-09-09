@@ -56,7 +56,7 @@ export function createManifestCases(salts: readonly Hex[], caseIds: readonly Hex
   };
 }
 export function manifestMessage(input: unknown) {
-  return `VulnProof synthetic fixture manifest v1\n${canonicalJson(manifestSchema.parse(input))}`;
+  return `ProofOfHack synthetic fixture manifest v1\n${canonicalJson(manifestSchema.parse(input))}`;
 }
 export async function verifyManifest(input: unknown, signature: Hex) {
   const manifest = manifestSchema.parse(input);

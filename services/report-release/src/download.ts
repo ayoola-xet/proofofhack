@@ -87,7 +87,7 @@ export function createReportDownloadApp(options: {
       await reportAccess(options.pool, actor.id, id, options.mode);
       return reply
         .type("application/json")
-        .header("Content-Disposition", `attachment; filename="vulnproof-report-${id}.json"`)
+        .header("Content-Disposition", `attachment; filename="proofofhack-report-${id}.json"`)
         .send(Buffer.from(plaintext));
     } finally {
       plaintext.fill(0);

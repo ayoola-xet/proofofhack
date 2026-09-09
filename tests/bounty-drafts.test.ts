@@ -13,7 +13,7 @@ import { LocalAuthProvider } from "../services/api/src/auth.ts";
 import { createReleaseApp } from "../services/report-release/src/app.ts";
 
 const { pool } = connectDatabase();
-const directory = await mkdtemp(join(tmpdir(), "vulnproof-keys-"));
+const directory = await mkdtemp(join(tmpdir(), "proofofhack-keys-"));
 const account = privateKeyToAccount(`0x${randomBytes(32).toString("hex")}` as Hex);
 const ids = ["Owner", "Reviewer", "Other"].map((displayName) => ({
   subject: `local:test:${randomUUID()}`,

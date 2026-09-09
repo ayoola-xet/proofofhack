@@ -4,7 +4,7 @@ Selected tracks: SP-03, SP-04, and SP-05. Track rules were checked on 8 Septembe
 
 ## Problem and architecture
 
-VulnProof binds a fixed reward to a signed synthetic accounting case. Arc holds the reward and records reservation, qualification, payment, and refund. An organization can read its report copy only after final payment.
+ProofOfHack binds a fixed reward to a signed synthetic accounting case. Arc holds the reward and records reservation, qualification, payment, and refund. An organization can read its report copy only after final payment.
 
 ```mermaid
 flowchart LR
@@ -46,7 +46,7 @@ The Circle CLI integration uses version 1.0.0 with a committed patch. It encodes
 
 The working app currently runs locally against Arc Testnet. Chain ID: 5042002. Escrow: `0x01742711ee569a0186349e54cffe805209808292`. Controller: `0x999c73e9bb9f70013f7a20cddd97c9633b094dda`.
 
-**Mainnet readiness is NOT READY.** The sponsor requires deployment or readiness by September 30. See [the readiness record](../../docs/MAINNET_READINESS.md). Hosted services, independent review, production configuration, and operational checks remain open. Testnet transactions do not complete this track.
+**Mainnet readiness is NOT READY.** The sponsor requires deployment or readiness by September 30. Hosted services, independent review, production configuration, and operational checks remain open. Testnet transactions do not complete this track.
 
 ## Run and inspect
 

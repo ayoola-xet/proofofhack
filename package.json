@@ -1,5 +1,5 @@
 {
-  "name": "vulnproof",
+  "name": "proofofhack",
   "version": "0.1.0",
   "private": true,
   "type": "module",
@@ -8,7 +8,7 @@
     "node": ">=22.14"
   },
   "scripts": {
-    "build": "pnpm openapi:check && pnpm -r --if-present build",
+    "build": "pnpm openapi:generate && pnpm -r --if-present build",
     "typecheck": "tsc --noEmit",
     "lint": "biome check apps packages services scripts tests infra package.json biome.json tsconfig.json vitest.config.ts playwright.config.ts",
     "format": "biome check --write apps packages services scripts tests",
@@ -20,7 +20,7 @@
     "db:migrate": "tsx scripts/migrate.ts",
     "dev:api": "tsx services/api/src/main.ts",
     "dev:worker": "tsx services/worker/src/main.ts",
-    "dev:web": "pnpm --filter @vulnproof/web dev",
+    "dev:web": "pnpm --filter @proofofhack/web dev",
     "setup:keys": "tsx scripts/setup-service-keys.ts",
     "dev:reports": "tsx services/report-release/src/main.ts",
     "dev:verifier": "tsx services/verifier/src/main.ts",

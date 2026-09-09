@@ -18,8 +18,8 @@ The first indexed block is 25929600. This is a bounded observation window. It is
 
 ## Build
 
-1. Run `pnpm --filter @vulnproof/erc4626-coverage-data codegen`.
-2. Run `pnpm --filter @vulnproof/erc4626-coverage-data build`.
+1. Run `pnpm --filter @proofofhack/erc4626-coverage-data codegen`.
+2. Run `pnpm --filter @proofofhack/erc4626-coverage-data build`.
 3. Set `GRAPH_DEPLOY_KEY` in the ignored environment file.
 4. Run `pnpm exec tsx scripts/deploy-graph.ts v0.1.0` from the repository root.
 5. Run `pnpm exec tsx scripts/capture-graph-evidence.ts` after indexing completes.

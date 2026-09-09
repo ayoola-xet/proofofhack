@@ -1,5 +1,5 @@
 {
-  "name": "@vulnproof/report-release",
+  "name": "@proofofhack/report-release",
   "private": true,
   "type": "module"
 }

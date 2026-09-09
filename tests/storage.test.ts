@@ -10,7 +10,7 @@ import { serviceToken, verifyServiceToken } from "../packages/service-auth/src/i
 
 describe("Bounded confidential storage", () => {
   it("Checks integrity, repeat writes, path isolation, and deletion", async () => {
-    const root = await mkdtemp(join(tmpdir(), "vulnproof-store-"));
+    const root = await mkdtemp(join(tmpdir(), "proofofhack-store-"));
     const store = new FileCiphertextStore(root, 256);
     const id = randomUUID();
     const bytes = new Uint8Array([4, 8, 15, 16, 23, 42]);

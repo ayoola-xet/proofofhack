@@ -140,7 +140,7 @@ function ReceiptWorkspace({ base, researcher }: { base: string; researcher: bool
       const url = URL.createObjectURL(new Blob([bytes], { type: "text/csv;charset=utf-8" })),
         link = document.createElement("a");
       link.href = url;
-      link.download = `vulnproof-receipts-${item.id}.csv`;
+      link.download = `proofofhack-receipts-${item.id}.csv`;
       link.click();
       setTimeout(() => URL.revokeObjectURL(url), 1000);
     } catch (e) {

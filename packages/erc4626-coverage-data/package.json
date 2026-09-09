@@ -1,5 +1,5 @@
 {
-  "name": "@vulnproof/erc4626-coverage-data",
+  "name": "@proofofhack/erc4626-coverage-data",
   "version": "0.1.0",
   "private": true,
   "type": "module",

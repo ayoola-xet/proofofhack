@@ -161,7 +161,7 @@ function WalletTransfers({ wallet }: { wallet: Wallet }) {
       method: "POST",
       body: { transactionHash: hash },
     });
-    localStorage.removeItem(`vulnproof:transfer:${intent.id}`);
+    localStorage.removeItem(`proofofhack:transfer:${intent.id}`);
     transfers.refresh();
     balance.refresh();
   }
@@ -169,7 +169,7 @@ function WalletTransfers({ wallet }: { wallet: Wallet }) {
     setBusy(intent.id);
     setError("");
     try {
-      const cached = localStorage.getItem(`vulnproof:transfer:${intent.id}`);
+      const cached = localStorage.getItem(`proofofhack:transfer:${intent.id}`);
       if (cached && /^0x[0-9a-fA-F]{64}$/.test(cached)) {
         await reconcile(intent, cached as `0x${string}`);
         return;
@@ -179,7 +179,7 @@ function WalletTransfers({ wallet }: { wallet: Wallet }) {
         { to: tx.to, data: tx.data, chainId: tx.chainId, nonce: tx.nonce, value: 0n },
         { address: tx.from, uiOptions: { showWalletUIs: true } },
       );
-      localStorage.setItem(`vulnproof:transfer:${intent.id}`, result.hash);
+      localStorage.setItem(`proofofhack:transfer:${intent.id}`, result.hash);
       await reconcile(intent, result.hash);
       setNotice("Transaction sent. Check its final status below.");
     } catch (e) {

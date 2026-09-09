@@ -367,7 +367,7 @@ export async function buildOpenApi() {
     openapi: "3.1.1",
     jsonSchemaDialect: "https://json-schema.org/draft/2020-12/schema",
     info: {
-      title: "VulnProof application API",
+      title: "ProofOfHack application API",
       version: "0.1.0",
       description:
         "Generated from implemented request schemas and checked against registered routes. Arc Testnet only for live funds. Fixture verification uses FIXTURE_ONLY and TRUSTED_SERVICE. Private report downloads and internal service routes are separate services. Response projections without a dedicated DTO schema remain open objects; this contract does not promise undocumented fields.",

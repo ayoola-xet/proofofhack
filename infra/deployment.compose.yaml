@@ -1,5 +1,5 @@
 x-service: &service
-  image: vulnproof-service:${RELEASE_TAG:-local}
+  image: proofofhack-service:${RELEASE_TAG:-local}
   build:
     context: ..
     dockerfile: infra/Dockerfile
@@ -36,15 +36,15 @@ services:
   postgres:
     image: postgres:17-alpine@sha256:18cfe3ef5e6815560c98237d6216d1e5119702fb0f3894c8785dd58b8bbe5d73
     environment:
-      POSTGRES_USER: vulnproof
-      POSTGRES_DB: vulnproof
+      POSTGRES_USER: proofofhack
+      POSTGRES_DB: proofofhack
       POSTGRES_PASSWORD_FILE: /run/secrets/database-password
     secrets: [database-password]
     volumes: [database:/var/lib/postgresql/data]
     networks: [services]
     restart: unless-stopped
     healthcheck:
-      test: [CMD-SHELL, "pg_isready -U vulnproof -d vulnproof"]
+      test: [CMD-SHELL, "pg_isready -U proofofhack -d proofofhack"]
       interval: 5s
       timeout: 5s
       retries: 15
@@ -129,7 +129,7 @@ services:
       - ${DEPLOY_DATA:?Set DEPLOY_DATA}/evidence:/data/evidence
       - ${DEPLOY_DATA:?Set DEPLOY_DATA}/reports:/data/reports
   gateway:
-    image: vulnproof-web:${RELEASE_TAG:-local}
+    image: proofofhack-web:${RELEASE_TAG:-local}
     build:
       context: ..
       dockerfile: infra/Dockerfile

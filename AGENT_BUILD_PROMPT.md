@@ -1,6 +1,6 @@
-# VulnProof implementation prompt
+# ProofOfHack implementation prompt
 
-Build VulnProof from the specification package in this repository. Deliver a working application, contracts, live provider integrations where credentials and authorization are available, tests, and reproducible deployment instructions.
+Build ProofOfHack from the specification package in this repository. Deliver a working application, contracts, live provider integrations where credentials and authorization are available, tests, and reproducible deployment instructions.
 
 ## Read before editing
 

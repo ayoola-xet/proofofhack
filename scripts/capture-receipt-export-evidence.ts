@@ -18,7 +18,7 @@ import {
 const path = z.string().min(1).parse(process.argv[2]);
 const exportId = z.uuid().parse(
   basename(path)
-    .replace(/^vulnproof-receipts-/, "")
+    .replace(/^proofofhack-receipts-/, "")
     .replace(/\.csv$/, ""),
 );
 const { pool } = connectDatabase();

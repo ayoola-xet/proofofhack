@@ -1,6 +1,6 @@
 import type { PoolClient } from "pg";
 
-export const ciphertextLock = "vulnproof:ciphertext-maintenance:v1";
+export const ciphertextLock = "proofofhack:ciphertext-maintenance:v1";
 
 // Call inside the transaction that creates a ciphertext object and its metadata.
 export async function protectCiphertextWrite(c: Pick<PoolClient, "query">) {

@@ -29,10 +29,10 @@ export function localSeedScope(env: Record<string, string | undefined>) {
     !database.port ||
     database.search ||
     database.hash ||
-    !/^\/vulnproof_seed_[a-z0-9_]{1,32}$/.test(database.pathname)
+    !/^\/proofofhack_seed_[a-z0-9_]{1,32}$/.test(database.pathname)
   )
     throw new LocalSeedError(
-      "Use a loopback PostgreSQL URL with a new vulnproof_seed_ database name.",
+      "Use a loopback PostgreSQL URL with a new proofofhack_seed_ database name.",
     );
   return { rpc: rpc.toString(), database: database.toString(), name: database.pathname.slice(1) };
 }

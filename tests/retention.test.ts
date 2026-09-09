@@ -26,7 +26,7 @@ const admin = connectDatabase().pool,
   url = new URL(databaseUrl());
 url.pathname = `/${databaseName}`;
 const { pool, db } = connectDatabase(url.toString()),
-  directory = await mkdtemp(join(tmpdir(), "vulnproof-retention-")),
+  directory = await mkdtemp(join(tmpdir(), "proofofhack-retention-")),
   evidenceDirectory = join(directory, "evidence"),
   reportDirectory = join(directory, "reports"),
   stores = {
@@ -332,7 +332,7 @@ it("coordinates cleanup with writes and removes only old unreferenced objects", 
 
 async function postgresTool(args: string[], input?: Buffer) {
   return new Promise<Buffer>((resolve, reject) => {
-    const child = spawn("docker", ["exec", "-i", "vulnproof-postgres-1", ...args], {
+    const child = spawn("docker", ["exec", "-i", "proofofhack-postgres-1", ...args], {
       stdio: ["pipe", "pipe", "pipe"],
     });
     const output: Buffer[] = [];
@@ -382,7 +382,7 @@ it("PRI-06 restores a real database, encrypted objects, and keys, then removes e
   const dump = await postgresTool([
     "pg_dump",
     "-U",
-    "vulnproof",
+    "proofofhack",
     "-d",
     databaseName,
     "--format=custom",
@@ -399,7 +399,7 @@ it("PRI-06 restores a real database, encrypted objects, and keys, then removes e
       [
         "pg_restore",
         "-U",
-        "vulnproof",
+        "proofofhack",
         "-d",
         restoredName,
         "--no-owner",
