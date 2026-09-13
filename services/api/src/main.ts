@@ -2,7 +2,7 @@ import { ARC_USDC } from "../../../packages/chain/src/arc.ts";
 import { ReadOnlyBountyChain } from "../../../packages/chain/src/bounty-reader.ts";
 import { ReadOnlyBudgetChain } from "../../../packages/chain/src/budget.ts";
 import { FileCiphertextStore } from "../../../packages/ciphertext-store/src/index.ts";
-import { address } from "../../../packages/domain/src/index.ts";
+import { ADAPTER_ID, address, GENERAL_FINDING_ADAPTER_ID } from "../../../packages/domain/src/index.ts";
 import { InternalClient } from "../../../packages/service-auth/src/http.ts";
 import { loadPublicConfig, loadTestnetSecret } from "../../../packages/service-config/src/index.ts";
 import "dotenv/config";
@@ -44,6 +44,9 @@ const bountyServices =
   process.env.SERVICE_PUBLIC_CONFIG && process.env.ESCROW_ADDRESS
     ? {
         publicConfig: await loadPublicConfig(process.env.SERVICE_PUBLIC_CONFIG),
+        findingsConfig: process.env.FINDING_SERVICE_PUBLIC_CONFIG
+          ? await loadPublicConfig(process.env.FINDING_SERVICE_PUBLIC_CONFIG)
+          : undefined,
         escrow: address.parse(process.env.ESCROW_ADDRESS),
         release: new InternalClient(
           process.env.REPORT_INTERNAL_URL ?? "http://127.0.0.1:4194",
@@ -86,7 +89,12 @@ const app = await createApp({
   bountyServices,
   claimServices: bountyServices
     ? {
-        config: bountyServices.publicConfig,
+        configs: {
+          [ADAPTER_ID]: bountyServices.publicConfig,
+          ...(process.env.FINDING_SERVICE_PUBLIC_CONFIG
+            ? { [GENERAL_FINDING_ADAPTER_ID]: await loadPublicConfig(process.env.FINDING_SERVICE_PUBLIC_CONFIG) }
+            : {}),
+        },
         evidence: new FileCiphertextStore(
           process.env.EVIDENCE_DIRECTORY ?? ".local/ciphertext/evidence",
           262192,

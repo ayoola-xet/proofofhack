@@ -103,11 +103,39 @@ export const programs = pgTable(
       .notNull()
       .references(() => organizations.id),
     name: text("name").notNull(),
+    kind: text("kind").notNull().default("COVERAGE"),
     coveragePolicyId: uuid("coverage_policy_id").references(() => coveragePolicies.id),
+    scopeSummary: text("scope_summary"),
+    rulesSummary: text("rules_summary"),
+    disclosurePolicy: text("disclosure_policy"),
+    visibility: text("visibility").notNull().default("PRIVATE"),
     status: text("status").notNull().default("ACTIVE"),
     ...dates(),
   },
-  (t) => [uniqueIndex("program_org_name").on(t.organizationId, t.name)],
+  (t) => [
+    uniqueIndex("program_org_name").on(t.organizationId, t.name),
+    check("program_kind", sql`${t.kind} in ('COVERAGE','FINDINGS')`),
+    check("program_visibility", sql`${t.visibility} in ('PUBLIC','PRIVATE')`),
+  ],
+);
+export const severityTiers = pgTable(
+  "severity_tiers",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    programId: uuid("program_id")
+      .notNull()
+      .references(() => programs.id),
+    name: text("name").notNull(),
+    minReward: amount("min_reward").notNull(),
+    maxReward: amount("max_reward").notNull(),
+    asset: text("asset").notNull(),
+    displayOrder: integer("display_order").notNull().default(0),
+    ...dates(),
+  },
+  (t) => [
+    uniqueIndex("severity_tier_program_name").on(t.programId, t.name),
+    check("severity_tier_range", sql`${t.minReward} >= 0 and ${t.maxReward} >= ${t.minReward}`),
+  ],
 );
 export const registeredVaults = pgTable(
   "registered_vaults",
@@ -235,6 +263,7 @@ export const bountyDrafts = pgTable("bounty_drafts", {
   programId: uuid("program_id")
     .notNull()
     .references(() => programs.id),
+  severityTierId: uuid("severity_tier_id").references(() => severityTiers.id),
   policy: json("policy_json").notNull(),
   policyHash: text("policy_hash").notNull(),
   createdBy: uuid("created_by")
@@ -251,6 +280,7 @@ export const bounties = pgTable(
     programId: uuid("program_id")
       .notNull()
       .references(() => programs.id),
+    severityTierId: uuid("severity_tier_id").references(() => severityTiers.id),
     policyHash: text("policy_hash").notNull().unique(),
     policy: json("policy_json").notNull(),
     chainId: text("chain_id").notNull(),
@@ -265,6 +295,7 @@ export const bounties = pgTable(
   },
   (t) => [
     index("bounty_program").on(t.programId),
+    index("bounty_severity_tier").on(t.severityTierId),
     check(
       "bounty_amounts",
       sql`${t.reward} > 0 and ${t.unallocatedReward} >= 0 and ${t.claimantCredit} >= 0 and ${t.unallocatedReward} + ${t.claimantCredit} <= ${t.reward}`,
@@ -324,6 +355,38 @@ export const claims = pgTable(
     uniqueIndex("one_projected_reservation")
       .on(t.bountyId)
       .where(sql`${t.jobState} in ('RESERVED','VERIFYING','ASSESSED','SETTLEMENT_PENDING')`),
+  ],
+);
+export const findings = pgTable(
+  "findings",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    programId: uuid("program_id")
+      .notNull()
+      .references(() => programs.id),
+    tierId: uuid("tier_id")
+      .notNull()
+      .references(() => severityTiers.id),
+    researcherUserId: uuid("researcher_user_id")
+      .notNull()
+      .references(() => users.id),
+    claimId: text("claim_id")
+      .unique()
+      .references(() => claims.claimId),
+    title: text("title").notNull(),
+    summary: text("summary").notNull(),
+    affectedComponent: text("affected_component").notNull(),
+    selfAssessedSeverity: text("self_assessed_severity").notNull(),
+    verdictSeverity: text("verdict_severity"),
+    verdictReasoning: text("verdict_reasoning"),
+    measuredImpact: amount("measured_impact"),
+    verifierMode: text("verifier_mode"),
+    status: text("status").notNull().default("SUBMITTED"),
+    ...dates(),
+  },
+  (t) => [
+    index("finding_program").on(t.programId),
+    index("finding_researcher").on(t.researcherUserId),
   ],
 );
 export const admissions = pgTable("admissions", {
@@ -688,3 +751,42 @@ export const signedTransactions = pgTable("signed_transactions", {
   transactionHash: text("transaction_hash").notNull().unique(),
   ...dates(),
 });
+
+export const payoutApprovals = pgTable(
+  "payout_approvals",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    claimId: text("claim_id").notNull().unique(),
+    organizationId: uuid("organization_id")
+      .notNull()
+      .references(() => organizations.id),
+    reward: amount("reward").notNull(),
+    requiredApprovals: integer("required_approvals").notNull().default(2),
+    state: text("state").notNull().default("PENDING"),
+    expiresAt: timestamp("expires_at", { withTimezone: true }).notNull(),
+    ...dates(),
+  },
+  (t) => [
+    index("payout_approval_organization").on(t.organizationId),
+    check("payout_approval_state", sql`${t.state} in ('PENDING','APPROVED','EXPIRED')`),
+  ],
+);
+export const payoutApprovalSignatures = pgTable(
+  "payout_approval_signatures",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    approvalId: uuid("approval_id")
+      .notNull()
+      .references(() => payoutApprovals.id),
+    memberUserId: uuid("member_user_id")
+      .notNull()
+      .references(() => users.id),
+    walletId: uuid("wallet_id")
+      .notNull()
+      .references(() => wallets.id),
+    message: text("message").notNull(),
+    signature: text("signature").notNull(),
+    ...dates(),
+  },
+  (t) => [uniqueIndex("payout_approval_signature_unique").on(t.approvalId, t.memberUserId)],
+);

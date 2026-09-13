@@ -1,4 +1,5 @@
 import { useSignMessage } from "@privy-io/react-auth";
+import { AlertTriangle, Check, Loader2, RefreshCw } from "lucide-react";
 import { type FormEvent, useState } from "react";
 import {
   type BountyPolicy,
@@ -7,6 +8,61 @@ import {
 } from "../../../../packages/domain/src/index.ts";
 import { type Membership, useApi, useResource, type Wallet } from "../api.ts";
 import type { BudgetController } from "./Budget.tsx";
+
+const FUNDING_STEPS = ["Draft", "Approved", "Funding", "Funded"] as const;
+
+function fundingStage(draft: Draft, request: Funding | undefined, usesBudget: boolean) {
+  if (draft.creation_tx || draft.chain_state === "FUNDED")
+    return { step: 3, failed: false, label: "Funded. The bounty is live on Arc Testnet." };
+  if (request?.failure_code && ["QUEUED", "APPROVING", "FUNDING"].includes(request.state))
+    return {
+      step: 2,
+      failed: true,
+      label: `Funding failed: ${request.failure_code.replaceAll("_", " ").toLowerCase()}.`,
+    };
+  if (request && !["CANCELLED", "EXPIRED"].includes(request.state))
+    return {
+      step: 2,
+      failed: false,
+      label:
+        request.state === "AWAITING_AUTHORIZATION"
+          ? "Waiting for your Privy confirmation."
+          : "Sending the funding transaction to Arc Testnet…",
+    };
+  if (draft.status === "APPROVED")
+    return {
+      step: 1,
+      failed: false,
+      label: usesBudget
+        ? "Approved. Waiting on the coverage budget to allocate this reward."
+        : "Approved. Ready to fund.",
+    };
+  return { step: 0, failed: false, label: "Waiting on the owner to approve these exact terms." };
+}
+function Stepper({ stage }: { stage: ReturnType<typeof fundingStage> }) {
+  return (
+    <div className="stepper">
+      {FUNDING_STEPS.map((label, i) => {
+        const done = i < stage.step || stage.step === 3;
+        const active = i === stage.step && stage.step !== 3;
+        const failed = active && stage.failed;
+        return (
+          <div key={label} style={{ display: "contents" }}>
+            <span
+              className={`stepper-step${done ? " done" : ""}${active && !failed ? " active" : ""}${failed ? " failed" : ""}`}
+            >
+              {done && <Check size={12} />}
+              {failed && <AlertTriangle size={12} />}
+              {active && !failed && <Loader2 className="spin" size={12} />}
+              {label}
+            </span>
+            {i < FUNDING_STEPS.length - 1 && <span className="stepper-line" />}
+          </div>
+        );
+      })}
+    </div>
+  );
+}
 
 type Draft = {
   id: string;
@@ -54,11 +110,15 @@ export function BountyWorkspace({
   const api = useApi(),
     base = `/organizations/${organization.organization_id}`;
   const { signMessage } = useSignMessage();
-  const drafts = useResource<{ items: Draft[] }>(`${base}/bounty-drafts`);
+  const drafts = useResource<{ items: Draft[] }>(`${base}/bounty-drafts`, { intervalMs: 5000 });
   const controllers = useResource<{ items: BudgetController[] }>(`${base}/controllers`);
   const [controllerId, setControllerId] = useState("");
-  const funding = useResource<{ items: Funding[] }>(`${base}/funding-requests`);
-  const programs = useResource<{ items: { id: string; name: string }[] }>(`${base}/programs`);
+  const funding = useResource<{ items: Funding[] }>(`${base}/funding-requests`, {
+    intervalMs: 5000,
+  });
+  const programs = useResource<{ items: { id: string; name: string; kind: string }[] }>(
+    `${base}/programs`,
+  );
   const vaults = useResource<{ items: { id: string; label: string }[] }>(`${base}/coverage`);
   const wallets = useResource<{ items: Wallet[] }>("/wallets/me");
   const treasury = useResource<{ items: Treasury[] }>(
@@ -78,6 +138,18 @@ export function BountyWorkspace({
   const [settlementGrace, setSettlementGrace] = useState("3600");
   const [draftCreated, setDraftCreated] = useState(false);
   const [confirm, setConfirm] = useState<{ funding: Funding; wallet: Wallet } | null>(null);
+  const [fProgram, setFProgram] = useState(""),
+    [fTier, setFTier] = useState(""),
+    [fScopeAddress, setFScopeAddress] = useState(""),
+    [fControllerId, setFControllerId] = useState(""),
+    [fSubmissionWindow, setFSubmissionWindow] = useState("259200"),
+    [fReservationDuration, setFReservationDuration] = useState("1800"),
+    [fSettlementGrace, setFSettlementGrace] = useState("3600");
+  const findingsPrograms = programs.data?.items.filter((p) => p.kind === "FINDINGS") ?? [];
+  const findingsProgramId = fProgram || findingsPrograms[0]?.id || "";
+  const findingsProgramDetail = useResource<{
+    tiers: { id: string; name: string; min_reward: string; max_reward: string }[];
+  }>(findingsProgramId ? `/programs/${findingsProgramId}` : null);
   const wallet = wallets.data?.items.find(
     (w) => w.provider === "PRIVY" && w.chain_id === "5042002",
   );
@@ -148,6 +220,39 @@ export function BountyWorkspace({
       );
     });
   }
+  async function prepareFindings(event: FormEvent) {
+    event.preventDefault();
+    await run("Prepare findings draft", async () => {
+      if (!wallet || !bank?.id)
+        throw new Error(
+          "Create and verify your reward wallet and organization funding wallet first.",
+        );
+      const programId = findingsProgramId;
+      const tierId = fTier || findingsProgramDetail.data?.tiers[0]?.id;
+      if (!programId || !tierId)
+        throw new Error("Create a findings program and add a severity tier first.");
+      if (!/^0x[0-9a-fA-F]{40}$/.test(fScopeAddress))
+        throw new Error("Use a full contract address for the in-scope target.");
+      const draftDeadline = String(Math.floor(Date.now() / 1000) + Number(fSubmissionWindow));
+      await api(`${base}/report-key`, { method: "POST", key: `${key}:findings-report`, body: {} });
+      await api(`/programs/${programId}/bounty-drafts`, {
+        method: "POST",
+        key: `${key}:findings-draft`,
+        body: {
+          tierId,
+          scopeAddress: fScopeAddress,
+          ...(fControllerId ? { controllerId: fControllerId } : { refundWalletId: bank.id }),
+          submissionDeadline: draftDeadline,
+          reservationDurationSeconds: Number(fReservationDuration),
+          settlementGraceSeconds: Number(fSettlementGrace),
+        },
+      });
+      setFScopeAddress("");
+      setKey(crypto.randomUUID());
+      drafts.refresh();
+      setNotice("Findings draft created. Review and approve the fixed terms below to fund it.");
+    });
+  }
   function download() {
     if (!prepared) return;
     const blob = new Blob(
@@ -210,13 +315,15 @@ export function BountyWorkspace({
         <button
           type="button"
           className="text-button"
+          title="Refresh now"
+          aria-label="Refresh now"
           onClick={() => {
             drafts.refresh();
             funding.refresh();
             onFunded();
           }}
         >
-          Refresh funding
+          <RefreshCw size={14} />
         </button>
       </div>
       <p>
@@ -252,15 +359,17 @@ export function BountyWorkspace({
           <label>
             Program
             <select
-              value={program || programs.data?.items[0]?.id || ""}
+              value={program || programs.data?.items.find((p) => p.kind !== "FINDINGS")?.id || ""}
               onChange={(e) => setProgram(e.target.value)}
               disabled={!!prepared || !!busy}
             >
-              {programs.data?.items.map((p) => (
-                <option key={p.id} value={p.id}>
-                  {p.name}
-                </option>
-              ))}
+              {programs.data?.items
+                .filter((p) => p.kind !== "FINDINGS")
+                .map((p) => (
+                  <option key={p.id} value={p.id}>
+                    {p.name}
+                  </option>
+                ))}
             </select>
           </label>
           <label>
@@ -342,13 +451,17 @@ export function BountyWorkspace({
             type="submit"
             disabled={!!busy || !bank || !wallet || draftCreated}
           >
-            {busy === "Prepare draft"
-              ? "Preparing…"
-              : draftCreated
-                ? "Draft created"
-                : prepared
-                  ? "Resume draft setup"
-                  : "Create signed fixture draft"}
+            {busy === "Prepare draft" ? (
+              <>
+                <Loader2 className="spin" size={14} /> Preparing…
+              </>
+            ) : draftCreated ? (
+              "Draft created"
+            ) : prepared ? (
+              "Resume draft setup"
+            ) : (
+              "Create signed fixture draft"
+            )}
           </button>
         </form>
       )}
@@ -356,6 +469,129 @@ export function BountyWorkspace({
         <button type="button" className="secondary" onClick={download}>
           Download synthetic cases
         </button>
+      )}
+      {organization.role === "OWNER" && findingsPrograms.length > 0 && (
+        <>
+          <h3>Fund a findings bounty</h3>
+          <p>
+            Creates one bounty slot against a severity tier. The reward pays out automatically
+            within the tier's range once a submission is auto-verified. No fixture manifest is
+            needed.
+          </p>
+          <form className="form-row" onSubmit={prepareFindings}>
+            <label>
+              Program
+              <select
+                value={findingsProgramId}
+                onChange={(e) => {
+                  setFProgram(e.target.value);
+                  setFTier("");
+                }}
+                disabled={!!busy}
+              >
+                {findingsPrograms.map((p) => (
+                  <option key={p.id} value={p.id}>
+                    {p.name}
+                  </option>
+                ))}
+              </select>
+            </label>
+            <label>
+              Severity tier
+              <select
+                value={fTier || findingsProgramDetail.data?.tiers[0]?.id || ""}
+                onChange={(e) => setFTier(e.target.value)}
+                disabled={!!busy}
+              >
+                {findingsProgramDetail.data?.tiers.map((tier) => (
+                  <option key={tier.id} value={tier.id}>
+                    {tier.name} ({formatMoney(BigInt(tier.min_reward))}-
+                    {formatMoney(BigInt(tier.max_reward))} test USDC)
+                  </option>
+                ))}
+              </select>
+            </label>
+            {findingsProgramDetail.data?.tiers.length === 0 && (
+              <p className="muted">
+                This program has no severity tiers yet. Add one on the Team page first.
+              </p>
+            )}
+            <label>
+              In-scope contract address
+              <input
+                required
+                value={fScopeAddress}
+                onChange={(e) => setFScopeAddress(e.target.value)}
+                placeholder="0x…"
+                disabled={!!busy}
+              />
+            </label>
+            <label>
+              Funding source and refund destination
+              <select
+                value={fControllerId}
+                onChange={(event) => setFControllerId(event.target.value)}
+                disabled={!!busy}
+              >
+                <option value="">Organization wallet</option>
+                {controllers.data?.items.map((c) => (
+                  <option key={c.id} value={c.id}>
+                    Coverage budget {c.enabled ? "(enabled)" : "(disabled)"}
+                  </option>
+                ))}
+              </select>
+            </label>
+            <label>
+              Submission window
+              <select
+                value={fSubmissionWindow}
+                onChange={(e) => setFSubmissionWindow(e.target.value)}
+                disabled={!!busy}
+              >
+                <option value="600">10 minutes</option>
+                <option value="3600">One hour</option>
+                <option value="259200">Three days</option>
+                <option value="2592000">30 days</option>
+              </select>
+            </label>
+            <label>
+              Reservation length
+              <select
+                value={fReservationDuration}
+                onChange={(e) => setFReservationDuration(e.target.value)}
+                disabled={!!busy}
+              >
+                <option value="60">One minute</option>
+                <option value="300">Five minutes</option>
+                <option value="1800">30 minutes</option>
+              </select>
+            </label>
+            <label>
+              Extra time before refund
+              <select
+                value={fSettlementGrace}
+                onChange={(e) => setFSettlementGrace(e.target.value)}
+                disabled={!!busy}
+              >
+                <option value="0">None</option>
+                <option value="3600">One hour</option>
+              </select>
+            </label>
+            <button
+              className="primary"
+              type="submit"
+              disabled={!!busy || !bank || !wallet || !findingsProgramDetail.data?.tiers.length}
+            >
+              {busy === "Prepare findings draft" ? (
+                <>
+                  <Loader2 className="spin" size={14} /> Preparing…
+                </>
+              ) : (
+                "Create findings draft"
+              )}
+            </button>
+          </form>
+        </>
       )}
       <p>
         The submission window starts when you prepare the draft. The refund cutoff adds one
@@ -383,16 +619,13 @@ export function BountyWorkspace({
         const request = funding.data?.items.find(
           (f) => f.draft_id === draft.id && !["CANCELLED", "EXPIRED"].includes(f.state),
         );
+        const stage = fundingStage(draft, request, !!usesBudget);
         return (
           <article className="wallet-card" key={draft.id}>
             <div>
               <h3>{formatMoney(BigInt(draft.policy.reward))} test USDC</h3>
-              <p>
-                {draft.status} ·{" "}
-                {draft.chain_state ??
-                  request?.state ??
-                  (usesBudget ? "Awaiting budget allocation" : "No funding request")}
-              </p>
+              <Stepper stage={stage} />
+              <p className={stage.failed ? "notice error" : "muted"}>{stage.label}</p>
               {draft.creation_tx && (
                 <p>
                   <a
@@ -442,7 +675,13 @@ export function BountyWorkspace({
                     })
                   }
                 >
-                  Approve these exact terms
+                  {busy === "Approve terms" ? (
+                    <>
+                      <Loader2 className="spin" size={14} /> Approving…
+                    </>
+                  ) : (
+                    "Approve these exact terms"
+                  )}
                 </button>
               )}
               {draft.status === "APPROVED" &&
@@ -456,15 +695,15 @@ export function BountyWorkspace({
                     disabled={!!busy || !bank || !wallet}
                     onClick={() => void requestFunding(draft)}
                   >
-                    Review funding confirmation
+                    {busy === "Prepare funding" ? (
+                      <>
+                        <Loader2 className="spin" size={14} /> Preparing…
+                      </>
+                    ) : (
+                      "Review funding confirmation"
+                    )}
                   </button>
                 )}
-              {usesBudget && !draft.creation_tx && (
-                <p>
-                  This draft uses the coverage budget. Check its owner approval and limits in
-                  organization settings.
-                </p>
-              )}
               {request?.state === "AWAITING_AUTHORIZATION" &&
                 request.requested_by === actorId &&
                 wallet && (
@@ -477,12 +716,6 @@ export function BountyWorkspace({
                     Open funding confirmation
                   </button>
                 )}
-              {request?.failure_code && (
-                <p role="alert">
-                  Funding needs attention: {request.failure_code.replaceAll("_", " ")}. Refresh
-                  after you resolve the issue.
-                </p>
-              )}
               {request?.failure_code &&
                 ["QUEUED", "APPROVING", "FUNDING"].includes(request.state) &&
                 request.requested_by === actorId && (
@@ -500,7 +733,13 @@ export function BountyWorkspace({
                       })
                     }
                   >
-                    Retry the saved funding request
+                    {busy === "Retry funding" ? (
+                      <>
+                        <Loader2 className="spin" size={14} /> Retrying…
+                      </>
+                    ) : (
+                      "Retry the saved funding request"
+                    )}
                   </button>
                 )}
               {request?.funding_hash && (
@@ -531,7 +770,13 @@ export function BountyWorkspace({
             disabled={!!busy}
             onClick={() => void authorize()}
           >
-            Confirm with Privy
+            {busy === "Confirm funding" ? (
+              <>
+                <Loader2 className="spin" size={14} /> Confirming…
+              </>
+            ) : (
+              "Confirm with Privy"
+            )}
           </button>
           <button
             className="secondary"

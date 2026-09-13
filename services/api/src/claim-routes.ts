@@ -1,17 +1,25 @@
 import { randomBytes, randomUUID } from "node:crypto";
 import type { FastifyInstance } from "fastify";
 import type { Pool } from "pg";
+import type { Hex } from "viem";
 import { keccak256 } from "viem";
 import { protectCiphertextWrite } from "../../../packages/ciphertext-store/src/coordination.ts";
 import type { CiphertextStore } from "../../../packages/ciphertext-store/src/index.ts";
 import { DomainError } from "../../../packages/domain/src/index.ts";
 import type { WalletIdentityProvider } from "../../../packages/privy/src/wallets.ts";
-import type { PublicServiceConfig } from "../../../packages/service-config/src/index.ts";
 import { first, mutate } from "./context.ts";
 import { parseApiBody } from "./parse-body.ts";
 import { pathSchemas } from "./request-schemas.ts";
 
-export type ClaimServices = { evidence: CiphertextStore; config: PublicServiceConfig };
+export type AdapterVerifierConfig = {
+  evidenceKeyId: Hex;
+  adapterCodeHash: Hex;
+  verifierConfigHash: Hex;
+};
+export type ClaimServices = {
+  evidence: CiphertextStore;
+  configs: Record<string, AdapterVerifierConfig>;
+};
 export function registerClaimRoutes(
   app: FastifyInstance,
   pool: Pool,
@@ -26,8 +34,6 @@ export function registerClaimRoutes(
       throw new DomainError("SERVICE_NOT_CONFIGURED", "Claim services are not configured.", 503);
     const { id } = pathSchemas.hash.parse(request.params);
     const input = parseApiBody("upload", request);
-    if (input.keyId !== services.config.evidenceKeyId)
-      throw new DomainError("EVIDENCE_KEY_MISMATCH", "Refresh the verifier encryption key.");
     const wallet = await first(
       pool,
       "select w.*,u.privy_user_id from wallets w join users u on u.id=w.owner_id where w.id=$1 and w.owner_type='USER' and w.owner_id=$2 and w.provider='PRIVY'",
@@ -62,14 +68,18 @@ export function registerClaimRoutes(
             "BOUNTY_UNAVAILABLE",
             "This bounty does not accept another claim now.",
           );
+        const adapterConfig = services.configs[bounty.policy_json.adapterId];
         if (
-          bounty.policy_json.adapterCodeHash !== services.config.adapterCodeHash ||
-          bounty.policy_json.verifierConfigHash !== services.config.verifierConfigHash
+          !adapterConfig ||
+          bounty.policy_json.adapterCodeHash !== adapterConfig.adapterCodeHash ||
+          bounty.policy_json.verifierConfigHash !== adapterConfig.verifierConfigHash
         )
           throw new DomainError(
             "VERIFIER_VERSION_UNAVAILABLE",
             "This bounty needs its original verifier version.",
           );
+        if (input.keyId !== adapterConfig.evidenceKeyId)
+          throw new DomainError("EVIDENCE_KEY_MISMATCH", "Refresh the verifier encryption key.");
         await c.query("select pg_advisory_xact_lock(hashtextextended($1,0))", [
           `uploads:${request.actor.id}`,
         ]);

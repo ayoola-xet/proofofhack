@@ -47,7 +47,7 @@ export async function fundBounty(
     }
     const row = await first(
       c,
-      `select f.*,d.policy_json,d.policy_hash,d.program_id,d.status as draft_status,
+      `select f.*,d.policy_json,d.policy_hash,d.program_id,d.severity_tier_id,d.status as draft_status,
       w.address,w.provider_wallet_id,s.owner_id as provider_owner_id,s.provider_policy_id,s.configuration_json,s.state as setup_state,
       a.address as authorization_address from funding_requests f join bounty_drafts d on d.id=f.draft_id
       join wallets w on w.id=f.wallet_id join wallet_setups s on s.wallet_id=w.id join wallets a on a.id=f.authorization_wallet_id where f.id=$1`,
@@ -307,6 +307,7 @@ export async function fundBounty(
         policy_hash: row.policy_hash,
         program_id: row.program_id,
         organization_id: row.organization_id,
+        severity_tier_id: row.severity_tier_id,
       },
       policy,
       receipt,
@@ -326,7 +327,13 @@ export async function fundBounty(
 }
 async function recordFunding(
   c: PoolClient,
-  row: { id: string; policy_hash: string; program_id: string; organization_id: string },
+  row: {
+    id: string;
+    policy_hash: string;
+    program_id: string;
+    organization_id: string;
+    severity_tier_id: string | null;
+  },
   policy: ReturnType<typeof policySchema.parse>,
   receipt: FundingReceipt,
   logIndex: number | null,
@@ -353,7 +360,7 @@ async function recordFunding(
       ],
     );
     await c.query(
-      "insert into bounties(bounty_id,program_id,policy_hash,policy_json,chain_id,escrow,reward,unallocated_reward,chain_state,creation_tx,last_event_key) values($1,$2,$1,$3,'5042002',$4,$5,$5,'FUNDED',$6,$7) on conflict(bounty_id) do nothing",
+      "insert into bounties(bounty_id,program_id,severity_tier_id,policy_hash,policy_json,chain_id,escrow,reward,unallocated_reward,chain_state,creation_tx,last_event_key) values($1,$2,$8,$1,$3,'5042002',$4,$5,$5,'FUNDED',$6,$7) on conflict(bounty_id) do nothing",
       [
         row.policy_hash,
         row.program_id,
@@ -362,6 +369,7 @@ async function recordFunding(
         policy.reward,
         receipt.hash,
         event.id,
+        row.severity_tier_id,
       ],
     );
     await c.query(

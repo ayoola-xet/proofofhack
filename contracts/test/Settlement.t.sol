@@ -218,6 +218,37 @@ contract SettlementTest {
         escrow.collectPayment(id);
     }
 
+    function test_ESC16_PartialRewardRefundsLeftoverImmediately() public {
+        BountyEscrow.BountyPolicyV1 memory p = policy(1);
+        bytes32 id = escrow.createAndFund(p);
+        reserve(id, 1);
+        uint256 recipientBefore = token.balanceOf(address(this));
+        BountyEscrow.AssessmentV1 memory a = assessment(id, 1);
+        a.reward = p.reward / 2;
+        escrow.submitAssessment(a, sign(VERDICT_KEY, escrow.assessmentDigest(a)));
+        require(escrow.getBounty(id).claimantCredit == p.reward / 2, "credit should equal the assessed reward");
+        require(escrow.getBounty(id).unallocatedReward == 0, "unallocated reward should be cleared");
+        require(escrow.totalLiability() == p.reward / 2, "liability should shrink to the assessed reward");
+        require(
+            token.balanceOf(address(this)) == recipientBefore + (p.reward - p.reward / 2),
+            "leftover should refund to refundRecipient immediately"
+        );
+        vm.prank(operator);
+        escrow.collectPayment(id);
+        require(token.balanceOf(claimant) == p.reward / 2, "claimant should only receive the assessed reward");
+        require(escrow.totalLiability() == 0);
+    }
+
+    function test_ESC17_RewardAboveUnallocatedRewardReverts() public {
+        bytes32 id = escrow.createAndFund(policy(1));
+        reserve(id, 1);
+        BountyEscrow.AssessmentV1 memory a = assessment(id, 1);
+        a.reward = a.reward + 1;
+        bytes memory signature = sign(VERDICT_KEY, escrow.assessmentDigest(a));
+        vm.expectRevert(BountyEscrow.InvalidAssessment.selector);
+        escrow.submitAssessment(a, signature);
+    }
+
     function test_ESC11_TransferFailurePreservesCredit() public {
         FailableToken replacement = new FailableToken();
         escrow = new BountyEscrow(replacement);

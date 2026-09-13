@@ -45,12 +45,13 @@ export function useApi() {
     [getAccessToken],
   );
 }
-export function useResource<T>(path: string | null) {
+export function useResource<T>(path: string | null, options?: { intervalMs?: number }) {
   const api = useApi();
   const [data, setData] = useState<T | null>(null);
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
   const [revision, setRevision] = useState(0);
+  const intervalMs = options?.intervalMs;
   useEffect(() => {
     const controller = new AbortController();
     setData(null);
@@ -70,6 +71,15 @@ export function useResource<T>(path: string | null) {
       });
     return () => controller.abort();
   }, [api, path, revision]);
+  // Polls silently in the background: keeps the last good data on screen and
+  // does not touch loading/error, so live updates never flicker the list.
+  useEffect(() => {
+    if (!path || !intervalMs) return;
+    const timer = setInterval(() => {
+      api<T>(path).then(setData).catch(() => {});
+    }, intervalMs);
+    return () => clearInterval(timer);
+  }, [api, path, intervalMs]);
   const refresh = useCallback(() => setRevision((v) => v + 1), []);
   return { data, error, loading, refresh };
 }

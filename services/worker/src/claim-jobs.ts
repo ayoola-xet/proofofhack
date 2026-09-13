@@ -8,8 +8,8 @@ export async function startClaimJobs(
   boss: PgBoss,
   pool: Pool,
   chain: ClaimChain,
-  relayer: ClaimRelayer,
-  verifier: InternalClient,
+  relayers: Record<string, ClaimRelayer>,
+  verifiers: Record<string, InternalClient>,
   release: InternalClient,
 ) {
   await boss.createQueue("claim-process", {
@@ -28,13 +28,17 @@ export async function startClaimJobs(
           await processClaim(
             pool,
             chain,
-            relayer,
-            verifier,
+            relayers,
+            verifiers,
             release,
             bytes32.parse(job.data.claimId),
           );
         } catch (error) {
-          if (error instanceof DomainError && error.code === "INVALID_FIXTURE") continue;
+          if (
+            error instanceof DomainError &&
+            ["INVALID_FIXTURE", "INVALID_FINDING_EVIDENCE"].includes(error.code)
+          )
+            continue;
           throw error;
         }
       }

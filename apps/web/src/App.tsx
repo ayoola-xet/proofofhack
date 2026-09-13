@@ -14,6 +14,7 @@ import {
   Plus,
   RefreshCw,
   ShieldCheck,
+  Target,
   Users,
   Wallet as WalletIcon,
 } from "lucide-react";
@@ -25,6 +26,14 @@ import { BountyWorkspace } from "./pages/BountyWorkspace.tsx";
 import { Budget } from "./pages/Budget.tsx";
 import { ClaimSubmission, MyClaims, ReportDownload } from "./pages/Claims.tsx";
 import { Coverage } from "./pages/Coverage.tsx";
+import {
+  MyFindings,
+  OrganizationFindings,
+  PayoutApprovals,
+  ProgramDetail,
+  ProgramDirectory,
+  ProgramSeverityTiers,
+} from "./pages/Programs.tsx";
 import { ReceiptsPage } from "./pages/Receipts.tsx";
 import { Recovery } from "./pages/Recovery.tsx";
 import {
@@ -38,9 +47,7 @@ import { WalletPage } from "./pages/Wallet.tsx";
 function Brand() {
   return (
     <Link to="/" className="brand">
-      <span className="brand-mark">
-        <ShieldCheck size={23} />
-      </span>
+      <img className="brand-mark" src="/logo-mark.png" alt="" width={36} height={36} />
       ProofOfHack<span className="beta">BETA</span>
     </Link>
   );
@@ -105,35 +112,73 @@ function Intro() {
       </header>
       <main className="welcome-grid">
         <section>
-          <div className="eyebrow">A WORKSPACE FOR ACCOUNTABLE COVERAGE</div>
+          <div className="eyebrow">CONFIDENTIAL BUG BOUNTIES & ONCHAIN PAYOUTS</div>
           <h1>
-            Keep evidence private.
+            Guaranteed payouts for researchers.
             <br />
-            <em>Make settlement clear.</em>
+            <em>Private reports for protocol teams.</em>
           </h1>
           <p>
-            Fund a fixed reward. Submit an encrypted fixture claim. Follow the payment from approval
-            to receipt.
+            ProofOfHack enables security researchers to submit encrypted vulnerability claims, lock
+            in guaranteed USDC payouts on Arc, and release full security reports to protocol teams
+            only after payment is confirmed.
           </p>
           <button type="button" className="primary large" disabled={!ready} onClick={() => login()}>
             Open your workspace <ArrowRight size={18} />
           </button>
           <div className="trust-row">
-            <LockKeyhole size={15} /> Private report access <span>·</span>
-            <Check size={15} /> Fixed reward terms
+            <LockKeyhole size={15} /> Client-side encrypted evidence <span>·</span>
+            <Check size={15} /> Guaranteed USDC escrow <span>·</span>
+            <FileCheck2 size={15} /> Post-payment report release
+          </div>
+          <div className="landing-benefits">
+            <div className="benefit-card">
+              <ShieldCheck size={18} className="benefit-icon" />
+              <h3>For Protocol Teams</h3>
+              <ul>
+                <li>Fund fixed USDC bounties in secure Arc smart contracts</li>
+                <li>Discover uncovered DeFi vaults indexed by The Graph</li>
+                <li>Receive private vulnerability reports after payment</li>
+              </ul>
+            </div>
+            <div className="benefit-card">
+              <LockKeyhole size={18} className="benefit-icon" />
+              <h3>For Security Researchers</h3>
+              <ul>
+                <li>Keep vulnerability evidence client-side encrypted</li>
+                <li>Reserve bounty rewards exclusively before submission</li>
+                <li>Collect USDC directly to your wallet upon verification</li>
+              </ul>
+            </div>
           </div>
         </section>
         <section className="flow-card">
           <div className="flow-top">
-            <ShieldCheck size={22} />
-            <span>One claim. A clear record.</span>
-            <Pill>TESTNET</Pill>
+            <img src="/logo-mark.png" alt="" width={22} height={22} />
+            <span>How ProofOfHack Works</span>
+            <Pill>ARC TESTNET</Pill>
           </div>
           {[
-            ["01", "Fund coverage", "Lock the reward and its terms."],
-            ["02", "Submit a private claim", "Encrypt a fixed synthetic record."],
-            ["03", "Verify and settle", "Check the record. Collect the reward."],
-            ["04", "Release the report", "Give the organization access after payment."],
+            [
+              "01",
+              "Protocol Funds Bounty",
+              "Lock USDC reward in an onchain escrow smart contract.",
+            ],
+            [
+              "02",
+              "Researcher Submits Proof",
+              "Upload client-side encrypted vulnerability evidence.",
+            ],
+            [
+              "03",
+              "Verification & Payout",
+              "Verifier checks proof; researcher collects USDC directly.",
+            ],
+            [
+              "04",
+              "Report Unlocked",
+              "Vulnerability report is released to protocol reviewers post-payment.",
+            ],
           ].map(([n, t, d]) => (
             <div className="flow-step" key={n}>
               <span>{n}</span>
@@ -149,8 +194,9 @@ function Intro() {
         </section>
       </main>
       <footer>
-        <strong>Evidence scope: synthetic fixtures.</strong> The trusted verifier checks committed
-        accounting records. It does not prove a vulnerability in a live vault.
+        <strong>Demo Fixture Notice:</strong> This reference deployment uses synthetic accounting
+        fixtures to demonstrate confidential verification and automated USDC settlement on Arc
+        testnet. Vault data is indexed live from Subgraphs via The Graph.
       </footer>
     </div>
   );
@@ -200,6 +246,7 @@ export function App() {
         <nav aria-label="Main navigation">
           {[
             ["/", "Overview", LayoutDashboard],
+            ["/programs", "Programs", Target],
             ["/coverage", "Vault coverage", Layers3],
             ["/bounties", "Fixture bounties", ShieldCheck],
             ["/reports", "Private reports", FileCheck2],
@@ -252,6 +299,8 @@ export function App() {
               path="/"
               element={<Overview organization={organization} me={me.data} refresh={me.refresh} />}
             />
+            <Route path="/programs" element={<ProgramDirectory />} />
+            <Route path="/programs/:id" element={<ProgramDetail />} />
             <Route path="/coverage" element={<Coverage organization={organization} />} />
             <Route
               path="/bounties"
@@ -526,6 +575,13 @@ function Reports({ organization }: { organization: Membership | null }) {
         description="Organization access starts after the claimant's payment is final."
       />
       <MyClaims />
+      <MyFindings />
+      {organization && ["OWNER", "REVIEWER"].includes(organization.role) && (
+        <OrganizationFindings organizationId={organization.organization_id} />
+      )}
+      {organization && ["OWNER", "TREASURY"].includes(organization.role) && (
+        <PayoutApprovals organizationId={organization.organization_id} />
+      )}
       <div className="notice">
         <LockKeyhole size={18} />
         <span>Your current role is checked each time you open a report.</span>
@@ -569,11 +625,22 @@ function Team({
   me: Me | null;
   refresh: () => void;
 }) {
-  const programs = useResource<{ items: { id: string; name: string; status: string }[] }>(
-    organization ? `/organizations/${organization.organization_id}/programs` : null,
-  );
+  const programs = useResource<{
+    items: {
+      id: string;
+      name: string;
+      status: string;
+      kind: string;
+      scope_summary: string | null;
+      rules_summary: string | null;
+    }[];
+  }>(organization ? `/organizations/${organization.organization_id}/programs` : null);
   const api = useApi();
   const [name, setName] = useState("");
+  const [kind, setKind] = useState<"COVERAGE" | "FINDINGS">("COVERAGE");
+  const [scopeSummary, setScopeSummary] = useState("");
+  const [rulesSummary, setRulesSummary] = useState("");
+  const [disclosurePolicy, setDisclosurePolicy] = useState("");
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
   async function submit(e: FormEvent) {
@@ -583,9 +650,22 @@ function Team({
     try {
       await api(`/organizations/${organization.organization_id}/programs`, {
         method: "POST",
-        body: { name },
+        body:
+          kind === "FINDINGS"
+            ? {
+                name,
+                kind,
+                scopeSummary,
+                rulesSummary,
+                disclosurePolicy: disclosurePolicy || undefined,
+                visibility: "PUBLIC",
+              }
+            : { name },
       });
       setName("");
+      setScopeSummary("");
+      setRulesSummary("");
+      setDisclosurePolicy("");
       programs.refresh();
     } catch (e) {
       setError((e as Error).message);
@@ -617,15 +697,25 @@ function Team({
       {organization && (
         <section className="panel">
           <div className="section-heading">
-            <h2>Coverage programs</h2>
+            <h2>Programs</h2>
             <Pill>{organization.role}</Pill>
           </div>
           <State loading={programs.loading} error={programs.error || error} />
           {programs.data?.items.map((p) => (
-            <div className="record" key={p.id}>
-              <Layers3 size={20} />
-              <strong>{p.name}</strong>
-              <Pill>{p.status}</Pill>
+            <div key={p.id}>
+              <div className="record">
+                <Layers3 size={20} />
+                <strong>{p.name}</strong>
+                <Pill>{p.kind}</Pill>
+                <Pill>{p.status}</Pill>
+              </div>
+              {p.kind === "FINDINGS" && organization && (
+                <ProgramSeverityTiers
+                  organizationId={organization.organization_id}
+                  programId={p.id}
+                  canManage={organization.role === "OWNER"}
+                />
+              )}
             </div>
           ))}
           {["OWNER", "REVIEWER"].includes(organization.role) && (
@@ -641,6 +731,49 @@ function Team({
                   placeholder="Accounting fixture coverage"
                 />
               </label>
+              <label>
+                Program type
+                <select
+                  value={kind}
+                  onChange={(e) => setKind(e.target.value as typeof kind)}
+                >
+                  <option value="COVERAGE">Coverage (fixture bounties)</option>
+                  <option value="FINDINGS">Findings (bug bounty program)</option>
+                </select>
+              </label>
+              {kind === "FINDINGS" && (
+                <>
+                  <label>
+                    Scope summary
+                    <input
+                      required
+                      maxLength={4000}
+                      value={scopeSummary}
+                      onChange={(e) => setScopeSummary(e.target.value)}
+                      placeholder="Which contracts are in scope"
+                    />
+                  </label>
+                  <label>
+                    Rules summary
+                    <input
+                      required
+                      maxLength={4000}
+                      value={rulesSummary}
+                      onChange={(e) => setRulesSummary(e.target.value)}
+                      placeholder="What qualifies as a valid finding"
+                    />
+                  </label>
+                  <label>
+                    Disclosure policy (optional)
+                    <input
+                      maxLength={2000}
+                      value={disclosurePolicy}
+                      onChange={(e) => setDisclosurePolicy(e.target.value)}
+                      placeholder="When researchers may disclose"
+                    />
+                  </label>
+                </>
+              )}
               <button type="submit" className="primary" disabled={busy}>
                 <Plus size={16} />
                 Create program

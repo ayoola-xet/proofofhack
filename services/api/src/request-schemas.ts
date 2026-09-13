@@ -5,6 +5,7 @@ import {
   bytes32,
   MAX_EVIDENCE_BYTES,
   role,
+  severity,
   uint,
 } from "../../../packages/domain/src/index.ts";
 import { filtersSchema } from "../../receipts/src/records.ts";
@@ -27,24 +28,73 @@ export const requestSchemas = {
     maxDataAgeSeconds: z.number().int().min(30).max(86400),
     allowedVaultIds: z.array(z.uuid()).max(100),
   }),
-  program: z.strictObject({ name: nameSchema, coveragePolicyId: z.uuid().optional() }),
+  program: z.strictObject({
+    name: nameSchema,
+    coveragePolicyId: z.uuid().optional(),
+    kind: z.enum(["COVERAGE", "FINDINGS"]).optional(),
+    scopeSummary: z.string().trim().min(1).max(4000).optional(),
+    rulesSummary: z.string().trim().min(1).max(4000).optional(),
+    disclosurePolicy: z.string().trim().min(1).max(2000).optional(),
+    visibility: z.enum(["PUBLIC", "PRIVATE"]).optional(),
+  }),
+  severityTier: z
+    .strictObject({
+      name: z.string().trim().min(1).max(40),
+      minReward: uint().refine((v) => BigInt(v) > 0n),
+      maxReward: uint(),
+    })
+    .refine((v) => BigInt(v.maxReward) >= BigInt(v.minReward), {
+      message: "The maximum reward must be at least the minimum reward.",
+    }),
+  finding: z.strictObject({
+    tierId: z.uuid(),
+    title: z.string().trim().min(3).max(200),
+    summary: z.string().trim().min(3).max(500),
+    affectedComponent: z.string().trim().min(1).max(200),
+    selfAssessedSeverity: severity,
+    claimantWalletId: z.uuid(),
+    keyId: bytes32,
+    algorithm: z.literal("X25519_SEALED_BOX"),
+    ciphertextHash: bytes32,
+    byteLength: z
+      .number()
+      .int()
+      .min(49)
+      .max(MAX_EVIDENCE_BYTES + 48),
+  }),
   assistantQuestion: z.strictObject({ question: z.string().trim().min(3).max(500) }),
   empty: z.strictObject({}),
   prepareManifest: z.strictObject({ vaultId: z.uuid(), signingWalletId: z.uuid() }),
   signature: z.strictObject({ signature: z.string().regex(/^0x[0-9a-fA-F]{130}$/) }),
+  payoutApprovalSignature: z.strictObject({
+    walletId: z.uuid(),
+    signature: z.string().regex(/^0x[0-9a-fA-F]{130}$/),
+  }),
   bountyDraft: z
     .strictObject({
-      manifestId: z.uuid(),
+      manifestId: z.uuid().optional(),
+      tierId: z.uuid().optional(),
+      scopeAddress: address.optional(),
       refundWalletId: z.uuid().optional(),
       controllerId: z.uuid().optional(),
-      reward: uint().refine((v) => BigInt(v) > 0n),
-      minimumDiscrepancy: uint().refine((v) => BigInt(v) > 0n),
+      reward: uint()
+        .refine((v) => BigInt(v) > 0n)
+        .optional(),
+      minimumDiscrepancy: uint()
+        .refine((v) => BigInt(v) > 0n)
+        .optional(),
       submissionDeadline: uint(64),
       reservationDurationSeconds: z.number().int().min(60).max(1800),
       settlementGraceSeconds: z.number().int().min(0).max(86400).default(3600),
     })
     .refine((v) => Boolean(v.refundWalletId) !== Boolean(v.controllerId), {
       message: "Select one refund wallet or budget controller.",
+    })
+    .refine((v) => Boolean(v.manifestId) !== Boolean(v.tierId), {
+      message: "Select one signed fixture manifest or one severity tier.",
+    })
+    .refine((v) => !v.tierId || Boolean(v.scopeAddress), {
+      message: "A severity tier draft needs the in-scope contract address.",
     }),
   policyHash: z.strictObject({ policyHash: bytes32 }),
   controller: z.strictObject({
@@ -98,6 +148,7 @@ export const pathSchemas = {
   hash: z.object({ id: bytes32 }),
   member: z.object({ id: z.uuid(), userId: z.uuid() }),
   wallet: z.object({ id: z.uuid(), walletId: z.uuid() }),
+  programTier: z.object({ id: z.uuid(), programId: z.uuid() }),
 };
 export const hashPageParams = z.object({
   limit: z.coerce.number().int().min(1).max(100).default(25),

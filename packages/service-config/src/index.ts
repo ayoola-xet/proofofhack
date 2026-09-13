@@ -4,8 +4,8 @@ import { address, bytes32 } from "../../domain/src/index.ts";
 export const publicConfigSchema = z.strictObject({
   schemaVersion: z.literal("1"),
   testnetOnly: z.literal(true),
-  evidenceScope: z.literal("FIXTURE_ONLY"),
-  verifierMode: z.literal("TRUSTED_SERVICE"),
+  evidenceScope: z.enum(["FIXTURE_ONLY", "AUTOMATED_FINDING"]),
+  verifierMode: z.enum(["TRUSTED_SERVICE", "AUTOMATED_SANDBOX_AND_AI"]),
   evidenceKeyId: bytes32,
   evidencePublicKey: z.string().min(40).max(100),
   admissionSigner: address,

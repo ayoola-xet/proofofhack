@@ -21,7 +21,11 @@ import { ReadOnlyBountyChain } from "../../packages/chain/src/bounty-reader.ts";
 import { encodeClaimCall } from "../../packages/chain/src/claim-calls.ts";
 import { FileCiphertextStore } from "../../packages/ciphertext-store/src/index.ts";
 import { connectDatabase, databaseUrl } from "../../packages/database/src/index.ts";
-import { policySchema } from "../../packages/domain/src/index.ts";
+import {
+  ADAPTER_ID,
+  GENERAL_FINDING_ADAPTER_ID,
+  policySchema,
+} from "../../packages/domain/src/index.ts";
 import { InternalClient } from "../../packages/service-auth/src/http.ts";
 import { publicConfigSchema } from "../../packages/service-config/src/index.ts";
 import { localSeedScope } from "../../scripts/local-seed-scope.ts";
@@ -32,6 +36,7 @@ import { createReleaseApp } from "../../services/report-release/src/app.ts";
 import { createReportDownloadApp } from "../../services/report-release/src/download.ts";
 import { OrganizationKeyStore } from "../../services/report-release/src/keys.ts";
 import { createVerifierApp } from "../../services/verifier/src/app.ts";
+import { FindingVerifier } from "../../services/verifier/src/finding-process.ts";
 import { FixtureVerifier } from "../../services/verifier/src/process.ts";
 import { startClaimJobs } from "../../services/worker/src/claim-jobs.ts";
 import type { ClaimRelayer } from "../../services/worker/src/claim-process.ts";
@@ -46,6 +51,13 @@ const seedSchema = z.object({
     z.object({ role: z.string(), userId: z.uuid(), walletId: z.uuid(), address: z.string() }),
   ),
   bounties: z.array(z.object({ label: z.string(), bountyId: z.string(), policy: policySchema })),
+  findingsProgram: z.object({
+    programId: z.uuid(),
+    tierId: z.uuid(),
+    bountyId: z.string(),
+    minReward: z.string(),
+    maxReward: z.string(),
+  }),
 });
 const actorSchema = z.array(
   z.object({
@@ -168,6 +180,7 @@ export async function startBrowserHarness() {
       actors = actorSchema.parse(await load("actors.json"));
     const config = publicConfigSchema.parse(await load("public-services.json"));
     const secrets = await load("verifier-secrets.json");
+    const findingSecrets = await load("finding-verifier-secrets.json");
     const workerIdentity = await load("worker-identity.json"),
       apiIdentity = await load("api-identity.json");
     const evidence = new FileCiphertextStore(resolve(directory, "evidence"), 262192),
@@ -189,6 +202,21 @@ export async function startBrowserHarness() {
     const verifierUrl = await listen(
       createVerifierApp(
         new FixtureVerifier(pool, { config, evidence, reports, reader, ...secrets }),
+        config.serviceIdentities.worker,
+      ),
+    );
+    const findingVerifierUrl = await listen(
+      createVerifierApp(
+        new FindingVerifier(pool, {
+          config: findingSecrets.config,
+          evidence,
+          reports,
+          reader,
+          evidenceKeys: findingSecrets.evidenceKeys,
+          researcherKeys: findingSecrets.researcherKeys,
+          admissionKey: findingSecrets.admissionKey,
+          verdictKey: findingSecrets.verdictKey,
+        }),
         config.serviceIdentities.worker,
       ),
     );
@@ -223,11 +251,15 @@ export async function startBrowserHarness() {
         appEnv: "local",
         localReceiptAsset: seed.asset,
         webOrigin: baseUrl,
-        claimServices: { config, evidence },
+        claimServices: {
+          configs: { [ADAPTER_ID]: config, [GENERAL_FINDING_ADAPTER_ID]: findingSecrets.config },
+          evidence,
+        },
         recoveryChain: reader,
         bountyServices: {
           escrow: seed.escrow,
           publicConfig: config,
+          findingsConfig: findingSecrets.config,
           release: new InternalClient(releaseUrl, "api", "report-release", apiIdentity.privateKey),
         },
         walletIdentity: {
@@ -315,8 +347,21 @@ export async function startBrowserHarness() {
       boss,
       pool,
       reader,
-      relayer,
-      new InternalClient(verifierUrl, "worker", "verifier", workerIdentity.privateKey),
+      { [ADAPTER_ID]: relayer, [GENERAL_FINDING_ADAPTER_ID]: relayer },
+      {
+        [ADAPTER_ID]: new InternalClient(
+          verifierUrl,
+          "worker",
+          "verifier",
+          workerIdentity.privateKey,
+        ),
+        [GENERAL_FINDING_ADAPTER_ID]: new InternalClient(
+          findingVerifierUrl,
+          "worker",
+          "verifier",
+          workerIdentity.privateKey,
+        ),
+      },
       new InternalClient(releaseUrl, "worker", "report-release", workerIdentity.privateKey),
     );
     vite = await viteServer({

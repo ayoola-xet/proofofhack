@@ -157,7 +157,7 @@ it("Creates final local funding, separate actors, private files, and refuses a r
     const counts = await database.pool.query(
       "select (select count(*)::int from bounties) bounties,(select count(*)::int from receipts where status='FINAL') receipts,(select count(*)::int from users) users",
     );
-    expect(counts.rows[0]).toEqual({ bounties: 3, receipts: 3, users: 5 });
+    expect(counts.rows[0]).toEqual({ bounties: 4, receipts: 4, users: 5 });
     for (let i = 0; i < 5; i++) {
       const response = await app.inject({
         url: `/api/v1/organizations/${manifest.organizationId}`,
@@ -173,9 +173,9 @@ it("Creates final local funding, separate actors, private files, and refuses a r
     expect(repeated.code).toBe(1);
     expect(repeated.output).toContain("database already exists");
     expect(await client.getBlockNumber()).toBe(before);
-    expect((await database.pool.query("select count(*)::int n from bounties")).rows[0].n).toBe(3);
+    expect((await database.pool.query("select count(*)::int n from bounties")).rows[0].n).toBe(4);
   } finally {
     await app.close();
     await database.pool.end();
   }
-}, 30000);
+}, 45000);

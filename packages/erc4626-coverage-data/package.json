@@ -5,7 +5,8 @@
   "type": "module",
   "exports": "./src/client.ts",
   "scripts": {
-    "codegen": "graph codegen subgraph.yaml",
-    "build": "graph codegen subgraph.yaml && graph build subgraph.yaml"
+    "generate-manifest": "tsx ../../scripts/generate-subgraph-manifest.ts",
+    "codegen": "pnpm generate-manifest && graph codegen subgraph.yaml",
+    "build": "pnpm generate-manifest && graph codegen subgraph.yaml && graph build subgraph.yaml"
   }
 }

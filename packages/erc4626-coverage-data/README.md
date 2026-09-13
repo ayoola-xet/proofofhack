@@ -1,8 +1,16 @@
 # ERC-4626 coverage data
 
-This package uses one schema and one query for three existing vault deployments. It reads public Ethereum data. It does not submit transactions to these vaults.
+This package uses one schema, one shared indexing mapping, and one query client for any number of ERC-4626 vault deployments. It reads public Ethereum data. It does not submit transactions to these vaults.
 
-The current sources are Sky sDAI, Sky sUSDS, and Ethena sUSDe. Each source has a reference in `sources.json`. Source labels are metadata. They are not model instructions.
+Every source lives in `sources.json`; `subgraph.yaml` is generated from it, not hand-written. Covering one more vault, on any of The Graph's supported EVM networks, is a one-line addition to `sources.json`, not a new hand-authored data source. Source labels are metadata. They are not model instructions.
+
+Currently indexed: Sky sDAI, Sky sUSDS, Ethena sUSDe, plus one clearly-labeled synthetic example entry demonstrating the addition path.
+
+## Covering another vault
+
+1. Add an entry to `sources.json` with the vault's `name`, `chainId`, `network`, `address`, `label`, `implementation`, and `source` reference.
+2. Run `pnpm --filter @proofofhack/erc4626-coverage-data generate-manifest` (or `codegen`/`build`, which run it first) to regenerate `subgraph.yaml`.
+3. Redeploy per the steps below. The schema, mapping, and query client require no changes.
 
 ## Data rules
 

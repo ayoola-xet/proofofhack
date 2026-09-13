@@ -27,7 +27,16 @@ export const role = z.enum(["OWNER", "TREASURY", "REVIEWER", "VIEWER"]);
 export const environment = z.enum(["local", "arc-testnet"]);
 export const VERIFIER_MODE = "TRUSTED_SERVICE" as const;
 export const EVIDENCE_SCOPE = "FIXTURE_ONLY" as const;
+export const FINDING_VERIFIER_MODE = "AUTOMATED_SANDBOX_AND_AI" as const;
+export const FINDING_EVIDENCE_SCOPE = "AUTOMATED_FINDING" as const;
 export const ADAPTER_ID = keccak256(toHex("ACCOUNTING_FIXTURE_V1"));
+export const GENERAL_FINDING_ADAPTER_ID = keccak256(toHex("GENERAL_FINDING_V1"));
+export const NO_FIXTURE_MANIFEST_ROOT = keccak256(toHex("GENERAL_FINDING_NO_FIXTURE"));
+export const severity = z.enum(["CRITICAL", "HIGH", "MEDIUM", "LOW"]);
+/** Payouts at or above this amount (base units, 6 decimals) pause for a
+ * two-of-N Privy-signed quorum from the organization before settling on-chain. */
+export const LARGE_PAYOUT_THRESHOLD = 1_500_000n;
+export const LARGE_PAYOUT_REQUIRED_APPROVALS = 2;
 export const MAX_EVIDENCE_BYTES = 256 * 1024;
 
 export const policySchema = z
@@ -178,6 +187,22 @@ export const fixtureSchema = z.strictObject({
   merkleProof: z.array(bytes32).max(32),
 });
 export type Fixture = z.infer<typeof fixtureSchema>;
+
+export const MAX_POC_BYTES = 64 * 1024;
+export const findingEvidenceSchema = z.strictObject({
+  schemaVersion: z.literal("1"),
+  pocLanguage: z.enum(["solidity-foundry", "none"]),
+  pocCode: z.string().max(MAX_POC_BYTES),
+  writeup: z.string().min(1).max(20000),
+  // The verifier always forks its own trusted Arc testnet RPC; a researcher-supplied
+  // RPC URL would let a submission point verification at a server returning fabricated
+  // state, so only the block number (for reproducibility) is researcher-controlled.
+  forkBlockNumber: z
+    .string()
+    .regex(/^[0-9]+$/)
+    .optional(),
+});
+export type FindingEvidence = z.infer<typeof findingEvidenceSchema>;
 
 export function parseMoney(value: string, decimals = 6): bigint {
   if (!Number.isInteger(decimals) || decimals < 0 || decimals > 18)

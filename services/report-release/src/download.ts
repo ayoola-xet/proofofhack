@@ -4,7 +4,13 @@ import { keccak256 } from "viem";
 import { z } from "zod";
 import type { CiphertextStore } from "../../../packages/ciphertext-store/src/index.ts";
 import { decryptReport } from "../../../packages/crypto-envelope/src/index.ts";
-import { DomainError } from "../../../packages/domain/src/index.ts";
+import {
+  DomainError,
+  EVIDENCE_SCOPE,
+  FINDING_EVIDENCE_SCOPE,
+  FINDING_VERIFIER_MODE,
+  VERIFIER_MODE,
+} from "../../../packages/domain/src/index.ts";
 import type { AuthProvider } from "../../api/src/auth.ts";
 import { first } from "../../api/src/context.ts";
 import { reportAccess } from "./access.ts";
@@ -75,12 +81,15 @@ export function createReportDownloadApp(options: {
           503,
         );
       const report = JSON.parse(new TextDecoder("utf-8", { fatal: true }).decode(plaintext));
+      const validScope =
+        (report.evidenceScope === EVIDENCE_SCOPE && report.verifierMode === VERIFIER_MODE) ||
+        (report.evidenceScope === FINDING_EVIDENCE_SCOPE &&
+          report.verifierMode === FINDING_VERIFIER_MODE);
       if (
         report.claimId !== row.claim_id ||
         report.bountyId !== row.bounty_id ||
         report.policyHash !== row.bounty_id ||
-        report.evidenceScope !== "FIXTURE_ONLY" ||
-        report.verifierMode !== "TRUSTED_SERVICE"
+        !validScope
       )
         throw new DomainError("REPORT_INTEGRITY", "The report does not match this claim.", 503);
       // Recheck current membership and payment after the bounded decryption operation.

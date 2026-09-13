@@ -3,7 +3,7 @@ import { ReadOnlyBountyChain } from "../../../packages/chain/src/bounty-reader.t
 import { ReadOnlyBudgetChain } from "../../../packages/chain/src/budget.ts";
 import { CircleBudgetExecutor } from "../../../packages/circle/src/budget.ts";
 import { configuredCircleRelayer } from "../../../packages/circle/src/claims.ts";
-import { address } from "../../../packages/domain/src/index.ts";
+import { ADAPTER_ID, address, GENERAL_FINDING_ADAPTER_ID } from "../../../packages/domain/src/index.ts";
 import { PrivyTreasury } from "../../../packages/privy/src/treasury.ts";
 import { PrivyWalletIdentity } from "../../../packages/privy/src/wallets.ts";
 import { InternalClient } from "../../../packages/service-auth/src/http.ts";
@@ -64,6 +64,13 @@ if (process.env.CIRCLE_AGENT_ADDRESS && process.env.ESCROW_ADDRESS) {
   const escrow = address.parse(process.env.ESCROW_ADDRESS);
   const operator = address.parse(process.env.CIRCLE_AGENT_ADDRESS);
   const relayer = await configuredCircleRelayer(pool, operator, escrow);
+  const findingRelayer = process.env.FINDING_CIRCLE_AGENT_ADDRESS
+    ? await configuredCircleRelayer(
+        pool,
+        address.parse(process.env.FINDING_CIRCLE_AGENT_ADDRESS),
+        escrow,
+      )
+    : relayer;
   await startReceiptExportJobs(
     boss,
     pool,
@@ -93,13 +100,21 @@ if (process.env.CIRCLE_AGENT_ADDRESS && process.env.ESCROW_ADDRESS) {
     boss,
     pool,
     new ReadOnlyBountyChain("https://rpc.testnet.arc.io", 5042002, escrow),
-    relayer,
-    new InternalClient(
-      process.env.VERIFIER_INTERNAL_URL ?? "http://127.0.0.1:4191",
-      "worker",
-      "verifier",
-      identity.privateKey,
-    ),
+    { [ADAPTER_ID]: relayer, [GENERAL_FINDING_ADAPTER_ID]: findingRelayer },
+    {
+      [ADAPTER_ID]: new InternalClient(
+        process.env.VERIFIER_INTERNAL_URL ?? "http://127.0.0.1:4191",
+        "worker",
+        "verifier",
+        identity.privateKey,
+      ),
+      [GENERAL_FINDING_ADAPTER_ID]: new InternalClient(
+        process.env.FINDING_VERIFIER_INTERNAL_URL ?? "http://127.0.0.1:4196",
+        "worker",
+        "finding-verifier",
+        identity.privateKey,
+      ),
+    },
     new InternalClient(
       process.env.REPORT_INTERNAL_URL ?? "http://127.0.0.1:4194",
       "worker",

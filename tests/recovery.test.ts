@@ -27,6 +27,7 @@ import {
 } from "../packages/chain/src/recovery.ts";
 import { connectDatabase, databaseUrl } from "../packages/database/src/index.ts";
 import {
+  ADAPTER_ID,
   admissionFields,
   assessmentFields,
   hashPolicy,
@@ -988,10 +989,14 @@ it("Stops assessment retries after reservation expiry and queues canonical recov
       throw new Error("Must not assess or release");
     }),
   };
-  expect(await processClaim(pool, reader, relay, service, service, f.claim)).toEqual({
+  expect(
+    await processClaim(pool, reader, { [ADAPTER_ID]: relay }, { [ADAPTER_ID]: service }, service, f.claim),
+  ).toEqual({
     state: "RECOVERY_PENDING",
   });
-  expect(await processClaim(pool, reader, relay, service, service, f.claim)).toEqual({
+  expect(
+    await processClaim(pool, reader, { [ADAPTER_ID]: relay }, { [ADAPTER_ID]: service }, service, f.claim),
+  ).toEqual({
     state: "RECOVERY_PENDING",
   });
   expect(relay.send).not.toHaveBeenCalled();

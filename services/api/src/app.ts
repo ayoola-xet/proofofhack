@@ -13,6 +13,8 @@ import type { AuthProvider } from "./auth.ts";
 import { type BountyServices, registerBountyRoutes } from "./bounty-routes.ts";
 import { type BudgetServices, registerBudgetRoutes } from "./budget-routes.ts";
 import { type ClaimServices, registerClaimRoutes } from "./claim-routes.ts";
+import { registerFindingRoutes } from "./finding-routes.ts";
+import { registerPayoutApprovalRoutes } from "./payout-approval-routes.ts";
 import { expectedVersion, first, idParams, member, mutate, pageParams } from "./context.ts";
 import { registerCoverageRoutes } from "./coverage-routes.ts";
 import { registerFundingRoutes } from "./funding-routes.ts";
@@ -283,8 +285,18 @@ export async function createApp(options: ApiOptions) {
           status: 201,
           body: await first(
             c,
-            "insert into programs(organization_id,name,coverage_policy_id) values($1,$2,$3) returning *",
-            [id, input.name, input.coveragePolicyId ?? null],
+            `insert into programs(organization_id,name,coverage_policy_id,kind,scope_summary,rules_summary,disclosure_policy,visibility)
+             values($1,$2,$3,$4,$5,$6,$7,$8) returning *`,
+            [
+              id,
+              input.name,
+              input.coveragePolicyId ?? null,
+              input.kind ?? "COVERAGE",
+              input.scopeSummary ?? null,
+              input.rulesSummary ?? null,
+              input.disclosurePolicy ?? null,
+              input.visibility ?? "PRIVATE",
+            ],
           ),
         };
       },
@@ -314,6 +326,8 @@ export async function createApp(options: ApiOptions) {
   registerTreasuryRoutes(app, pool, options.bountyServices?.escrow);
   registerFundingRoutes(app, pool, options.bountyServices?.escrow, options.walletIdentity);
   registerClaimRoutes(app, pool, options.claimServices, options.walletIdentity);
+  registerFindingRoutes(app, pool, options.claimServices, options.walletIdentity);
+  registerPayoutApprovalRoutes(app, pool, options.walletIdentity);
   registerCoverageRoutes(app, pool);
   registerBudgetRoutes(app, pool, options.budgetServices);
   registerOwnerRoutes(app, pool, options.budgetServices, options.walletIdentity);

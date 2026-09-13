@@ -26,6 +26,7 @@ const required = [
   "ESCROW_ADDRESS",
   "CIRCLE_AGENT_ADDRESS",
   "SERVICE_PUBLIC_CONFIG",
+  "FINDING_SERVICE_PUBLIC_CONFIG",
 ];
 const missing = required.filter((key) => !process.env[key]);
 if (missing.length)
@@ -33,6 +34,10 @@ if (missing.length)
 if (!existsSync(process.env.SERVICE_PUBLIC_CONFIG as string))
   throw new Error(
     "The public service configuration file is missing. Complete service key setup first.",
+  );
+if (!existsSync(process.env.FINDING_SERVICE_PUBLIC_CONFIG as string))
+  throw new Error(
+    "The findings public service configuration file is missing. Complete findings service key setup first.",
   );
 const port = (key: string, fallback: number) => {
   const value = Number(process.env[key] ?? fallback);
@@ -50,6 +55,11 @@ const services = [
     name: "verifier",
     entry: "services/verifier/src/main.ts",
     ports: [port("VERIFIER_INTERNAL_PORT", 4191), port("RESEARCHER_REPORT_PORT", 4192)],
+  },
+  {
+    name: "findings-verifier",
+    entry: "services/verifier/src/finding-main.ts",
+    ports: [port("FINDING_VERIFIER_INTERNAL_PORT", 4196)],
   },
   { name: "api", entry: "services/api/src/main.ts", ports: [port("API_PORT", 4187)] },
   { name: "worker", entry: "services/worker/src/main.ts", ports: [] },

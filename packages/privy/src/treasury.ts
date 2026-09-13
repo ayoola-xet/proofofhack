@@ -150,6 +150,7 @@ export interface TreasuryProvider {
   createPolicy(key: string, config: TreasuryConfiguration): Promise<string>;
   createWallet(key: string, policyId: string): Promise<TreasuryWallet>;
   verify(wallet: TreasuryWallet, config: TreasuryConfiguration): Promise<void>;
+  configureArcSigning?(wallet: TreasuryWallet, config: TreasuryConfiguration): Promise<void>;
   sign(
     wallet: TreasuryWallet,
     key: string,

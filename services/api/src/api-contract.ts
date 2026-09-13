@@ -90,6 +90,58 @@ route(
 route("GET", "/organizations/:id/programs", "programs", "List organization programs", member, 200, {
   pagination: "uuid",
 });
+route(
+  "POST",
+  "/organizations/:id/programs/:programId/severity-tiers",
+  "createSeverityTier",
+  "Create a severity tier for a findings program",
+  owner,
+  201,
+  { body: "severityTier" },
+);
+route("GET", "/programs", "publicPrograms", "List public findings programs", user, 200, {
+  pagination: "uuid",
+});
+route(
+  "GET",
+  "/programs/:id",
+  "publicProgram",
+  "Read a public findings program and its tiers",
+  user,
+);
+route(
+  "POST",
+  "/programs/:id/findings",
+  "submitFinding",
+  "Submit an encrypted finding against an open severity tier slot",
+  user,
+  201,
+  { body: "finding" },
+);
+route("GET", "/findings/me", "myFindings", "List the current user's submitted findings", user);
+route(
+  "GET",
+  "/organizations/:id/findings",
+  "organizationFindings",
+  "List findings submitted against organization programs",
+  reviewer,
+);
+route(
+  "GET",
+  "/organizations/:id/payout-approvals",
+  "payoutApprovals",
+  "List pending large-payout quorum approvals",
+  treasury,
+);
+route(
+  "POST",
+  "/payout-approvals/:id/sign",
+  "signPayoutApproval",
+  "Add a Privy-signed quorum approval for a large automated payout",
+  treasury,
+  200,
+  { body: "payoutApprovalSignature" },
+);
 route("GET", "/bounties", "bounties", "List funded fixture bounties", user, 200, {
   pagination: "hash",
 });

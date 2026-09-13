@@ -19,7 +19,13 @@ import { ReadOnlyBountyChain } from "../packages/chain/src/bounty-reader.ts";
 import { contractPolicy } from "../packages/chain/src/policy.ts";
 import { createEncryptionKeyPair, hashCanonical } from "../packages/crypto-envelope/src/index.ts";
 import { connectDatabase } from "../packages/database/src/index.ts";
-import { ADAPTER_ID, hashPolicy, policySchema } from "../packages/domain/src/index.ts";
+import {
+  ADAPTER_ID,
+  GENERAL_FINDING_ADAPTER_ID,
+  hashPolicy,
+  NO_FIXTURE_MANIFEST_ROOT,
+  policySchema,
+} from "../packages/domain/src/index.ts";
 import { createManifestCases } from "../packages/fixture-manifest/src/index.ts";
 import { publicConfigSchema } from "../packages/service-config/src/index.ts";
 import { createApp } from "../services/api/src/app.ts";
@@ -247,7 +253,7 @@ async function seed() {
         address: asset,
         abi: erc20Abi,
         functionName: "approve",
-        args: [escrow, 3000000n],
+        args: [escrow, 5000000n],
       }),
     );
     const bounties = [];
@@ -340,6 +346,125 @@ async function seed() {
         blockNumber: String(funded.blockNumber),
       });
     }
+    const findingAdmissionKey = generatePrivateKey(),
+      findingVerdictKey = generatePrivateKey();
+    const findingSources = [
+      "services/verifier/src/finding.ts",
+      "services/verifier/src/finding-process.ts",
+      "packages/domain/src/index.ts",
+      "packages/crypto-envelope/src/index.ts",
+    ];
+    const findingSourceHashes = Object.fromEntries(
+      await Promise.all(
+        findingSources.map(async (path) => [path, keccak256(toHex(await readFile(path, "utf8")))]),
+      ),
+    );
+    const findingAdapterCodeHash = hashCanonical({
+      sources: findingSourceHashes,
+      dependencies: { viem: "2.56.3", zod: "4.5.4" },
+    });
+    const findingVerifierConfigHash = hashCanonical({
+      adapterCodeHash: findingAdapterCodeHash,
+      verifierMode: "AUTOMATED_SANDBOX_AND_AI",
+      schemaVersion: "1",
+    });
+    const findingConfig = {
+      adapterCodeHash: findingAdapterCodeHash,
+      verifierConfigHash: findingVerifierConfigHash,
+      admissionSigner: privateKeyToAccount(findingAdmissionKey).address.toLowerCase(),
+      verdictSigner: privateKeyToAccount(findingVerdictKey).address.toLowerCase(),
+      evidenceKeyId: config.evidenceKeyId,
+      evidencePublicKey: config.evidencePublicKey,
+    };
+    await save("finding-verifier-secrets.json", {
+      testnetOnly: true,
+      admissionKey: findingAdmissionKey,
+      verdictKey: findingVerdictKey,
+      evidenceKeys,
+      researcherKeys,
+      config: findingConfig,
+    });
+    const findingsProgram = await request(0, `/organizations/${org.id}/programs`, {
+      name: "Local findings program",
+    });
+    const tier = await pool.query(
+      "insert into severity_tiers(program_id,name,min_reward,max_reward,asset,display_order) values($1,'CRITICAL','200000','2000000',$2,0) returning id",
+      [findingsProgram.id, asset.toLowerCase()],
+    );
+    const tierId = tier.rows[0].id;
+    await pool.query("update programs set kind='FINDINGS',visibility='PUBLIC' where id=$1", [
+      findingsProgram.id,
+    ]);
+    const findingPolicy = policySchema.parse({
+      settlementChainId: "31337",
+      escrow: escrow.toLowerCase(),
+      organizationId: org.onchain_id,
+      refundRecipient: owner.address.toLowerCase(),
+      sourceChainId: "31337",
+      sourceVault: toHex(555, { size: 20 }),
+      sourceBlockHash: latest.hash,
+      fixtureManifestRoot: NO_FIXTURE_MANIFEST_ROOT,
+      adapterId: GENERAL_FINDING_ADAPTER_ID,
+      adapterCodeHash: findingAdapterCodeHash,
+      verifierConfigHash: findingVerifierConfigHash,
+      admissionSigner: findingConfig.admissionSigner,
+      verdictSigner: findingConfig.verdictSigner,
+      reportRecipientKeyId: orgKey.keyId,
+      asset: asset.toLowerCase(),
+      reward: "2000000",
+      minimumDiscrepancy: "1",
+      submissionDeadline: String(latest.timestamp + 86400n),
+      settlementDeadline: String(latest.timestamp + 90000n),
+      reservationDurationSeconds: "1800",
+      organizationNonce: randomHash(),
+    });
+    const findingFunded = await receipt(
+      await wallet.writeContract({
+        address: escrow,
+        abi: bountyEscrowAbi,
+        functionName: "createAndFund",
+        args: [contractPolicy(findingPolicy)],
+      }),
+    );
+    await anvil("anvil_mine", ["0x40"]);
+    const findingBountyId = hashPolicy(findingPolicy);
+    const findingLogs = findingFunded.logs
+      .filter((log) => log.address.toLowerCase() === findingPolicy.escrow)
+      .map((log) => ({
+        log,
+        event: decodeEventLog({ abi: bountyEscrowAbi, data: log.data, topics: log.topics }),
+      }));
+    if (findingLogs.length !== 1)
+      throw new LocalSeedError("The local finding bounty funding receipt is malformed.");
+    const { log: findingLog, event: findingEvent } = findingLogs[0];
+    if (findingEvent.eventName !== "BountyFunded")
+      throw new LocalSeedError("The local finding bounty funding event is malformed.");
+    await pool.query(
+      "insert into bounties(bounty_id,program_id,severity_tier_id,policy_hash,policy_json,chain_id,escrow,reward,unallocated_reward,chain_state,creation_tx) values($1,$2,$3,$1,$4,'31337',$5,'2000000','2000000','FUNDED',$6)",
+      [
+        findingBountyId,
+        findingsProgram.id,
+        tierId,
+        JSON.stringify(findingPolicy),
+        findingPolicy.escrow,
+        findingFunded.transactionHash,
+      ],
+    );
+    const findingEventRow = await pool.query(
+      "insert into chain_events(chain_id,transaction_hash,log_index,block_number,block_hash,name,payload_json,finality_state,contract_address) values('31337',$1,$2,$3,$4,'BountyFunded',$5,'FINAL',$6) returning id",
+      [
+        findingFunded.transactionHash,
+        findingLog.logIndex,
+        String(findingFunded.blockNumber),
+        findingFunded.blockHash,
+        JSON.stringify({ ...findingEvent.args, reward: String(findingEvent.args.reward) }),
+        findingPolicy.escrow,
+      ],
+    );
+    await pool.query(
+      "insert into receipts(organization_id,bounty_id,category,amount,asset,event_id,status) values($1,$2,'FUNDING','2000000',$3,$4,'FINAL')",
+      [org.id, findingBountyId, findingPolicy.asset, findingEventRow.rows[0].id],
+    );
     const wallets = [];
     for (let i = 0; i < actors.length; i++) {
       const address = privateKeyToAccount(actors[i].privateKey).address.toLowerCase();
@@ -364,6 +489,13 @@ async function seed() {
       wallets,
       bounties,
       adapterCodeHash,
+      findingsProgram: {
+        programId: findingsProgram.id,
+        tierId,
+        bountyId: findingBountyId,
+        minReward: "200000",
+        maxReward: "2000000",
+      },
     });
     process.stdout.write(
       `Local seed complete: ${directory}/seed.json\nThree local bounties have final funding. No sponsor account was used.\n`,

@@ -25,5 +25,14 @@
     "implementation": "StakedUSDeV2",
     "synthetic": false,
     "source": "https://docs.ethena.fi/solution-design/key-addresses"
+  },
+  {
+    "name": "ExampleVault",
+    "chainId": "1",
+    "address": "0x0000000000000000000000000000000000004626",
+    "label": "Example ERC-4626 vault (synthetic)",
+    "implementation": "GenericERC4626",
+    "synthetic": true,
+    "source": "This entry demonstrates that covering one more ERC-4626 vault is a one-line addition to sources.json, not a new hand-written data source. Replace with a real deployment address before indexing."
   }
 ]

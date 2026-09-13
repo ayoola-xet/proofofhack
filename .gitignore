@@ -21,3 +21,4 @@ output/
 
 packages/erc4626-coverage-data/generated/
 packages/erc4626-coverage-data/build/
+.vercel

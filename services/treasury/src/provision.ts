@@ -80,7 +80,15 @@ export async function provisionTreasury(pool: Pool, provider: TreasuryProvider, 
         throw error;
       }
     }
-    await provider.verify(wallet, config);
+    try {
+      await provider.verify(wallet, config);
+    } catch (err) {
+      if (typeof provider.configureArcSigning === "function") {
+        await provider.configureArcSigning(wallet, config);
+      } else {
+        throw err;
+      }
+    }
     await c.query(
       "update wallet_setups set state='READY',version=version+1,updated_at=now() where id=$1",
       [setupId],

@@ -1,0 +1,2 @@
+ALTER TABLE "bounty_drafts" ADD COLUMN "severity_tier_id" uuid;--> statement-breakpoint
+ALTER TABLE "bounty_drafts" ADD CONSTRAINT "bounty_drafts_severity_tier_id_severity_tiers_id_fk" FOREIGN KEY ("severity_tier_id") REFERENCES "public"."severity_tiers"("id") ON DELETE no action ON UPDATE no action;

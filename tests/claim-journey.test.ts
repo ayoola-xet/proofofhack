@@ -29,6 +29,7 @@ import {
 } from "../packages/crypto-envelope/src/index.ts";
 import { connectDatabase, databaseUrl } from "../packages/database/src/index.ts";
 import { ADAPTER_ID, type BountyPolicy, hashPolicy } from "../packages/domain/src/index.ts";
+import { payoutApprovalMessage } from "../packages/privy/src/funding-authorization.ts";
 import { createManifestCases } from "../packages/fixture-manifest/src/index.ts";
 import { serviceToken } from "../packages/service-auth/src/index.ts";
 import type { PublicServiceConfig } from "../packages/service-config/src/index.ts";
@@ -91,7 +92,7 @@ const api = await createApp({
   auth,
   appEnv: "local",
   webOrigin: "http://127.0.0.1:5173",
-  claimServices: { config, evidence },
+  claimServices: { configs: { [ADAPTER_ID]: config }, evidence },
   walletIdentity: {
     userWallets: async () => [
       { providerWalletId: "test-researcher", address: accounts[1].address.toLowerCase() },
@@ -112,7 +113,7 @@ let vApp: ReturnType<typeof createVerifierApp>,
   organization: ReturnType<typeof createReportDownloadApp>;
 let publicClient: ReturnType<typeof createPublicClient>;
 let advanceTime: (seconds: number) => Promise<void>;
-let fundNext: () => Promise<void>, collectExternally: () => Promise<Hex>;
+let fundNext: (reward?: string) => Promise<void>, collectExternally: () => Promise<Hex>;
 const cases = createManifestCases([h(100), h(101), h(102)], [h(200), h(201), h(202)]);
 const headers = (i = 1) => ({
   authorization: `Bearer ${users[i].token}`,
@@ -310,14 +311,14 @@ beforeAll(async () => {
     "insert into bounties(bounty_id,program_id,policy_hash,policy_json,chain_id,escrow,reward,unallocated_reward,chain_state,creation_tx) values($1,$2,$1,$3,'31337',$4,'1000000','1000000','FUNDED',$5)",
     [hashPolicy(policy), programId, JSON.stringify(policy), policy.escrow, funded.transactionHash],
   );
-  fundNext = async () => {
-    policy = { ...policy, organizationNonce: h(45) };
+  fundNext = async (reward = "1000000") => {
+    policy = { ...policy, reward, organizationNonce: h(45 + Number(reward)) };
     await publicClient.waitForTransactionReceipt({
       hash: await wallet.writeContract({
         address: asset,
         abi: erc20Abi,
         functionName: "approve",
-        args: [escrow, 1000000n],
+        args: [escrow, BigInt(reward)],
       }),
     });
     const receipt = await publicClient.waitForTransactionReceipt({
@@ -330,13 +331,14 @@ beforeAll(async () => {
     });
     await finalize();
     await pool.query(
-      "insert into bounties(bounty_id,program_id,policy_hash,policy_json,chain_id,escrow,reward,unallocated_reward,chain_state,creation_tx) values($1,$2,$1,$3,'31337',$4,'1000000','1000000','FUNDED',$5)",
+      "insert into bounties(bounty_id,program_id,policy_hash,policy_json,chain_id,escrow,reward,unallocated_reward,chain_state,creation_tx) values($1,$2,$1,$3,'31337',$4,$6,$6,'FUNDED',$5)",
       [
         hashPolicy(policy),
         programId,
         JSON.stringify(policy),
         policy.escrow,
         receipt.transactionHash,
+        reward,
       ],
     );
   };
@@ -452,9 +454,11 @@ async function upload(input: unknown) {
   expect(response.statusCode).toBe(200);
   return item.claimId as string;
 }
-const verifierClient = {
-  post: <T>(path: string, body: Record<string, unknown>) =>
-    internal<T>(vApp, "verifier", path, body),
+const verifierClients = {
+  [ADAPTER_ID]: {
+    post: <T>(path: string, body: Record<string, unknown>) =>
+      internal<T>(vApp, "verifier", path, body),
+  },
 };
 const releaseClient = {
   post: <T>(path: string, body: Record<string, unknown>) =>
@@ -480,13 +484,13 @@ it("Stops an expired admission after a lost response without reserving funds", a
     },
   };
   await expect(
-    processClaim(pool, reader, unavailable, verifierClient, releaseClient, claimId),
+    processClaim(pool, reader, { [ADAPTER_ID]: unavailable }, verifierClients, releaseClient, claimId),
   ).rejects.toThrow("Lost provider response");
   await advanceTime(301);
   expect(
-    await processClaim(pool, reader, unavailable, verifierClient, releaseClient, claimId),
+    await processClaim(pool, reader, { [ADAPTER_ID]: unavailable }, verifierClients, releaseClient, claimId),
   ).toEqual({ state: "ADMISSION_EXPIRED" });
-  await processClaim(pool, reader, unavailable, verifierClient, releaseClient, claimId);
+  await processClaim(pool, reader, { [ADAPTER_ID]: unavailable }, verifierClients, releaseClient, claimId);
   expect(sends).toBe(1);
   expect((await reader.read(policy)).state).toBe(1);
   expect(
@@ -501,7 +505,7 @@ it("Settles both nonqualifying controls and keeps organization report access loc
   for (const item of [cases.fixtures[1], cases.fixtures[2]]) {
     const claimId = await upload(item.fixture);
     expect(
-      await processClaim(pool, reader, relayer, verifierClient, releaseClient, claimId),
+      await processClaim(pool, reader, { [ADAPTER_ID]: relayer }, verifierClients, releaseClient, claimId),
     ).toEqual({ state: "SETTLED" });
     expect((await reader.read(policy)).state).toBe(1);
     const report = (await pool.query("select id from reports where claim_id=$1", [claimId]))
@@ -545,12 +549,12 @@ it("Pays the qualifying claim once and releases the exact report after final pay
     },
   };
   await expect(
-    processClaim(pool, reader, relayer, verifierClient, unavailable, claimId),
+    processClaim(pool, reader, { [ADAPTER_ID]: relayer }, verifierClients, unavailable, claimId),
   ).rejects.toThrow("Report service unavailable");
   expect((await reader.read(policy)).state).toBe(4);
   const count = calls.size;
-  await processClaim(pool, reader, relayer, verifierClient, releaseClient, claimId);
-  await processClaim(pool, reader, relayer, verifierClient, releaseClient, claimId);
+  await processClaim(pool, reader, { [ADAPTER_ID]: relayer }, verifierClients, releaseClient, claimId);
+  await processClaim(pool, reader, { [ADAPTER_ID]: relayer }, verifierClients, releaseClient, claimId);
   expect(calls.size).toBe(count);
   const savedIntent = (
     await pool.query(
@@ -610,6 +614,73 @@ it("Pays the qualifying claim once and releases the exact report after final pay
   ).toBe(200);
 }, 20000);
 
+it("Pauses a large automated payout for quorum and pays once two members approve", async () => {
+  await fundNext("2000000");
+  const claimId = await upload(cases.fixtures[0].fixture);
+  const before = await publicClient.readContract({
+    address: asset,
+    abi: erc20Abi,
+    functionName: "balanceOf",
+    args: [accounts[1].address],
+  });
+  await processClaim(pool, reader, { [ADAPTER_ID]: relayer }, verifierClients, releaseClient, claimId);
+  const gated = await pool.query("select job_state from claims where claim_id=$1", [claimId]);
+  expect(gated.rows[0].job_state).toBe("AWAITING_QUORUM");
+  const approval = (
+    await pool.query("select * from payout_approvals where claim_id=$1", [claimId])
+  ).rows[0];
+  expect(approval.state).toBe("PENDING");
+  expect(approval.reward).toBe("2000000");
+  const midway = await publicClient.readContract({
+    address: asset,
+    abi: erc20Abi,
+    functionName: "balanceOf",
+    args: [accounts[1].address],
+  });
+  expect(midway).toBe(before);
+  // Signature verification against a Privy wallet is already exercised by the
+  // funding-request authorization tests (the same recoverMessageAddress
+  // pattern); this test focuses on the new quorum bookkeeping and the
+  // worker's gate, so it records two members' approvals directly.
+  const message = payoutApprovalMessage({
+    approvalId: approval.id,
+    claimId: approval.claim_id,
+    reward: approval.reward,
+    requiredApprovals: approval.required_approvals,
+    expiresAt: approval.expires_at.toISOString(),
+  });
+  for (const userId of [ids[0], ids[1]]) {
+    const signerWallet = (
+      await pool.query(
+        "insert into wallets(provider,provider_wallet_id,owner_type,owner_id,chain_id,address) values('PRIVY',$1,'USER',$2,'31337',$3) returning id",
+        [`quorum-signer:${userId}`, userId, accounts[0].address.toLowerCase()],
+      )
+    ).rows[0];
+    await pool.query(
+      "insert into payout_approval_signatures(approval_id,member_user_id,wallet_id,message,signature) values($1,$2,$3,$4,'0x00')",
+      [approval.id, userId, signerWallet.id, message],
+    );
+  }
+  const signatureCount = await pool.query(
+    "select count(*)::int n from payout_approval_signatures where approval_id=$1",
+    [approval.id],
+  );
+  expect(signatureCount.rows[0].n).toBe(2);
+  await pool.query("update payout_approvals set state='APPROVED',updated_at=now() where id=$1", [
+    approval.id,
+  ]);
+  await processClaim(pool, reader, { [ADAPTER_ID]: relayer }, verifierClients, releaseClient, claimId);
+  const settled = await pool.query("select job_state from claims where claim_id=$1", [claimId]);
+  expect(settled.rows[0].job_state).toBe("SETTLED");
+  const after = await publicClient.readContract({
+    address: asset,
+    abi: erc20Abi,
+    functionName: "balanceOf",
+    args: [accounts[1].address],
+  });
+  expect(after - before).toBe(2000000n);
+}, 20000);
+
 it("Reconciles an external payment after a lost assessment response", async () => {
   await fundNext();
   const claimId = await upload(cases.fixtures[0].fixture);
@@ -626,10 +697,10 @@ it("Reconciles an external payment after a lost assessment response", async () =
     },
   };
   await expect(
-    processClaim(pool, reader, concurrent, verifierClient, releaseClient, claimId),
+    processClaim(pool, reader, { [ADAPTER_ID]: concurrent }, verifierClients, releaseClient, claimId),
   ).rejects.toThrow("Lost assessment response");
   const sent = calls.size;
-  await processClaim(pool, reader, concurrent, verifierClient, releaseClient, claimId);
+  await processClaim(pool, reader, { [ADAPTER_ID]: concurrent }, verifierClients, releaseClient, claimId);
   expect(calls.size).toBe(sent);
   expect(calls.has(`${claimId}:collectPayment`)).toBe(false);
   expect(

@@ -81,14 +81,10 @@ p {
   letter-spacing: -0.6px;
 }
 .brand-mark {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  background: var(--green);
-  color: #fff;
-  width: 33px;
+  display: block;
+  width: 36px;
   height: 36px;
-  border-radius: 10px 10px 14px 14px;
+  object-fit: contain;
 }
 .beta {
   font-family: "DM Sans", sans-serif;
@@ -451,6 +447,46 @@ p {
   white-space: nowrap;
   font-weight: 600;
 }
+.stepper {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin: 10px 0;
+}
+.stepper-step {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 5px 10px;
+  border-radius: 999px;
+  border: 1px solid var(--line);
+  background: #f5f8ef;
+  color: var(--muted);
+  font-size: 11px;
+  font-weight: 600;
+  white-space: nowrap;
+}
+.stepper-step.done {
+  border-color: var(--green);
+  color: var(--green);
+  background: #eef4ee;
+}
+.stepper-step.active {
+  border-color: var(--green);
+  background: var(--green);
+  color: #fff;
+}
+.stepper-step.failed {
+  border-color: #b3402f;
+  background: #fbe9e6;
+  color: #b3402f;
+}
+.stepper-line {
+  flex: 1;
+  height: 1px;
+  background: var(--line);
+  min-width: 10px;
+}
 .action-grid {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
@@ -751,6 +787,13 @@ code {
   max-width: 700px;
   margin: auto;
 }
+.setup-logo {
+  display: block;
+  width: 220px;
+  height: auto;
+  object-fit: contain;
+  margin-bottom: 24px;
+}
 .welcome {
   max-width: 1280px;
   padding: 32px 58px;
@@ -804,6 +847,35 @@ code {
 .trust-row span {
   margin: 0 6px;
 }
+.landing-benefits {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+  margin-top: 28px;
+}
+.benefit-card {
+  background: #ffffff;
+  border: 1px solid #dfe6d8;
+  border-radius: 12px;
+  padding: 16px;
+  box-shadow: 0 2px 8px #19372d06;
+}
+.benefit-card h3 {
+  font-size: 13px;
+  font-weight: 650;
+  color: var(--ink);
+  margin: 6px 0 8px;
+}
+.benefit-card ul {
+  margin: 0;
+  padding-left: 16px;
+  font-size: 11px;
+  color: #63735e;
+  line-height: 1.6;
+}
+.benefit-icon {
+  color: var(--green);
+}
 .flow-card {
   background: #fff;
   border: 1px solid #dfe6d8;
@@ -820,9 +892,10 @@ code {
   font-size: 11px;
   font-weight: 600;
 }
-.flow-top > svg {
-  color: #5c7c4c;
-  stroke-width: 1.4;
+.flow-top > img {
+  width: 22px;
+  height: 22px;
+  object-fit: contain;
 }
 .flow-top > .pill {
   margin-left: auto;

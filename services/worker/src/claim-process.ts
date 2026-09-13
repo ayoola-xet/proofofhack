@@ -5,7 +5,13 @@ import type { BountyReader } from "../../../packages/chain/src/bounty-reader.ts"
 import { type ClaimCall, claimCallSchema } from "../../../packages/chain/src/claim-calls.ts";
 import type { FundingReceipt } from "../../../packages/chain/src/funding.ts";
 import { hashCanonical } from "../../../packages/crypto-envelope/src/index.ts";
-import { bytes32, DomainError, policySchema } from "../../../packages/domain/src/index.ts";
+import {
+  bytes32,
+  DomainError,
+  LARGE_PAYOUT_REQUIRED_APPROVALS,
+  LARGE_PAYOUT_THRESHOLD,
+  policySchema,
+} from "../../../packages/domain/src/index.ts";
 import type { InternalClient } from "../../../packages/service-auth/src/http.ts";
 import { first } from "../../api/src/context.ts";
 
@@ -29,8 +35,8 @@ export type ClaimChain = BountyReader & {
 export async function processClaim(
   pool: Pool,
   chain: ClaimChain,
-  relayer: ClaimRelayer,
-  verifier: Pick<InternalClient, "post">,
+  relayers: Record<string, ClaimRelayer>,
+  verifiers: Record<string, Pick<InternalClient, "post">>,
   release: Pick<InternalClient, "post">,
   claimId: string,
 ) {
@@ -52,6 +58,12 @@ export async function processClaim(
       throw new Error("Another claim is being processed for this bounty.");
     }
     const policy = policySchema.parse(row.policy_json);
+    const relayer = relayers[policy.adapterId];
+    if (!relayer)
+      throw new DomainError(
+        "RELAYER_NOT_CONFIGURED",
+        "No settlement wallet is configured for this bounty's adapter.",
+      );
     const releaseIfPaid = async () => {
       const report = (
         await c.query(
@@ -164,6 +176,12 @@ export async function processClaim(
         );
       }
       if (!intent && !externalReceipt) {
+        const verifier = verifiers[policy.adapterId];
+        if (!verifier)
+          throw new DomainError(
+            "VERIFIER_NOT_CONFIGURED",
+            "No verifier is configured for this bounty's adapter.",
+          );
         const response =
           method === "collectPayment"
             ? { payload: { bountyId: row.bounty_id } }
@@ -352,10 +370,29 @@ export async function processClaim(
     };
     await step("reserveClaim");
     await step("submitAssessment");
-    const assessment = await first(c, "select outcome from assessments where claim_id=$1", [
-      claimId,
-    ]);
+    const assessment = await first(
+      c,
+      "select outcome,payload_json->>'reward' as reward from assessments where claim_id=$1",
+      [claimId],
+    );
     if (assessment.outcome === "QUALIFIES") {
+      if (BigInt(assessment.reward) >= LARGE_PAYOUT_THRESHOLD) {
+        const approval = await first(
+          c,
+          `insert into payout_approvals(claim_id,organization_id,reward,required_approvals,expires_at)
+           values($1,$2,$3,$4,now()+interval '7 days')
+           on conflict(claim_id) do update set updated_at=payout_approvals.updated_at
+           returning id,state,(select count(*)::int from payout_approval_signatures where approval_id=payout_approvals.id) as signatures`,
+          [claimId, row.organization_id, assessment.reward, LARGE_PAYOUT_REQUIRED_APPROVALS],
+        );
+        if (approval.state !== "APPROVED" && approval.signatures < LARGE_PAYOUT_REQUIRED_APPROVALS) {
+          await c.query(
+            "update claims set job_state='AWAITING_QUORUM',updated_at=now() where claim_id=$1 and job_state not in('SETTLED','EXPIRED')",
+            [claimId],
+          );
+          return { state: "AWAITING_QUORUM" };
+        }
+      }
       await step("collectPayment");
       await releaseIfPaid();
     }

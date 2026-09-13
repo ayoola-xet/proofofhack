@@ -7,7 +7,9 @@ import {
   ADAPTER_ID,
   address,
   DomainError,
+  GENERAL_FINDING_ADAPTER_ID,
   hashPolicy,
+  NO_FIXTURE_MANIFEST_ROOT,
   policySchema,
 } from "../../../packages/domain/src/index.ts";
 import {
@@ -20,8 +22,17 @@ import type { InternalClient } from "../../../packages/service-auth/src/http.ts"
 import type { PublicServiceConfig } from "../../../packages/service-config/src/index.ts";
 import { expectedVersion, first, idParams, member, mutate } from "./context.ts";
 import { parseApiBody } from "./parse-body.ts";
+export type FindingsPublicConfig = {
+  evidenceKeyId: Hex;
+  evidencePublicKey: string;
+  admissionSigner: Hex;
+  verdictSigner: Hex;
+  adapterCodeHash: Hex;
+  verifierConfigHash: Hex;
+};
 export type BountyServices = {
   publicConfig: PublicServiceConfig;
+  findingsConfig?: FindingsPublicConfig;
   escrow: Hex;
   release: Pick<InternalClient, "post">;
 };
@@ -33,7 +44,8 @@ export function registerBountyRoutes(app: FastifyInstance, pool: Pool, services?
     return services;
   }
   app.get("/api/v1/verifier-config", async () => {
-    const c = configured().publicConfig;
+    const s = configured();
+    const c = s.publicConfig;
     return {
       evidenceScope: c.evidenceScope,
       verifierMode: c.verifierMode,
@@ -43,6 +55,7 @@ export function registerBountyRoutes(app: FastifyInstance, pool: Pool, services?
       verdictSigner: c.verdictSigner,
       adapterCodeHash: c.adapterCodeHash,
       verifierConfigHash: c.verifierConfigHash,
+      findings: s.findingsConfig ?? null,
     };
   });
   app.post("/api/v1/organizations/:id/report-key", async (request, reply) => {
@@ -196,25 +209,12 @@ export function registerBountyRoutes(app: FastifyInstance, pool: Pool, services?
         await member(c, request.actor, program.organization_id, ["OWNER", "REVIEWER"]);
       },
       async (c) => {
-        const program = await first(c, "select organization_id from programs where id=$1", [id]);
+        const program = await first(c, "select organization_id,kind from programs where id=$1", [
+          id,
+        ]);
         const org = await first(c, "select onchain_id from organizations where id=$1", [
           program.organization_id,
         ]);
-        const manifest = await first(
-          c,
-          "select * from fixture_manifests where id=$1 and organization_id=$2 and status='SIGNED'",
-          [input.manifestId, program.organization_id],
-        );
-        const checked = await verifyManifest(
-          manifest.source_context_json,
-          manifest.owner_signature,
-        );
-        if (checked.manifest.organizationId !== org.onchain_id)
-          throw new DomainError(
-            "MANIFEST_SCOPE",
-            "The manifest belongs to another organization.",
-            400,
-          );
         const refund = input.controllerId
           ? await first(
               c,
@@ -239,39 +239,99 @@ export function registerBountyRoutes(app: FastifyInstance, pool: Pool, services?
             "Use a submission deadline from five minutes to thirty days from now.",
             400,
           );
-        const policy = policySchema.parse({
-          settlementChainId: "5042002",
-          escrow: address.parse(config.escrow),
-          organizationId: org.onchain_id,
-          refundRecipient: refund.address,
-          sourceChainId: checked.manifest.sourceChainId,
-          sourceVault: checked.manifest.sourceVault,
-          sourceBlockHash: checked.manifest.sourceBlockHash,
-          fixtureManifestRoot: manifest.root,
-          adapterId: ADAPTER_ID,
-          adapterCodeHash: config.publicConfig.adapterCodeHash,
-          verifierConfigHash: config.publicConfig.verifierConfigHash,
-          admissionSigner: config.publicConfig.admissionSigner,
-          verdictSigner: config.publicConfig.verdictSigner,
-          reportRecipientKeyId: key.key_id,
-          asset: ARC_USDC,
-          reward: input.reward,
-          minimumDiscrepancy: input.minimumDiscrepancy,
-          submissionDeadline: input.submissionDeadline,
-          settlementDeadline: (
-            deadline +
-            BigInt(input.reservationDurationSeconds) +
-            BigInt(input.settlementGraceSeconds)
-          ).toString(),
-          reservationDurationSeconds: String(input.reservationDurationSeconds),
-          organizationNonce: randomHash(),
-        });
+        const settlementDeadline = (
+          deadline +
+          BigInt(input.reservationDurationSeconds) +
+          BigInt(input.settlementGraceSeconds)
+        ).toString();
+        let policy: ReturnType<typeof policySchema.parse>;
+        let tierId: string | null = null;
+        if (input.manifestId) {
+          if (program.kind !== "COVERAGE")
+            throw new DomainError("PROGRAM_KIND", "This program does not use fixture manifests.");
+          const manifest = await first(
+            c,
+            "select * from fixture_manifests where id=$1 and organization_id=$2 and status='SIGNED'",
+            [input.manifestId, program.organization_id],
+          );
+          const checked = await verifyManifest(
+            manifest.source_context_json,
+            manifest.owner_signature,
+          );
+          if (checked.manifest.organizationId !== org.onchain_id)
+            throw new DomainError(
+              "MANIFEST_SCOPE",
+              "The manifest belongs to another organization.",
+              400,
+            );
+          policy = policySchema.parse({
+            settlementChainId: "5042002",
+            escrow: address.parse(config.escrow),
+            organizationId: org.onchain_id,
+            refundRecipient: refund.address,
+            sourceChainId: checked.manifest.sourceChainId,
+            sourceVault: checked.manifest.sourceVault,
+            sourceBlockHash: checked.manifest.sourceBlockHash,
+            fixtureManifestRoot: manifest.root,
+            adapterId: ADAPTER_ID,
+            adapterCodeHash: config.publicConfig.adapterCodeHash,
+            verifierConfigHash: config.publicConfig.verifierConfigHash,
+            admissionSigner: config.publicConfig.admissionSigner,
+            verdictSigner: config.publicConfig.verdictSigner,
+            reportRecipientKeyId: key.key_id,
+            asset: ARC_USDC,
+            reward: input.reward,
+            minimumDiscrepancy: input.minimumDiscrepancy,
+            submissionDeadline: input.submissionDeadline,
+            settlementDeadline,
+            reservationDurationSeconds: String(input.reservationDurationSeconds),
+            organizationNonce: randomHash(),
+          });
+        } else {
+          if (program.kind !== "FINDINGS")
+            throw new DomainError("PROGRAM_KIND", "This program does not use severity tiers.");
+          if (!config.findingsConfig)
+            throw new DomainError(
+              "SERVICE_NOT_CONFIGURED",
+              "The automated finding verifier is not configured.",
+              503,
+            );
+          const tier = await first(
+            c,
+            "select * from severity_tiers where id=$1 and program_id=$2",
+            [input.tierId, id],
+          );
+          tierId = tier.id;
+          policy = policySchema.parse({
+            settlementChainId: "5042002",
+            escrow: address.parse(config.escrow),
+            organizationId: org.onchain_id,
+            refundRecipient: refund.address,
+            sourceChainId: "5042002",
+            sourceVault: input.scopeAddress,
+            sourceBlockHash: NO_FIXTURE_MANIFEST_ROOT,
+            fixtureManifestRoot: NO_FIXTURE_MANIFEST_ROOT,
+            adapterId: GENERAL_FINDING_ADAPTER_ID,
+            adapterCodeHash: config.findingsConfig.adapterCodeHash,
+            verifierConfigHash: config.findingsConfig.verifierConfigHash,
+            admissionSigner: config.findingsConfig.admissionSigner,
+            verdictSigner: config.findingsConfig.verdictSigner,
+            reportRecipientKeyId: key.key_id,
+            asset: ARC_USDC,
+            reward: tier.max_reward,
+            minimumDiscrepancy: "1",
+            submissionDeadline: input.submissionDeadline,
+            settlementDeadline,
+            reservationDurationSeconds: String(input.reservationDurationSeconds),
+            organizationNonce: randomHash(),
+          });
+        }
         return {
           status: 201,
           body: await first(
             c,
-            "insert into bounty_drafts(program_id,policy_json,policy_hash,created_by) values($1,$2,$3,$4) returning id,policy_json as policy,policy_hash,status,version",
-            [id, JSON.stringify(policy), hashPolicy(policy), request.actor.id],
+            "insert into bounty_drafts(program_id,severity_tier_id,policy_json,policy_hash,created_by) values($1,$2,$3,$4,$5) returning id,policy_json as policy,policy_hash,status,version",
+            [id, tierId, JSON.stringify(policy), hashPolicy(policy), request.actor.id],
           ),
         };
       },

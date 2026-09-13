@@ -27,7 +27,12 @@ createRoot(root).render(
       <PrivyProvider
         appId={appId}
         config={{
-          appearance: { theme: "light", accentColor: "#285749", walletChainType: "ethereum-only" },
+          appearance: {
+            theme: "light",
+            accentColor: "#285749",
+            logo: "/logo-mark.png",
+            walletChainType: "ethereum-only",
+          },
           loginMethods: ["email", "wallet"],
           embeddedWallets: { ethereum: { createOnLogin: "users-without-wallets" } },
           defaultChain: arc,
@@ -40,6 +45,7 @@ createRoot(root).render(
       </PrivyProvider>
     ) : (
       <main className="setup">
+        <img className="setup-logo" src="/logo.png" alt="ProofOfHack" />
         <h1>ProofOfHack setup</h1>
         <p>Set the Privy app ID to enable sign-in.</p>
         <p>No account data is loaded.</p>
