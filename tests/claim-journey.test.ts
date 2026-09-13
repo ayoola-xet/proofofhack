@@ -29,8 +29,8 @@ import {
 } from "../packages/crypto-envelope/src/index.ts";
 import { connectDatabase, databaseUrl } from "../packages/database/src/index.ts";
 import { ADAPTER_ID, type BountyPolicy, hashPolicy } from "../packages/domain/src/index.ts";
-import { payoutApprovalMessage } from "../packages/privy/src/funding-authorization.ts";
 import { createManifestCases } from "../packages/fixture-manifest/src/index.ts";
+import { payoutApprovalMessage } from "../packages/privy/src/funding-authorization.ts";
 import { serviceToken } from "../packages/service-auth/src/index.ts";
 import type { PublicServiceConfig } from "../packages/service-config/src/index.ts";
 import { createApp } from "../services/api/src/app.ts";
@@ -484,13 +484,34 @@ it("Stops an expired admission after a lost response without reserving funds", a
     },
   };
   await expect(
-    processClaim(pool, reader, { [ADAPTER_ID]: unavailable }, verifierClients, releaseClient, claimId),
+    processClaim(
+      pool,
+      reader,
+      { [ADAPTER_ID]: unavailable },
+      verifierClients,
+      releaseClient,
+      claimId,
+    ),
   ).rejects.toThrow("Lost provider response");
   await advanceTime(301);
   expect(
-    await processClaim(pool, reader, { [ADAPTER_ID]: unavailable }, verifierClients, releaseClient, claimId),
+    await processClaim(
+      pool,
+      reader,
+      { [ADAPTER_ID]: unavailable },
+      verifierClients,
+      releaseClient,
+      claimId,
+    ),
   ).toEqual({ state: "ADMISSION_EXPIRED" });
-  await processClaim(pool, reader, { [ADAPTER_ID]: unavailable }, verifierClients, releaseClient, claimId);
+  await processClaim(
+    pool,
+    reader,
+    { [ADAPTER_ID]: unavailable },
+    verifierClients,
+    releaseClient,
+    claimId,
+  );
   expect(sends).toBe(1);
   expect((await reader.read(policy)).state).toBe(1);
   expect(
@@ -505,7 +526,14 @@ it("Settles both nonqualifying controls and keeps organization report access loc
   for (const item of [cases.fixtures[1], cases.fixtures[2]]) {
     const claimId = await upload(item.fixture);
     expect(
-      await processClaim(pool, reader, { [ADAPTER_ID]: relayer }, verifierClients, releaseClient, claimId),
+      await processClaim(
+        pool,
+        reader,
+        { [ADAPTER_ID]: relayer },
+        verifierClients,
+        releaseClient,
+        claimId,
+      ),
     ).toEqual({ state: "SETTLED" });
     expect((await reader.read(policy)).state).toBe(1);
     const report = (await pool.query("select id from reports where claim_id=$1", [claimId]))
@@ -553,8 +581,22 @@ it("Pays the qualifying claim once and releases the exact report after final pay
   ).rejects.toThrow("Report service unavailable");
   expect((await reader.read(policy)).state).toBe(4);
   const count = calls.size;
-  await processClaim(pool, reader, { [ADAPTER_ID]: relayer }, verifierClients, releaseClient, claimId);
-  await processClaim(pool, reader, { [ADAPTER_ID]: relayer }, verifierClients, releaseClient, claimId);
+  await processClaim(
+    pool,
+    reader,
+    { [ADAPTER_ID]: relayer },
+    verifierClients,
+    releaseClient,
+    claimId,
+  );
+  await processClaim(
+    pool,
+    reader,
+    { [ADAPTER_ID]: relayer },
+    verifierClients,
+    releaseClient,
+    claimId,
+  );
   expect(calls.size).toBe(count);
   const savedIntent = (
     await pool.query(
@@ -623,12 +665,18 @@ it("Pauses a large automated payout for quorum and pays once two members approve
     functionName: "balanceOf",
     args: [accounts[1].address],
   });
-  await processClaim(pool, reader, { [ADAPTER_ID]: relayer }, verifierClients, releaseClient, claimId);
+  await processClaim(
+    pool,
+    reader,
+    { [ADAPTER_ID]: relayer },
+    verifierClients,
+    releaseClient,
+    claimId,
+  );
   const gated = await pool.query("select job_state from claims where claim_id=$1", [claimId]);
   expect(gated.rows[0].job_state).toBe("AWAITING_QUORUM");
-  const approval = (
-    await pool.query("select * from payout_approvals where claim_id=$1", [claimId])
-  ).rows[0];
+  const approval = (await pool.query("select * from payout_approvals where claim_id=$1", [claimId]))
+    .rows[0];
   expect(approval.state).toBe("PENDING");
   expect(approval.reward).toBe("2000000");
   const midway = await publicClient.readContract({
@@ -669,7 +717,14 @@ it("Pauses a large automated payout for quorum and pays once two members approve
   await pool.query("update payout_approvals set state='APPROVED',updated_at=now() where id=$1", [
     approval.id,
   ]);
-  await processClaim(pool, reader, { [ADAPTER_ID]: relayer }, verifierClients, releaseClient, claimId);
+  await processClaim(
+    pool,
+    reader,
+    { [ADAPTER_ID]: relayer },
+    verifierClients,
+    releaseClient,
+    claimId,
+  );
   const settled = await pool.query("select job_state from claims where claim_id=$1", [claimId]);
   expect(settled.rows[0].job_state).toBe("SETTLED");
   const after = await publicClient.readContract({
@@ -697,10 +752,24 @@ it("Reconciles an external payment after a lost assessment response", async () =
     },
   };
   await expect(
-    processClaim(pool, reader, { [ADAPTER_ID]: concurrent }, verifierClients, releaseClient, claimId),
+    processClaim(
+      pool,
+      reader,
+      { [ADAPTER_ID]: concurrent },
+      verifierClients,
+      releaseClient,
+      claimId,
+    ),
   ).rejects.toThrow("Lost assessment response");
   const sent = calls.size;
-  await processClaim(pool, reader, { [ADAPTER_ID]: concurrent }, verifierClients, releaseClient, claimId);
+  await processClaim(
+    pool,
+    reader,
+    { [ADAPTER_ID]: concurrent },
+    verifierClients,
+    releaseClient,
+    claimId,
+  );
   expect(calls.size).toBe(sent);
   expect(calls.has(`${claimId}:collectPayment`)).toBe(false);
   expect(

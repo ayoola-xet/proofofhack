@@ -1,12 +1,13 @@
 import { mkdir } from "node:fs/promises";
-import { resolve, join } from "node:path";
+import { join, resolve } from "node:path";
 import { chromium } from "@playwright/test";
 import { startBrowserHarness } from "../tests/e2e/harness.ts";
 
 async function main() {
   console.log("Starting screenshot capture harness (with Programs page)...");
   const harness = await startBrowserHarness();
-  const artifactDir = "/Users/Apple/.gemini/antigravity-cli/brain/f5bf71a9-ea4b-4824-b231-eed16060f5dc/screenshots";
+  const artifactDir =
+    "/Users/Apple/.gemini/antigravity-cli/brain/f5bf71a9-ea4b-4824-b231-eed16060f5dc/screenshots";
   await mkdir(artifactDir, { recursive: true });
 
   const browser = await chromium.launch({
@@ -15,7 +16,8 @@ async function main() {
   });
 
   const actor = harness.actors.find((row) => row.role === "RESEARCHER") ?? harness.actors[0];
-  const wallet = harness.seed.wallets.find((row) => row.role === "RESEARCHER") ?? harness.seed.wallets[0];
+  const wallet =
+    harness.seed.wallets.find((row) => row.role === "RESEARCHER") ?? harness.seed.wallets[0];
 
   const context = await browser.newContext({
     viewport: { width: 1920, height: 1080 },
@@ -24,8 +26,7 @@ async function main() {
 
   await context.addInitScript(
     (identity) => {
-      // @ts-ignore
-      window.__PROOFOFHACK_E2E_IDENTITY__ = identity;
+      (window as unknown as Record<string, unknown>).__PROOFOFHACK_E2E_IDENTITY__ = identity;
     },
     {
       token: actor.token,
@@ -63,25 +64,38 @@ async function main() {
 
   // 3. Organization Workspace & Treasury
   console.log("Capturing 02-organization-workspace.png...");
-  await page.getByRole("navigation").getByRole("link", { name: "Organization", exact: true }).click();
+  await page
+    .getByRole("navigation")
+    .getByRole("link", { name: "Organization", exact: true })
+    .click();
   await page.waitForTimeout(2500);
-  await page.screenshot({ path: join(artifactDir, "02-organization-workspace.png"), fullPage: false });
+  await page.screenshot({
+    path: join(artifactDir, "02-organization-workspace.png"),
+    fullPage: false,
+  });
 
   // 4. Vault Coverage (The Graph Subgraphs)
   console.log("Capturing 03-vault-coverage.png...");
-  await page.getByRole("navigation").getByRole("link", { name: "Vault coverage", exact: true }).click();
+  await page
+    .getByRole("navigation")
+    .getByRole("link", { name: "Vault coverage", exact: true })
+    .click();
   await page.waitForTimeout(2500);
   await page.screenshot({ path: join(artifactDir, "03-vault-coverage.png"), fullPage: false });
 
   // 5. AI Coverage Assistant
   console.log("Capturing 04-ai-coverage-assistant.png...");
-  const assistantButton = page.getByRole("button", { name: /Ask coverage assistant|Coverage assistant/i });
+  const assistantButton = page.getByRole("button", {
+    name: /Ask coverage assistant|Coverage assistant/i,
+  });
   if (await assistantButton.isVisible()) {
     await assistantButton.click();
     await page.waitForTimeout(1000);
     const textarea = page.getByPlaceholder(/Ask about registered vaults|Ask coverage/i);
     if (await textarea.isVisible()) {
-      await textarea.type("Which registered vaults currently lack funded bounty coverage?", { delay: 20 });
+      await textarea.type("Which registered vaults currently lack funded bounty coverage?", {
+        delay: 20,
+      });
       const submitQuery = page.getByRole("button", { name: /Ask|Submit/i });
       if (await submitQuery.isVisible()) {
         await submitQuery.click();
@@ -89,11 +103,17 @@ async function main() {
       }
     }
   }
-  await page.screenshot({ path: join(artifactDir, "04-ai-coverage-assistant.png"), fullPage: false });
+  await page.screenshot({
+    path: join(artifactDir, "04-ai-coverage-assistant.png"),
+    fullPage: false,
+  });
 
   // 6. Fixture Bounties & Arc Escrow
   console.log("Capturing 05-bounties-escrow.png...");
-  await page.getByRole("navigation").getByRole("link", { name: "Fixture bounties", exact: true }).click();
+  await page
+    .getByRole("navigation")
+    .getByRole("link", { name: "Fixture bounties", exact: true })
+    .click();
   await page.waitForTimeout(2500);
 
   const qualifyingFixture = harness.fixtures.fixtures.find((item) => item.label === "QUALIFYING");
@@ -120,9 +140,15 @@ async function main() {
 
   // 7. Private Security Report & Receipts
   console.log("Capturing 06-private-report-receipts.png...");
-  await page.getByRole("navigation").getByRole("link", { name: "Private reports", exact: true }).click();
+  await page
+    .getByRole("navigation")
+    .getByRole("link", { name: "Private reports", exact: true })
+    .click();
   await page.waitForTimeout(2500);
-  await page.screenshot({ path: join(artifactDir, "06-private-report-receipts.png"), fullPage: false });
+  await page.screenshot({
+    path: join(artifactDir, "06-private-report-receipts.png"),
+    fullPage: false,
+  });
 
   await browser.close();
   await harness.stop();

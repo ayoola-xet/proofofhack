@@ -1,5 +1,5 @@
 import { mkdir, rename } from "node:fs/promises";
-import { resolve, join } from "node:path";
+import { join, resolve } from "node:path";
 import { chromium } from "@playwright/test";
 import { startBrowserHarness } from "../tests/e2e/harness.ts";
 
@@ -15,10 +15,13 @@ async function main() {
   });
 
   const ownerActor = harness.actors.find((row) => row.role === "OWNER") ?? harness.actors[0];
-  const ownerWallet = harness.seed.wallets.find((row) => row.role === "OWNER") ?? harness.seed.wallets[0];
+  const ownerWallet =
+    harness.seed.wallets.find((row) => row.role === "OWNER") ?? harness.seed.wallets[0];
 
-  const researcherActor = harness.actors.find((row) => row.role === "RESEARCHER") ?? harness.actors[3];
-  const researcherWallet = harness.seed.wallets.find((row) => row.role === "RESEARCHER") ?? harness.seed.wallets[3];
+  const researcherActor =
+    harness.actors.find((row) => row.role === "RESEARCHER") ?? harness.actors[3];
+  const researcherWallet =
+    harness.seed.wallets.find((row) => row.role === "RESEARCHER") ?? harness.seed.wallets[3];
 
   const context = await browser.newContext({
     viewport: { width: 1920, height: 1080 },
@@ -29,8 +32,7 @@ async function main() {
   // Inject initial owner identity script before page load
   await context.addInitScript(
     (identity) => {
-      // @ts-ignore
-      window.__PROOFOFHACK_E2E_IDENTITY__ = identity;
+      (window as unknown as Record<string, unknown>).__PROOFOFHACK_E2E_IDENTITY__ = identity;
     },
     {
       token: ownerActor.token,
@@ -74,7 +76,10 @@ async function main() {
   await page.waitForTimeout(3500);
 
   // Navigate to Organization page
-  await page.getByRole("navigation").getByRole("link", { name: "Organization", exact: true }).click();
+  await page
+    .getByRole("navigation")
+    .getByRole("link", { name: "Organization", exact: true })
+    .click();
   await page.waitForTimeout(3500);
 
   // Scroll down to view funding wallet details
@@ -84,7 +89,10 @@ async function main() {
   console.log("==========================================");
   console.log("SCENE 3: Protocol Owner — Vault Coverage & The Graph Subgraphs");
   console.log("==========================================");
-  await page.getByRole("navigation").getByRole("link", { name: "Vault coverage", exact: true }).click();
+  await page
+    .getByRole("navigation")
+    .getByRole("link", { name: "Vault coverage", exact: true })
+    .click();
   await page.waitForTimeout(3500);
 
   // Scroll vault table & AI Assistant section
@@ -94,7 +102,10 @@ async function main() {
   console.log("==========================================");
   console.log("SCENE 4: Protocol Owner — Inspecting Active Bounties on Arc Testnet");
   console.log("==========================================");
-  await page.getByRole("navigation").getByRole("link", { name: "Fixture bounties", exact: true }).click();
+  await page
+    .getByRole("navigation")
+    .getByRole("link", { name: "Fixture bounties", exact: true })
+    .click();
   await page.waitForTimeout(4000);
 
   console.log("==========================================");
@@ -103,8 +114,7 @@ async function main() {
   // Switch in-page identity to Security Researcher
   await page.evaluate(
     (identity) => {
-      // @ts-ignore
-      window.__PROOFOFHACK_E2E_IDENTITY__ = identity;
+      (window as unknown as Record<string, unknown>).__PROOFOFHACK_E2E_IDENTITY__ = identity;
     },
     {
       token: researcherActor.token,
@@ -150,8 +160,7 @@ async function main() {
   // Switch session back to Protocol Owner to show report unlock
   await page.evaluate(
     (identity) => {
-      // @ts-ignore
-      window.__PROOFOFHACK_E2E_IDENTITY__ = identity;
+      (window as unknown as Record<string, unknown>).__PROOFOFHACK_E2E_IDENTITY__ = identity;
     },
     {
       token: ownerActor.token,
@@ -163,7 +172,10 @@ async function main() {
   await page.reload();
   await page.waitForTimeout(2000);
 
-  await page.getByRole("navigation").getByRole("link", { name: "Private reports", exact: true }).click();
+  await page
+    .getByRole("navigation")
+    .getByRole("link", { name: "Private reports", exact: true })
+    .click();
   await page.waitForTimeout(4000);
 
   const downloadBtn = page.getByRole("button", { name: "Download report" }).first();

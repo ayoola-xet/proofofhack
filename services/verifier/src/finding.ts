@@ -85,7 +85,8 @@ export async function runSandboxPoc(
       logs: "",
       measuredImpact: null,
     };
-  if (process.env.FINDING_SANDBOX_SIMULATE === "true") return simulateSandboxPoc(evidence, scopeAddress);
+  if (process.env.FINDING_SANDBOX_SIMULATE === "true")
+    return simulateSandboxPoc(evidence, scopeAddress);
   let sandbox: Awaited<ReturnType<typeof Sandbox.create>> | undefined;
   try {
     sandbox = await Sandbox.create({
@@ -286,10 +287,7 @@ export async function assessFinding(
   const pocSubmitted = evidence.pocLanguage === "solidity-foundry" && sandbox.ran;
   const scopeViolation = pocSubmitted && !sandbox.touchedScope;
   const sandboxConfident =
-    sandbox.ran &&
-    sandbox.passed &&
-    sandbox.touchedScope &&
-    sandbox.measuredImpact !== null;
+    sandbox.ran && sandbox.passed && sandbox.touchedScope && sandbox.measuredImpact !== null;
   const valid = !scopeViolation && (sandboxConfident || ai.valid);
   let reward = 0n;
   let severityOut: "CRITICAL" | "HIGH" | "MEDIUM" | "LOW" = ai.severity;

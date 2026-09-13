@@ -385,7 +385,10 @@ export async function processClaim(
            returning id,state,(select count(*)::int from payout_approval_signatures where approval_id=payout_approvals.id) as signatures`,
           [claimId, row.organization_id, assessment.reward, LARGE_PAYOUT_REQUIRED_APPROVALS],
         );
-        if (approval.state !== "APPROVED" && approval.signatures < LARGE_PAYOUT_REQUIRED_APPROVALS) {
+        if (
+          approval.state !== "APPROVED" &&
+          approval.signatures < LARGE_PAYOUT_REQUIRED_APPROVALS
+        ) {
           await c.query(
             "update claims set job_state='AWAITING_QUORUM',updated_at=now() where claim_id=$1 and job_state not in('SETTLED','EXPIRED')",
             [claimId],

@@ -42,7 +42,14 @@ const tier = { minReward: 200000n, maxReward: 2000000n };
 const assessorsFor = (overrides: Partial<FindingAssessors>): FindingAssessors => ({
   runSandbox:
     overrides.runSandbox ??
-    (async () => ({ ran: false, passed: false, touchedScope: false, simulated: false, logs: "", measuredImpact: null })),
+    (async () => ({
+      ran: false,
+      passed: false,
+      touchedScope: false,
+      simulated: false,
+      logs: "",
+      measuredImpact: null,
+    })),
   judgeAi:
     overrides.judgeAi ??
     (async () => ({ valid: false, severity: "LOW", reasoning: "unused", confidence: 0 })),

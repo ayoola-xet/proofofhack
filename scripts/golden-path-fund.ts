@@ -4,6 +4,8 @@ import { randomBytes, randomUUID } from "node:crypto";
 import { readFile } from "node:fs/promises";
 import { promisify } from "node:util";
 import { toFunctionSignature } from "viem";
+import { bountyEscrowAbi } from "../packages/chain/src/abi/BountyEscrow.ts";
+import { ARC_USDC } from "../packages/chain/src/arc.ts";
 import { connectDatabase } from "../packages/database/src/index.ts";
 import {
   address,
@@ -13,8 +15,6 @@ import {
   organizationHash,
   policySchema,
 } from "../packages/domain/src/index.ts";
-import { ARC_USDC } from "../packages/chain/src/arc.ts";
-import { bountyEscrowAbi } from "../packages/chain/src/abi/BountyEscrow.ts";
 import { InternalClient } from "../packages/service-auth/src/http.ts";
 
 const execute = promisify(execFile);
@@ -62,10 +62,9 @@ async function main() {
 
   console.log("[1/4] Setting up organization, program, and severity tier...");
   let org = (
-    await pool.query(
-      "select id,onchain_id,owner_user_id from organizations where name=$1",
-      [ORG_NAME],
-    )
+    await pool.query("select id,onchain_id,owner_user_id from organizations where name=$1", [
+      ORG_NAME,
+    ])
   ).rows[0];
   if (!org) {
     const user = await pool.query(
@@ -84,9 +83,7 @@ async function main() {
       [org.id, org.owner_user_id],
     );
   }
-  let program = (
-    await pool.query("select id from programs where name=$1", [PROGRAM_NAME])
-  ).rows[0];
+  let program = (await pool.query("select id from programs where name=$1", [PROGRAM_NAME])).rows[0];
   if (!program) {
     program = (
       await pool.query(
@@ -186,9 +183,7 @@ async function main() {
     return;
   }
 
-  const entry = bountyEscrowAbi.find(
-    (e) => e.type === "function" && e.name === "createAndFund",
-  );
+  const entry = bountyEscrowAbi.find((e) => e.type === "function" && e.name === "createAndFund");
   if (entry?.type !== "function") throw new Error("Missing createAndFund ABI entry.");
   const tuple = entry.inputs[0];
   if (!tuple || !("components" in tuple)) throw new Error("Missing tuple components.");
@@ -196,11 +191,7 @@ async function main() {
 
   await circleExecute("approve(address,uint256)", [escrow, REWARD], ARC_USDC);
   console.log("Approved escrow to pull the reward.");
-  const funded = await circleExecute(
-    toFunctionSignature(entry),
-    [JSON.stringify(values)],
-    escrow,
-  );
+  const funded = await circleExecute(toFunctionSignature(entry), [JSON.stringify(values)], escrow);
   console.log("Funded on-chain:", funded.txHash);
 
   console.log("[4/4] Recording the funded bounty...");

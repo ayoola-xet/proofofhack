@@ -3,7 +3,11 @@ import { ReadOnlyBountyChain } from "../../../packages/chain/src/bounty-reader.t
 import { ReadOnlyBudgetChain } from "../../../packages/chain/src/budget.ts";
 import { CircleBudgetExecutor } from "../../../packages/circle/src/budget.ts";
 import { configuredCircleRelayer } from "../../../packages/circle/src/claims.ts";
-import { ADAPTER_ID, address, GENERAL_FINDING_ADAPTER_ID } from "../../../packages/domain/src/index.ts";
+import {
+  ADAPTER_ID,
+  address,
+  GENERAL_FINDING_ADAPTER_ID,
+} from "../../../packages/domain/src/index.ts";
 import { PrivyTreasury } from "../../../packages/privy/src/treasury.ts";
 import { PrivyWalletIdentity } from "../../../packages/privy/src/wallets.ts";
 import { InternalClient } from "../../../packages/service-auth/src/http.ts";

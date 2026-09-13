@@ -331,7 +331,10 @@ export function PayoutApprovals({ organizationId }: { organizationId: string }) 
     setBusy(item.id);
     setError("");
     try {
-      const { signature } = await signMessage({ message: item.message }, { address: wallet.address });
+      const { signature } = await signMessage(
+        { message: item.message },
+        { address: wallet.address },
+      );
       await api(`/payout-approvals/${item.id}/sign`, {
         method: "POST",
         body: { walletId: wallet.id, signature },
@@ -347,9 +350,9 @@ export function PayoutApprovals({ organizationId }: { organizationId: string }) 
     <section className="panel">
       <h2>Payouts awaiting quorum</h2>
       <p>
-        Findings above the large-payout threshold pause here until two organization members
-        confirm with Privy. Triage and severity are already automated; this only confirms the
-        amount before funds move.
+        Findings above the large-payout threshold pause here until two organization members confirm
+        with Privy. Triage and severity are already automated; this only confirms the amount before
+        funds move.
       </p>
       {error && (
         <p role="alert" className="notice error">
@@ -490,8 +493,8 @@ function FindingSubmissionForm({
         </p>
       ) : (
         <p role="alert" className="notice error">
-          This slot has no recorded in-scope contract address. Contact the program before
-          submitting a proof of concept.
+          This slot has no recorded in-scope contract address. Contact the program before submitting
+          a proof of concept.
         </p>
       )}
       <form className="form-row" onSubmit={submit}>

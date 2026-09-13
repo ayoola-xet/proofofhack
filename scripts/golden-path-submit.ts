@@ -4,8 +4,8 @@ import { readFile } from "node:fs/promises";
 import { setTimeout as delay } from "node:timers/promises";
 import { keccak256 } from "viem";
 import { ReadOnlyBountyChain } from "../packages/chain/src/bounty-reader.ts";
-import { configuredCircleRelayer } from "../packages/circle/src/claims.ts";
 import { FileCiphertextStore } from "../packages/ciphertext-store/src/index.ts";
+import { configuredCircleRelayer } from "../packages/circle/src/claims.ts";
 import { canonicalJson, seal } from "../packages/crypto-envelope/src/index.ts";
 import { connectDatabase } from "../packages/database/src/index.ts";
 import { address, GENERAL_FINDING_ADAPTER_ID } from "../packages/domain/src/index.ts";
@@ -26,14 +26,13 @@ async function main() {
   const { pool } = connectDatabase();
 
   console.log("[1/6] Looking up the funded golden-path bounty...");
-  const program = (
-    await pool.query("select id from programs where name=$1", [PROGRAM_NAME])
-  ).rows[0];
+  const program = (await pool.query("select id from programs where name=$1", [PROGRAM_NAME]))
+    .rows[0];
   const tier = (
-    await pool.query("select id,min_reward,max_reward from severity_tiers where program_id=$1 and name=$2", [
-      program.id,
-      TIER_NAME,
-    ])
+    await pool.query(
+      "select id,min_reward,max_reward from severity_tiers where program_id=$1 and name=$2",
+      [program.id, TIER_NAME],
+    )
   ).rows[0];
   const bounty = (
     await pool.query(
@@ -51,10 +50,10 @@ async function main() {
   ).rows[0];
   if (!researcher) {
     researcher = (
-      await pool.query(
-        "insert into users(privy_user_id,display_name) values($1,$2) returning id",
-        ["golden-path:researcher", "Golden Path Researcher"],
-      )
+      await pool.query("insert into users(privy_user_id,display_name) values($1,$2) returning id", [
+        "golden-path:researcher",
+        "Golden Path Researcher",
+      ])
     ).rows[0];
   }
   let wallet = (
@@ -108,7 +107,15 @@ async function main() {
   await pool.query(
     `insert into claims(claim_id,bounty_id,researcher_user_id,claimant_wallet_id,claimant_address,upload_id,evidence_commitment,job_state)
      values($1,$2,$3,$4,$5,$6,$7,'ADMISSION_PENDING')`,
-    [claimId, bounty.bounty_id, researcher.id, wallet.id, wallet.address.toLowerCase(), uploadId, ciphertextHash],
+    [
+      claimId,
+      bounty.bounty_id,
+      researcher.id,
+      wallet.id,
+      wallet.address.toLowerCase(),
+      uploadId,
+      ciphertextHash,
+    ],
   );
   await pool.query(
     `insert into findings(program_id,tier_id,researcher_user_id,claim_id,title,summary,affected_component,self_assessed_severity,status)
@@ -147,7 +154,14 @@ async function main() {
   let lastState = "";
   for (let attempt = 0; attempt < 20; attempt++) {
     try {
-      await processClaim(pool, reader, { [GENERAL_FINDING_ADAPTER_ID]: relayer }, verifiers, release, claimId);
+      await processClaim(
+        pool,
+        reader,
+        { [GENERAL_FINDING_ADAPTER_ID]: relayer },
+        verifiers,
+        release,
+        claimId,
+      );
     } catch (error) {
       console.log(`  attempt ${attempt + 1}: processClaim threw:`, (error as Error).message);
     }
@@ -205,9 +219,10 @@ async function main() {
           [approval.id, memberId, signerWallet.id, message],
         );
       }
-      await pool.query("update payout_approvals set state='APPROVED',updated_at=now() where id=$1", [
-        approval.id,
-      ]);
+      await pool.query(
+        "update payout_approvals set state='APPROVED',updated_at=now() where id=$1",
+        [approval.id],
+      );
     }
     if (["SETTLED", "FAILED"].includes(lastState)) break;
     await delay(2000);

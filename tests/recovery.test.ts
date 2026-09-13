@@ -990,12 +990,26 @@ it("Stops assessment retries after reservation expiry and queues canonical recov
     }),
   };
   expect(
-    await processClaim(pool, reader, { [ADAPTER_ID]: relay }, { [ADAPTER_ID]: service }, service, f.claim),
+    await processClaim(
+      pool,
+      reader,
+      { [ADAPTER_ID]: relay },
+      { [ADAPTER_ID]: service },
+      service,
+      f.claim,
+    ),
   ).toEqual({
     state: "RECOVERY_PENDING",
   });
   expect(
-    await processClaim(pool, reader, { [ADAPTER_ID]: relay }, { [ADAPTER_ID]: service }, service, f.claim),
+    await processClaim(
+      pool,
+      reader,
+      { [ADAPTER_ID]: relay },
+      { [ADAPTER_ID]: service },
+      service,
+      f.claim,
+    ),
   ).toEqual({
     state: "RECOVERY_PENDING",
   });

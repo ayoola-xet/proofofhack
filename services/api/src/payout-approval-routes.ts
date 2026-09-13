@@ -1,7 +1,11 @@
 import type { FastifyInstance } from "fastify";
 import type { Pool } from "pg";
 import { type Hex, recoverMessageAddress } from "viem";
-import { address, DomainError, LARGE_PAYOUT_REQUIRED_APPROVALS } from "../../../packages/domain/src/index.ts";
+import {
+  address,
+  DomainError,
+  LARGE_PAYOUT_REQUIRED_APPROVALS,
+} from "../../../packages/domain/src/index.ts";
 import { payoutApprovalMessage } from "../../../packages/privy/src/funding-authorization.ts";
 import type { WalletIdentityProvider } from "../../../packages/privy/src/wallets.ts";
 import { first, idParams, member, mutate } from "./context.ts";
@@ -41,22 +45,26 @@ export function registerPayoutApprovalRoutes(
   });
   app.post("/api/v1/payout-approvals/:id/sign", async (request, reply) => {
     if (!identities)
-      throw new DomainError("SERVICE_NOT_CONFIGURED", "Wallet verification is not configured.", 503);
+      throw new DomainError(
+        "SERVICE_NOT_CONFIGURED",
+        "Wallet verification is not configured.",
+        503,
+      );
     const { id } = idParams(request);
     const input = parseApiBody("payoutApprovalSignature", request);
     const result = await mutate(
       pool,
       request,
       async (c) => {
-        const row = await first(c, "select organization_id from payout_approvals where id=$1", [id]);
+        const row = await first(c, "select organization_id from payout_approvals where id=$1", [
+          id,
+        ]);
         await member(c, request.actor, row.organization_id, ["OWNER", "TREASURY"]);
       },
       async (c) => {
-        const approval = await first(
-          c,
-          "select * from payout_approvals where id=$1 for update",
-          [id],
-        );
+        const approval = await first(c, "select * from payout_approvals where id=$1 for update", [
+          id,
+        ]);
         if (approval.state !== "PENDING" || approval.expires_at.getTime() <= Date.now())
           throw new DomainError("STALE_APPROVAL", "This payout approval is no longer open.");
         const wallet = await first(
@@ -67,7 +75,9 @@ export function registerPayoutApprovalRoutes(
         const live = await identities.userWallets(wallet.privy_user_id);
         if (
           !live.some(
-            (w) => w.providerWalletId === wallet.provider_wallet_id && w.address.toLowerCase() === wallet.address,
+            (w) =>
+              w.providerWalletId === wallet.provider_wallet_id &&
+              w.address.toLowerCase() === wallet.address,
           )
         )
           throw new DomainError("WALLET_UNLINKED", "Verify a currently linked reward wallet.", 403);
@@ -83,7 +93,11 @@ export function registerPayoutApprovalRoutes(
             await recoverMessageAddress({ message, signature: input.signature as Hex }),
           ) !== wallet.address
         )
-          throw new DomainError("INVALID_AUTHORIZATION", "Confirm with your linked Privy wallet.", 403);
+          throw new DomainError(
+            "INVALID_AUTHORIZATION",
+            "Confirm with your linked Privy wallet.",
+            403,
+          );
         const existing = await c.query(
           "select id from payout_approval_signatures where approval_id=$1 and member_user_id=$2",
           [id, request.actor.id],
@@ -102,7 +116,10 @@ export function registerPayoutApprovalRoutes(
         let state = approval.state;
         if (count >= approval.required_approvals && approval.state === "PENDING") {
           state = "APPROVED";
-          await c.query("update payout_approvals set state='APPROVED',updated_at=now() where id=$1", [id]);
+          await c.query(
+            "update payout_approvals set state='APPROVED',updated_at=now() where id=$1",
+            [id],
+          );
           await c.query(
             "insert into outbox(deduplication_key,event_type,aggregate_id,payload_json) values($1,'CLAIM_PROCESS',$2,$3) on conflict(deduplication_key) do nothing",
             [

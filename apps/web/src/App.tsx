@@ -733,10 +733,7 @@ function Team({
               </label>
               <label>
                 Program type
-                <select
-                  value={kind}
-                  onChange={(e) => setKind(e.target.value as typeof kind)}
-                >
+                <select value={kind} onChange={(e) => setKind(e.target.value as typeof kind)}>
                   <option value="COVERAGE">Coverage (fixture bounties)</option>
                   <option value="FINDINGS">Findings (bug bounty program)</option>
                 </select>

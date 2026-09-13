@@ -2,7 +2,11 @@ import { ARC_USDC } from "../../../packages/chain/src/arc.ts";
 import { ReadOnlyBountyChain } from "../../../packages/chain/src/bounty-reader.ts";
 import { ReadOnlyBudgetChain } from "../../../packages/chain/src/budget.ts";
 import { FileCiphertextStore } from "../../../packages/ciphertext-store/src/index.ts";
-import { ADAPTER_ID, address, GENERAL_FINDING_ADAPTER_ID } from "../../../packages/domain/src/index.ts";
+import {
+  ADAPTER_ID,
+  address,
+  GENERAL_FINDING_ADAPTER_ID,
+} from "../../../packages/domain/src/index.ts";
 import { InternalClient } from "../../../packages/service-auth/src/http.ts";
 import { loadPublicConfig, loadTestnetSecret } from "../../../packages/service-config/src/index.ts";
 import "dotenv/config";
@@ -92,7 +96,11 @@ const app = await createApp({
         configs: {
           [ADAPTER_ID]: bountyServices.publicConfig,
           ...(process.env.FINDING_SERVICE_PUBLIC_CONFIG
-            ? { [GENERAL_FINDING_ADAPTER_ID]: await loadPublicConfig(process.env.FINDING_SERVICE_PUBLIC_CONFIG) }
+            ? {
+                [GENERAL_FINDING_ADAPTER_ID]: await loadPublicConfig(
+                  process.env.FINDING_SERVICE_PUBLIC_CONFIG,
+                ),
+              }
             : {}),
         },
         evidence: new FileCiphertextStore(

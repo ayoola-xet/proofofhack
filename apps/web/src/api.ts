@@ -76,7 +76,9 @@ export function useResource<T>(path: string | null, options?: { intervalMs?: num
   useEffect(() => {
     if (!path || !intervalMs) return;
     const timer = setInterval(() => {
-      api<T>(path).then(setData).catch(() => {});
+      api<T>(path)
+        .then(setData)
+        .catch(() => {});
     }, intervalMs);
     return () => clearInterval(timer);
   }, [api, path, intervalMs]);
